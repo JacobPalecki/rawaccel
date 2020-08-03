@@ -103,9 +103,13 @@ namespace rawaccel {
         /// <summary> The object which sets a min and max for the acceleration scale. </summary>
         vec2<accel_scale_clamp> clamp;
 
-        double cap_slope;
+        double cap_slope_y;
+        double cap_slope_x;
         
-        double cap_intercept;
+        double cap_intercept_y;
+        double cap_intercept_x;
+
+        bool cap_is_gain;
 
         accel_function(const accel_fn_args& args) {
             if (args.time_min <= 0) error("min time must be positive");
@@ -117,23 +121,59 @@ namespace rawaccel {
             time_min = args.time_min;
             speed_offset = args.acc_args.offset;
 
-            if (args.cap.x > 0 && args.cap.y > 0)
-            {
-				double mag_1_in = args.cap.x;
-				vec2d mag_1_out_vec = accel.visit([=](auto&& impl) {
-					double accel_val = impl.accelerate(mag_1_in);
-					return impl.scale(accel_val); 
-				});
-				double mag_1_out = mag_1_out_vec.x*mag_1_in;
+            // Set to true here so I don't need to feed in another arg for this example
+            cap_is_gain = true;
 
-                double mag_2_in = args.cap.x * 1.01;
-				vec2d mag_2_out_vec = accel.visit([=](auto&& impl) {
-					double accel_val = impl.accelerate(mag_2_in);
-					return impl.scale(accel_val); 
-				});
-                double mag_2_out = mag_2_out_vec.x*mag_2_in;
-                cap_slope = (mag_2_out - mag_1_out) / (mag_2_in - mag_1_in);
-                cap_intercept = mag_1_out - cap_slope * mag_1_in;
+            if (cap_is_gain)
+            {
+				if (args.cap.x > 0)
+				{
+                    // Consider cap.x to be the max speed to apply accel for x.
+
+                    // Determine the acceleration for that.
+					vec2d mag_1_out_vec = accel.visit([=](auto&& impl) {
+						double accel_val = impl.accelerate(args.cap.x);
+						return impl.scale(accel_val); 
+					});
+
+                    // And then the output speed.
+					double mag_1_out = mag_1_out_vec.x*args.cap.x;
+
+
+                    // Now, take a speed just a tiny bit higher.
+					double mag_2_in = args.cap.x * 1.01;
+
+                    //Determine the acceleration and output speed for that.
+					vec2d mag_2_out_vec = accel.visit([=](auto&& impl) {
+						double accel_val = impl.accelerate(mag_2_in);
+						return impl.scale(accel_val); 
+					});
+					double mag_2_out = mag_2_out_vec.x*mag_2_in;
+
+                    // Determine the slope and intercept of the output velocity line from your two points.
+					cap_slope_x = (mag_2_out - mag_1_out) / (mag_2_in - args.cap.x);
+					cap_intercept_x = mag_1_out - cap_slope_x * args.cap.x;
+				}
+
+                // Repeat for y.
+				if (args.cap.y > 0)
+				{
+					vec2d mag_1_out_vec = accel.visit([=](auto&& impl) {
+						double accel_val = impl.accelerate(args.cap.y);
+						return impl.scale(accel_val); 
+					});
+					double mag_1_out = mag_1_out_vec.x*args.cap.y;
+
+					double mag_2_in = args.cap.x * 1.01;
+					vec2d mag_2_out_vec = accel.visit([=](auto&& impl) {
+						double accel_val = impl.accelerate(mag_2_in);
+						return impl.scale(accel_val); 
+					});
+					double mag_2_out = mag_2_out_vec.x*mag_2_in;
+					cap_slope_x = (mag_2_out - mag_1_out) / (mag_2_in - args.cap.x);
+					cap_intercept_x = mag_1_out - cap_slope_x * args.cap.x;
+				}
+
             }
 
             clamp.x = accel_scale_clamp(args.cap.x);
@@ -150,22 +190,57 @@ namespace rawaccel {
             double mag = sqrtsd(input.x * input.x + input.y * input.y);
             double time_clamped = clampsd(time, time_min, 100);
             double speed = maxsd(mag / time_clamped - speed_offset, 0);
+            vec2d output;
 
-            vec2d scale = accel.visit([=](auto&& impl) {
-                double accel_val = impl.accelerate(speed);
-                return impl.scale(accel_val); 
-            });
-
-            vec2d output = {
-                input.x * scale.x,
-                input.y * scale.y
-            };
-
-            if (speed >= clamp.x.hi)
+            if (cap_is_gain)
             {
-                double out_mult = cap_slope + cap_intercept / speed;
-                output.x = out_mult * input.x;
-                output.y = out_mult * input.y;
+				output = {
+					input.x,
+					input.y
+				};
+
+                if (speed > clamp.x.hi)
+                {
+					double out_mult_x = cap_slope_x + cap_intercept_x / speed;
+					output.x = out_mult_x * input.x;
+                }
+                else
+                {
+                    vec2d scale = accel.visit([=](auto&& impl) {
+						double accel_val = impl.accelerate(speed);
+						return impl.scale(accel_val); 
+					});
+
+                    output.x *= scale.x;
+                }
+
+                if (speed > clamp.y.hi)
+                {
+					double out_mult_y = cap_slope_y + cap_intercept_y / speed;
+					output.y = out_mult_y * input.y;
+                }
+                else
+                {
+                    vec2d scale = accel.visit([=](auto&& impl) {
+						double accel_val = impl.accelerate(speed);
+						return impl.scale(accel_val); 
+					});
+
+                    output.y *= scale.y;
+                }
+            }
+            else
+            {
+				vec2d scale = accel.visit([=](auto&& impl) {
+					double accel_val = impl.accelerate(speed);
+					return impl.scale(accel_val); 
+				});
+
+				output = {
+					input.x * scale.x,
+					input.y * scale.y
+				};
+
             }
 
             return output;
