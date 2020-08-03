@@ -45,7 +45,7 @@ namespace rawaccel {
     /// <summary> Struct to hold clamp (min and max) details for acceleration application </summary>
     struct accel_scale_clamp {
         double lo = 0;
-        double hi = 9;
+        double hi = 9000;
 
         /// <summary>
         /// Clamps given input to min at lo, max at hi.
@@ -103,6 +103,10 @@ namespace rawaccel {
         /// <summary> The object which sets a min and max for the acceleration scale. </summary>
         vec2<accel_scale_clamp> clamp;
 
+        double cap_slope;
+        
+        double cap_intercept;
+
         accel_function(const accel_fn_args& args) {
             if (args.time_min <= 0) error("min time must be positive");
             if (args.acc_args.offset < 0) error("offset must not be negative");
@@ -112,6 +116,26 @@ namespace rawaccel {
 
             time_min = args.time_min;
             speed_offset = args.acc_args.offset;
+
+            if (args.cap.x > 0 && args.cap.y > 0)
+            {
+				double mag_1_in = args.cap.x;
+				vec2d mag_1_out_vec = accel.visit([=](auto&& impl) {
+					double accel_val = impl.accelerate(mag_1_in);
+					return impl.scale(accel_val); 
+				});
+				double mag_1_out = mag_1_out_vec.x*mag_1_in;
+
+                double mag_2_in = args.cap.x * 1.01;
+				vec2d mag_2_out_vec = accel.visit([=](auto&& impl) {
+					double accel_val = impl.accelerate(mag_2_in);
+					return impl.scale(accel_val); 
+				});
+                double mag_2_out = mag_2_out_vec.x*mag_2_in;
+                cap_slope = (mag_2_out - mag_1_out) / (mag_2_in - mag_1_in);
+                cap_intercept = mag_1_out - cap_slope * mag_1_in;
+            }
+
             clamp.x = accel_scale_clamp(args.cap.x);
             clamp.y = accel_scale_clamp(args.cap.y);
         }
@@ -132,10 +156,19 @@ namespace rawaccel {
                 return impl.scale(accel_val); 
             });
 
-            return {
-                input.x * clamp.x(scale.x),
-                input.y * clamp.y(scale.y)
+            vec2d output = {
+                input.x * scale.x,
+                input.y * scale.y
             };
+
+            if (speed >= clamp.x.hi)
+            {
+                double out_mult = cap_slope + cap_intercept / speed;
+                output.x = out_mult * input.x;
+                output.y = out_mult * input.y;
+            }
+
+            return output;
         }
 
         accel_function() = default;
