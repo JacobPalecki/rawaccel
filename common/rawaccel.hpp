@@ -199,11 +199,13 @@ namespace rawaccel {
 					input.y
 				};
 
+                // If our speed is higher than the gain cap, calculate output velocity from line.
                 if (speed > clamp.x.hi)
                 {
 					double out_mult_x = cap_slope_x + cap_intercept_x / speed;
 					output.x = out_mult_x * input.x;
                 }
+                // Otherwise calculate normally.
                 else
                 {
                     vec2d scale = accel.visit([=](auto&& impl) {
@@ -214,6 +216,7 @@ namespace rawaccel {
                     output.x *= scale.x;
                 }
 
+                // Repeat for y.
                 if (speed > clamp.y.hi)
                 {
 					double out_mult_y = cap_slope_y + cap_intercept_y / speed;
