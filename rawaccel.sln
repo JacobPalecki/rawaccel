@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "converter", "converter\conv
 		{28A3656F-A1DE-405C-B547-191C32EC555F} = {28A3656F-A1DE-405C-B547-191C32EC555F}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GUI", "GUI", "{A08B9037-3E8D-4467-8AD1-DF449D4F2C15}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		common\common.vcxitems*{24b4226f-1461-408f-a1a4-1371c97153ea}*SharedItemsImports = 9
@@ -76,6 +78,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EF67F71F-ABF5-4760-B50D-D1B9836DF01C} = {A08B9037-3E8D-4467-8AD1-DF449D4F2C15}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A3B5EC34-5340-4301-8BE9-33096EFEF77E}
