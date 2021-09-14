@@ -132,7 +132,10 @@ namespace grapher
 
             if (!Settings.TryActivate(settings, out string errors))
             {
-                new MessageDialog(errors, "bad input").ShowDialog();
+                using (var form = new MessageDialog(errors, "bad input"))
+                {
+                    form.ShowDialog();
+                }
             }
             else
             {
