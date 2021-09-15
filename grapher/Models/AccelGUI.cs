@@ -4,6 +4,7 @@ using grapher.Models.Mouse;
 using grapher.Models.Options;
 using grapher.Models.Serialized;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
@@ -24,7 +25,8 @@ namespace grapher
             Button writeButton,
             ButtonBase toggleButton,
             MouseWatcher mouseWatcher,
-            ToolStripMenuItem scaleMenuItem)
+            ToolStripMenuItem scaleMenuItem,
+            ToolStripMenuItem deviceMenuItem)
         {
             AccelForm = accelForm;
             AccelCalculator = accelCalculator;
@@ -33,11 +35,13 @@ namespace grapher
             WriteButton = writeButton;
             DisableButton = (CheckBox)toggleButton;
             ScaleMenuItem = scaleMenuItem;
+            DeviceMenuItem = deviceMenuItem;
             Settings = settings;
             DefaultButtonFont = WriteButton.Font;
             SmallButtonFont = new Font(WriteButton.Font.Name, WriteButton.Font.Size * Constants.SmallButtonSizeFactor);
             MouseWatcher = mouseWatcher;
 
+            DeviceMenuItem.Click += DeviceMenuItemClick;
             ScaleMenuItem.Click += new System.EventHandler(OnScaleMenuItemClick);
             WriteButton.Click += new System.EventHandler(OnWriteButtonClick);
             DisableButton.Click += new System.EventHandler(DisableDriverEventHandler);
@@ -82,6 +86,8 @@ namespace grapher
         public MouseWatcher MouseWatcher { get; }
 
         public ToolStripMenuItem ScaleMenuItem { get; }
+
+        public ToolStripMenuItem DeviceMenuItem { get; }
 
         private Timer ChartRefresh { get; }
 
@@ -140,6 +146,7 @@ namespace grapher
             else
             {
                 RefreshActive();
+                Settings.SetActiveHandles();
             }
         }
 
@@ -223,10 +230,12 @@ namespace grapher
         {
             ButtonTimer.Stop();
             SetButtonDefaults();
+            DeviceMenuItem.Enabled = true;
         }
 
         private void StartButtonTimer()
         {
+            DeviceMenuItem.Enabled = false;
             ButtonTimer.Interval = ButtonTimerInterval;
             ButtonTimer.Start();
         }
@@ -249,6 +258,18 @@ namespace grapher
         {
             AccelCharts.DrawLastMovement();
             MouseWatcher.UpdateLastMove();
+        }
+
+        private void DeviceMenuItemClick(object sender, EventArgs e)
+        {
+            using (var devMenu = new DeviceMenuForm(Settings))
+            {
+                if (devMenu.ShowDialog() == DialogResult.OK)
+                {
+                    Settings.Submit(devMenu.defaultConfig, devMenu.Items);
+                    UpdateActiveSettingsFromFields();
+                }
+            }
         }
 
         #endregion Methods
