@@ -114,7 +114,7 @@ namespace grapher
             }
         }
 
-        public void UpdateActiveSettingsFromFields()
+        public Profile MakeProfileFromFields()
         {
             var settings = new Profile();
 
@@ -134,19 +134,35 @@ namespace grapher
 
             Settings.SetHiddenOptions(settings);
 
-            ButtonDelay(WriteButton);
+            return settings;
+        }
 
-            if (!Settings.TryActivate(settings, out string errors))
+        public void UpdateActiveSettingsFromFields()
+        {
+            string errors;
+
+            try
+            {
+                var profile = MakeProfileFromFields();
+                ButtonDelay(WriteButton);
+                Settings.TryActivate(profile, out errors);
+            }
+            catch (ApplicationException e)
+            {
+                errors = e.Message;
+            }
+
+            if (errors is null)
+            {
+                RefreshActive();
+                Settings.SetActiveHandles();
+            }
+            else
             {
                 using (var form = new MessageDialog(errors, "bad input"))
                 {
                     form.ShowDialog();
                 }
-            }
-            else
-            {
-                RefreshActive();
-                Settings.SetActiveHandles();
             }
         }
 
