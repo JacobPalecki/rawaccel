@@ -83,11 +83,16 @@ The authors of this program feel that Whole is the best style for most users, bu
   
 ## Features
 
+### Sensitivity Multiplier
+As described above, the "sensitivity multiplier" parameter is a multiplier used on the post-calculation output vector. The "Y/X Ratio" parameter is then only applied to the Y component of the output, so that it defines the ratio of vertical to horizontal output sensitivity without acceleration.
+
 ### Gain Switch
 The acceleration curve styles below (see "Acceleration Styles") each describe a certain shape mathematically. The gain switch determines whether that shape is applied in the sensitivity graph or the gain graph. For styles Linear, Classic, and Power, this setting does not change the possible shapes of the velocity curve - that is, for any particular settings with the gain switch set to Sensitivity, there is a different set of settings that will replicate the exact same velocity curve (output for a given hand motion) with the switch set to Gain. For styles Natural, Jump, and Motivity, this is not true, and the gain switch allows new velocity curves for each style. 
 
 ### Offsets
 An offset, sometimes called a threshold, is a speed in counts before acceleration "kicks in". The legacy way of applying an offset is having a multiplier of 1 below and at the offset, and applying the sensitivity of (speed-offset) above. This legacy "sensitivity offset" is still available but causes a large discontuinity in gain at the point of offset, leading to non-smooth feeling at offset cross. The new default "gain offset" does a little extra math to simply shift the gain graph by the offset amount without any discontinuity. This feels smoother and has almost no effect on sensitivity. The theory behind "gain offsets" is developed in [this document](https://docs.google.com/document/d/1P6LygpeEazyHfjVmaEygCsyBjwwW2A-eMBl81ZfxXZk).
+
+Offsets are only applicable to the Classic, Linear, and Natural modes, where they are defined in terms of an input speed. Power mode has a special "output offset", where the curve "starts from" some ratio of the sens multiplier, described in its section.
 
 ### Caps
 A cap is a point after which acceleration is not applied. The legacy way of applying an offset is simply applying the minimum of the cap sensitivity and the calculated sensitivity for any acceleration calculation. Thus, for the legacy "sensitivity cap" the value given is a sensitivity. This cap style is still available but causes a large discontinuity at the point of offset, leading to a non-smooth feeling at cap cross. The new default "gain cap" effectively caps the gain, but for internal calculation reasons, does so for a given speed rather than a given gain value. This feels much smoother but might have a large effect on sensitivity as gain generally raises faster than sensitivity. We recommend that users use a gain cap and simply adjust it to hit at the gain equivalent to the sensitivity they'd like to cap at. The theory behind "gain caps" is developed in [this document](https://docs.google.com/document/d/1FCpkqRxUaCP7J258SupbxNxvdPfljb16AKMs56yDucA).
@@ -125,7 +130,7 @@ This is the style found in CS:GO and Source Engine games (m_customaccel 3). The 
 In the aforementioned games the default m_customaccel_exponent value of 1.05 would be a value of 0.05 in Raw Accel, leading to a concave slowly rising curve. CS:GO and Source Engine games apply acceleration in an fps-dependent manner, so Raw Accel can only simulate acceleration from these games at a given fps. To do so, set scale to 1000/(in-game fps) and the output offset to 1.
 ![PowerExample](images/power_example.png)
 
-### Natural & NaturalGain
+### Natural
 Natural features a concave curve which starts at 1 and approaches some maximum sensitivity. The sensitivity version of this curve can be found in the game Diabotical. This style is unique and useful but causes an ugly dip in the gain graph. The gain version of this curve recreates the Natural style shape in the gain graph without any dips and therefore we recommend this version. Natural is an excellent choice for new users due to only needing a two intuitive parameters which achieve what many users are looking for.
 ![NaturalGainExample](images/natural_gain_example.png)
 
