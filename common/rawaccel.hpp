@@ -40,6 +40,7 @@ namespace rawaccel {
         bool apply_directional_weight = 0;
         bool apply_dir_mul_x = 0;
         bool apply_dir_mul_y = 0;
+        bool apply_as_force = 0;
 
         modifier_flags(const profile& args) 
         {
@@ -50,6 +51,7 @@ namespace rawaccel {
             compute_ref_angle = apply_snap || apply_directional_weight;
             apply_dir_mul_x = args.lr_sens_ratio != 1;
             apply_dir_mul_y = args.ud_sens_ratio != 1;
+            apply_as_force = args.force;
 
             if (!args.whole) {
                 dist_mode = distance_mode::separate;
@@ -115,6 +117,8 @@ namespace rawaccel {
             auto& flags = settings.data.flags;
 
             double reference_angle = 0;
+            double new_x = in.x;
+            double new_y = in.y;
             double ips_factor = dpi_factor / time;
 
             if (flags.apply_rotate) in = rotate(in, data.rot_direction);
@@ -148,51 +152,124 @@ namespace rawaccel {
                 in.y *= ratio;
             }
 
-            vec2d abs_weighted_vel = {
-                fabs(in.x * ips_factor * args.domain_weights.x),
-                fabs(in.y * ips_factor * args.domain_weights.y)
-            };
+            if (flags.apply_as_force)
+            {
+                if (flags.dist_mode == distance_mode::separate) {
 
-            if (flags.dist_mode == distance_mode::separate) {
-                in.x *= (*cb_x)(data.accel_x, args.accel_x, abs_weighted_vel.x, args.range_weights.x);
-                in.y *= (*cb_y)(data.accel_y, args.accel_y, abs_weighted_vel.y, args.range_weights.y);
-            }
-            else {
-                double speed;
+					vec2d weighted_force = {
+						(in.x - last_x) * ips_factor * args.domain_weights.x,
+						(in.y - last_y) * ips_factor * args.domain_weights.y
+					};
 
-                if (flags.dist_mode == distance_mode::max) {
-                    speed = maxsd(abs_weighted_vel.x, abs_weighted_vel.y);
-                }
-                else if (flags.dist_mode == distance_mode::Lp) {
-                    speed = lp_distance(abs_weighted_vel, args.lp_norm);
+					vec2d abs_weighted_force = {
+						fabs(weighted_force.x),
+						fabs(weighted_force.y)
+					};
+
+                    double x_scale = (*cb_x)(data.accel_x, args.accel_x, abs_weighted_force.x, args.range_weights.x);
+                    double y_scale = (*cb_y)(data.accel_y, args.accel_y, abs_weighted_force.y, args.range_weights.y);
+
+                    if (weighted_force.x < 0) x_scale = 1 / x_scale;
+                    if (weighted_force.y < 0) y_scale = 1 / y_scale;
+                    
+                    in.x *= x_scale;
+                    in.y *= y_scale;
                 }
                 else {
-                    speed = magnitude(abs_weighted_vel);
+                    double last_speed;
+                    double new_speed;
+
+					vec2d abs_weighted_vel = {
+						fabs(in.x * ips_factor * args.domain_weights.x),
+						fabs(in.y * ips_factor * args.domain_weights.y)
+					};
+
+					vec2d last_abs_weighted_vel = {
+						fabs(last_x * last_ips_factor * args.domain_weights.x),
+						fabs(last_y * last_ips_factor * args.domain_weights.y)
+					};
+
+                    if (flags.dist_mode == distance_mode::max) {
+                        new_speed = maxsd(abs_weighted_vel.x, abs_weighted_vel.y);
+                        last_speed = maxsd(last_abs_weighted_vel.x, last_abs_weighted_vel.y);
+                    }
+                    else if (flags.dist_mode == distance_mode::Lp) {
+                        new_speed = lp_distance(abs_weighted_vel, args.lp_norm);
+                        last_speed = lp_distance(last_abs_weighted_vel, args.lp_norm);
+                    }
+                    else {
+                        new_speed = magnitude(abs_weighted_vel);
+                        last_speed = magnitude(last_abs_weighted_vel);
+                    }
+
+                    double force = new_speed - last_speed;
+
+                    double weight = args.range_weights.x;
+
+                    if (flags.apply_directional_weight) {
+                        double diff = args.range_weights.y - args.range_weights.x;
+                        weight += 2 / M_PI * reference_angle * diff;
+                    }
+
+                    double scale = (*cb_x)(data.accel_x, args.accel_x, fabs(force), weight);
+
+                    if (force < 0) scale = 1 / scale;
+
+                    in.x *= scale;
+                    in.y *= scale;
                 }
+            }
+            else {
+                vec2d abs_weighted_vel = {
+                    fabs(in.x * ips_factor * args.domain_weights.x),
+                    fabs(in.y * ips_factor * args.domain_weights.y)
+                };
 
-                double weight = args.range_weights.x;
-
-                if (flags.apply_directional_weight) {
-                    double diff = args.range_weights.y - args.range_weights.x;
-                    weight += 2 / M_PI * reference_angle * diff;
+                if (flags.dist_mode == distance_mode::separate) {
+                    in.x *= (*cb_x)(data.accel_x, args.accel_x, abs_weighted_vel.x, args.range_weights.x);
+                    in.y *= (*cb_y)(data.accel_y, args.accel_y, abs_weighted_vel.y, args.range_weights.y);
                 }
+                else {
+                    double speed;
 
-                double scale = (*cb_x)(data.accel_x, args.accel_x, speed, weight);
-                in.x *= scale;
-                in.y *= scale;
+                    if (flags.dist_mode == distance_mode::max) {
+                        speed = maxsd(abs_weighted_vel.x, abs_weighted_vel.y);
+                    }
+                    else if (flags.dist_mode == distance_mode::Lp) {
+                        speed = lp_distance(abs_weighted_vel, args.lp_norm);
+                    }
+                    else {
+                        speed = magnitude(abs_weighted_vel);
+                    }
+
+                    double weight = args.range_weights.x;
+
+                    if (flags.apply_directional_weight) {
+                        double diff = args.range_weights.y - args.range_weights.x;
+                        weight += 2 / M_PI * reference_angle * diff;
+                    }
+
+                    double scale = (*cb_x)(data.accel_x, args.accel_x, speed, weight);
+                    in.x *= scale;
+                    in.y *= scale;
+                }
             }
 
-            double dpi_adjusted_sens = args.sensitivity * dpi_factor;
-            in.x *= dpi_adjusted_sens;
-            in.y *= dpi_adjusted_sens * args.yx_sens_ratio;
+			double dpi_adjusted_sens = args.sensitivity * dpi_factor;
+			in.x *= dpi_adjusted_sens;
+			in.y *= dpi_adjusted_sens * args.yx_sens_ratio;
 
-            if (flags.apply_dir_mul_x && in.x < 0) {
-                in.x *= args.lr_sens_ratio;
-            }
+			if (flags.apply_dir_mul_x && in.x < 0) {
+				in.x *= args.lr_sens_ratio;
+			}
 
-            if (flags.apply_dir_mul_y && in.y < 0) {
-                in.y *= args.ud_sens_ratio;
-            }
+			if (flags.apply_dir_mul_y && in.y < 0) {
+				in.y *= args.ud_sens_ratio;
+			}
+
+            last_x = new_x;
+            last_y = new_y;
+            last_ips_factor = ips_factor;
         }
 
         modifier(modifier_settings& settings)
@@ -225,6 +302,9 @@ namespace rawaccel {
 
         callback_t cb_x = &callback_template<accel_noaccel>;
         callback_t cb_y = &callback_template<accel_noaccel>;
+        mutable double last_x = 0;
+        mutable double last_y = 0;
+        mutable double last_ips_factor;
     };
 
 } // rawaccel

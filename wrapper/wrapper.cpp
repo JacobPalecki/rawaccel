@@ -109,6 +109,10 @@ public ref struct Profile
     [MarshalAs(UnmanagedType::U1)]
     bool combineMagnitudes;
 
+    [JsonProperty("Force")]
+    [MarshalAs(UnmanagedType::U1)]
+    bool force;
+
     double lpNorm;
 
     [JsonProperty("Stretches domain for horizontal vs vertical inputs")]
