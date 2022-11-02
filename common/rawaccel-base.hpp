@@ -68,6 +68,7 @@ namespace rawaccel {
 
         bool whole = true;
         double lp_norm = 2;
+        double rate = 0;
         vec2d domain_weights = { 1, 1 };
         vec2d range_weights = { 1, 1 };
 

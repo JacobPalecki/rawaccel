@@ -40,6 +40,7 @@ namespace rawaccel {
         bool apply_directional_weight = 0;
         bool apply_dir_mul_x = 0;
         bool apply_dir_mul_y = 0;
+        bool limit_rate;
 
         modifier_flags(const profile& args) 
         {
@@ -51,6 +52,7 @@ namespace rawaccel {
             compute_ref_angle = apply_snap || apply_directional_weight;
             apply_dir_mul_x = args.lr_sens_ratio != 1;
             apply_dir_mul_y = args.ud_sens_ratio != 1;
+            limit_rate = args.rate > 0;
 
             if (!args.whole) {
                 dist_mode = distance_mode::separate;
@@ -109,7 +111,7 @@ namespace rawaccel {
 #ifdef _KERNEL_MODE
         __forceinline
 #endif
-        void modify(vec2d& in, const modifier_settings& settings, double dpi_factor, milliseconds time) const
+        void modify(vec2d& in, const modifier_settings& settings, double dpi_factor, milliseconds time)
         {
             auto& args = settings.prof;
             auto& data = settings.data;
@@ -179,6 +181,14 @@ namespace rawaccel {
                 }
 
                 double scale = (*cb_x)(data.accel_x, args.accel_x, speed, weight);
+
+                if (flags.limit_rate)
+                {
+					double allowed_speed_increase = args.rate * time / 1000.0;
+					scale = clampsd(scale, previous_scale - allowed_speed_increase, previous_scale + allowed_speed_increase);
+					previous_scale = scale;
+                }
+
                 in.x *= scale;
                 in.y *= scale;
             }
@@ -214,6 +224,11 @@ namespace rawaccel {
             }, args);
         }
 
+        void set_previous_scale(double scale)
+        {
+            previous_scale = scale;
+        }
+
         template <typename AccelFunc>
         static double callback_template(const accel_union& u, 
                                         const accel_args& args, 
@@ -226,6 +241,7 @@ namespace rawaccel {
 
         callback_t cb_x = &callback_template<accel_noaccel>;
         callback_t cb_y = &callback_template<accel_noaccel>;
+        double previous_scale = 1;
     };
 
 } // rawaccel
