@@ -111,7 +111,8 @@ public ref struct Profile
 
     double lpNorm;
 
-    double rate;
+    double rateIncrease;
+    double rateDecrease;
 
     [JsonProperty("Stretches domain for horizontal vs vertical inputs")]
     Vec2<double> domainXY;

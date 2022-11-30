@@ -40,7 +40,7 @@ namespace rawaccel {
         bool apply_directional_weight = 0;
         bool apply_dir_mul_x = 0;
         bool apply_dir_mul_y = 0;
-        bool limit_rate;
+        bool limit_rate = 0;
 
         modifier_flags(const profile& args) 
         {
@@ -52,7 +52,7 @@ namespace rawaccel {
             compute_ref_angle = apply_snap || apply_directional_weight;
             apply_dir_mul_x = args.lr_sens_ratio != 1;
             apply_dir_mul_y = args.ud_sens_ratio != 1;
-            limit_rate = args.rate > 0;
+            limit_rate = args.rateDecrease > 0 || args.rateIncrease >0;
 
             if (!args.whole) {
                 dist_mode = distance_mode::separate;
@@ -184,8 +184,10 @@ namespace rawaccel {
 
                 if (flags.limit_rate)
                 {
-					double allowed_speed_increase = args.rate * time / 1000.0;
-					scale = clampsd(scale, previous_scale - allowed_speed_increase, previous_scale + allowed_speed_increase);
+					double allowed_speed_increase = args.rateIncrease * time / 1000.0;
+                    double allowed_scale_upper = args.rateIncrease > 0 ? previous_scale + args.rateIncrease * time / 1000.0 : DBL_MAX;
+                    double allowed_scale_lower = args.rateDecrease > 0 ? previous_scale - args.rateDecrease * time / 1000.0 : DBL_MIN;
+					scale = clampsd(scale, allowed_scale_lower, allowed_scale_upper);
 					previous_scale = scale;
                 }
 
@@ -222,11 +224,6 @@ namespace rawaccel {
             u.visit([&](auto& impl) {
                 cb = &callback_template<remove_ref_t<decltype(impl)>>;
             }, args);
-        }
-
-        void set_previous_scale(double scale)
-        {
-            previous_scale = scale;
         }
 
         template <typename AccelFunc>
