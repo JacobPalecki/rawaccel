@@ -1,6 +1,4 @@
-﻿using LiveChartsCore.Defaults;
-
-namespace userinterface.Models.Mouse
+﻿namespace userinterface.Models.Mouse
 {
     public interface IMouseMoveDisplayer
     {
