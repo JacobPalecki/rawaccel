@@ -50,8 +50,7 @@ namespace userinterface.ViewModels
 
         public void SetLastMouseMove(float x, float y)
         {
-            LastMouseMoveSeries.Points.RemoveAt(0);
-            LastMouseMoveSeries.Points.Add(new DataPoint(x, y));
+            LastMouseMoveSeries.Points[0] = new DataPoint(x, y);
             ScatterModel.InvalidatePlot(false);
         }
     }
