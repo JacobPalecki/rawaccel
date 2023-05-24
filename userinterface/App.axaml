@@ -9,5 +9,6 @@
     <Application.Styles>
         <FluentTheme Mode="Dark"/>
         <StyleInclude Source="avares://userinterface/Icons.axaml" />
+        <StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>
     </Application.Styles>
 </Application>

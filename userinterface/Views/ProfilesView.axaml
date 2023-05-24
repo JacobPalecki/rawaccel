@@ -3,13 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
-             xmlns:lvcore="using:LiveChartsCore"
+             xmlns:oxy="clr-namespace:OxyPlot.Avalonia;assembly=OxyPlot.Avalonia" 
              x:Class="userinterface.Views.ProfilesView">
 
   <TabControl>
     <TabItem Header="{Binding ProfileOneTitle}">
-      <Image Source="/Assets/Filler.png"/>
+      <oxy:PlotView Model="{Binding ScatterModel}">
+      </oxy:PlotView>
     </TabItem>
     <TabItem Header="Profile2">
       This will be another profile.
