@@ -697,6 +697,11 @@ namespace userinterface.Models.Mouse
             RegisterRawInputDevices(devices, 1, Marshal.SizeOf(typeof(RAWINPUTDEVICE)));
             Stopwatch = new Stopwatch();
             Stopwatch.Start();
+
+            LastMouseMoveDisplayTimer = new Timer();
+            LastMouseMoveDisplayTimer.Enabled = true;
+            LastMouseMoveDisplayTimer.Interval = 10;
+            LastMouseMoveDisplayTimer.Tick += OnLastMouseMoveTimerTick;
         }
 
         #endregion Constructors
@@ -711,6 +716,8 @@ namespace userinterface.Models.Mouse
         {
             get => 1;
         }
+
+        private Timer LastMouseMoveDisplayTimer { get; }
 
         #endregion Properties
 
@@ -737,6 +744,11 @@ namespace userinterface.Models.Mouse
                     rawInput.Data.Mouse.LastX,
                     rawInput.Data.Mouse.LastY);
             }
+        }
+
+        private void OnLastMouseMoveTimerTick(object sender, EventArgs e)
+        {
+            MouseMoveDisplayer.ShowLastMouseMove();
         }
 
         #endregion Methods

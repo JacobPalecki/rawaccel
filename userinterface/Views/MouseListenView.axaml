@@ -8,7 +8,7 @@
     <TextBlock Text="Lase Mouse Move" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
     <TextBlock Text="X" Grid.Row="1" Grid.Column="0"/>
     <TextBlock Text="Y" Grid.Row="1" Grid.Column="1"/>
-    <TextBlock Text="{Binding LastX}" Grid.Row="2" Grid.Column="0"/>
-    <TextBlock Text="{Binding LastY}" Grid.Row="2" Grid.Column="1"/>
+    <TextBlock Text="{Binding DisplayedLastX}" Grid.Row="2" Grid.Column="0"/>
+    <TextBlock Text="{Binding DisplayedLastY}" Grid.Row="2" Grid.Column="1"/>
   </Grid>
 </UserControl>

@@ -3,5 +3,7 @@
     public interface IMouseMoveDisplayer
     {
         public void SetLastMouseMove(float x, float y);
+
+        public void ShowLastMouseMove();
     }
 }
