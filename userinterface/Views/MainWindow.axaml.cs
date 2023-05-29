@@ -1,3 +1,5 @@
+using Avalonia.Media;
+using userinterface.ViewModels;
 using Window = Avalonia.Controls.Window;
 
 namespace userinterface.Views

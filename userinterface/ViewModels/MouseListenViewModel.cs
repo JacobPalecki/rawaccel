@@ -6,13 +6,41 @@ namespace userinterface.ViewModels
         protected int _displayedLastX = 0;
         protected int _displayedLastY = 0;
 
+        protected int _lastX = 0;
+        protected int _lastY = 0;
+
         public MouseListenViewModel()
         {
+            DisplayUpdated = false;
         }
 
-        public int LastX { get; set; }
+        public int LastX
+        {
+            get => _lastX;
+            set
+            {
+                if (value != _lastX)
+                {
+                    _lastX = value;
+                    DisplayUpdated = false;
+                }
+            }
+        }
 
-        public int LastY { get; set; }
+        public int LastY
+        {
+            get => _lastY;
+            set
+            {
+                if (value != _lastY)
+                {
+                    _lastY = value;
+                    DisplayUpdated = false;
+                }
+            }
+        }
+
+        public bool DisplayUpdated { get; private set; }
 
         public int DisplayedLastX
         {
@@ -31,6 +59,7 @@ namespace userinterface.ViewModels
             System.Diagnostics.Debug.WriteLine($"Setting DisplayedLastX and Y to {LastX} and {LastY}");
             DisplayedLastX = LastX;
             DisplayedLastY = LastY;
+            DisplayUpdated = true;
         }
     }
 }

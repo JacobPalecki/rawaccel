@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using System;
+using userinterface.ViewModels;
 
 namespace userinterface.Views
 {

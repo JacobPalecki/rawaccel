@@ -273,6 +273,7 @@ namespace grapher
 
         private void OnChartTimerTick(object sender, EventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine($"Updating last mouse move at time {DateTime.Now.Millisecond}");
             AccelCharts.DrawLastMovement();
             MouseWatcher.UpdateLastMove();
         }

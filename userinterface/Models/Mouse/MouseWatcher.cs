@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -698,9 +699,9 @@ namespace userinterface.Models.Mouse
             Stopwatch = new Stopwatch();
             Stopwatch.Start();
 
-            LastMouseMoveDisplayTimer = new Timer();
-            LastMouseMoveDisplayTimer.Enabled = true;
-            LastMouseMoveDisplayTimer.Interval = 10;
+            LastMouseMoveDisplayTimer = new DispatcherTimer();
+            LastMouseMoveDisplayTimer.IsEnabled = true;
+            LastMouseMoveDisplayTimer.Interval = TimeSpan.FromMilliseconds(10);
             LastMouseMoveDisplayTimer.Tick += OnLastMouseMoveTimerTick;
         }
 
@@ -717,7 +718,7 @@ namespace userinterface.Models.Mouse
             get => 1;
         }
 
-        private Timer LastMouseMoveDisplayTimer { get; }
+        private DispatcherTimer LastMouseMoveDisplayTimer { get; }
 
         #endregion Properties
 

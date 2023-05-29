@@ -28,10 +28,14 @@ namespace userinterface.ViewModels
 
         public void ShowLastMouseMove()
         {
-            MouseListen.UpdateDisplay();
+            System.Diagnostics.Debug.WriteLine($"Updating last mouse move at time {DateTime.Now.Millisecond}");
+            if (!MouseListen.DisplayUpdated)
+            {
+                MouseListen.UpdateDisplay();
 
-            var size = MathF.Sqrt(MouseListen.LastX * MouseListen.LastX + MouseListen.LastY * MouseListen.LastY);
-            Profiles.SetLastMouseMove(size, 1);
+                var size = MathF.Sqrt(MouseListen.LastX * MouseListen.LastX + MouseListen.LastY * MouseListen.LastY);
+                Profiles.SetLastMouseMove(size, 1);
+            }
         }
     }
 }
