@@ -26,7 +26,7 @@ namespace userinterface.ViewModels
             MouseListen.LastX = (int)x;
 
             var size = MathF.Sqrt(x * x + y * y);
-            Profiles.SetLastMouseMove(size, size);
+            Profiles.SetLastMouseMove(size, 1);
         }
     }
 }

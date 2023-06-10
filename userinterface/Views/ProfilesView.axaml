@@ -8,8 +8,7 @@
 
   <TabControl>
     <TabItem Header="{Binding ProfileOneTitle}">
-      <!--<ScottPlot:AvaPlot Name="AvaPlot1"/> -->
-      <Image Source="/Assets/Filler.png"/>
+      <ScottPlot:AvaPlot Name="Sensitivity"/>
     </TabItem>
     <TabItem Header="Profile2">
       This will be another profile.
