@@ -18,6 +18,8 @@ namespace userinterface.ViewModels
 
         public MouseWindow MouseWindow { get; }
 
+        public bool IsVisible { get; set; } = false;
+
         public string Test => "Is this working?";
 
         public void SetLastMouseMove(float x, float y)
@@ -28,9 +30,9 @@ namespace userinterface.ViewModels
 
         public void ShowLastMouseMove()
         {
-            System.Diagnostics.Debug.WriteLine($"Updating last mouse move at time {DateTime.Now.Millisecond}");
-            if (!MouseListen.DisplayUpdated)
+            if (!MouseListen.DisplayUpdated && IsVisible)
             {
+                System.Diagnostics.Debug.WriteLine($"Updating last mouse move at time {DateTime.Now.Millisecond}");
                 MouseListen.UpdateDisplay();
 
                 var size = MathF.Sqrt(MouseListen.LastX * MouseListen.LastX + MouseListen.LastY * MouseListen.LastY);
