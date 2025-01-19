@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DATA = userspace_backend.Data;
 using userspace_backend.Model;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace userspace_backend
 {
@@ -18,8 +19,12 @@ namespace userspace_backend
 
         public BackEnd(IBackEndLoader backEndLoader)
         {
+            // TODO: fully construct BackEnd via DI
+            ServiceCollection services = new ServiceCollection();
+            IServiceProvider serviceProvider = BackEndComposer.Compose(services);
+
             BackEndLoader = backEndLoader;
-            Devices = new DevicesModel();
+            Devices = new DevicesModel(serviceProvider.GetRequiredService<ISystemDevicesProvider>());
             Profiles = new ProfilesModel([]);
         }
 

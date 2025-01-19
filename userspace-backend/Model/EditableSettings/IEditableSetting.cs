@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 namespace userspace_backend.Model.EditableSettings
 {
@@ -6,12 +7,15 @@ namespace userspace_backend.Model.EditableSettings
     {
         string DisplayName { get; }
 
-        string EditedValueForDiplay { get; }
-
         string InterfaceValue { get; set; }
 
         bool HasChanged();
 
         bool TryUpdateFromInterface();
+    }
+
+    public interface IEditableSettingSpecific<T> : IEditableSetting where T : IComparable
+    {
+        public T CurrentValidatedValue { get; }
     }
 }

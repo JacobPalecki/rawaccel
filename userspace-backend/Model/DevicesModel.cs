@@ -10,14 +10,13 @@ namespace userspace_backend.Model
 {
     public class DevicesModel
     {
-        public DevicesModel()
+        public DevicesModel(ISystemDevicesProvider systemDevicesProvider)
         {
             Devices = new ObservableCollection<DeviceModel>();
             DeviceGroups = new DeviceGroups([]);
             DeviceModelNameValidator = new DeviceModelNameValidator(this);
             DeviceModelHWIDValidator = new DeviceModelHWIDValidator(this);
-            SystemDevices = new ObservableCollection<MultiHandleDevice>();
-            RefreshSystemDevices();
+            SystemDevices = systemDevicesProvider;
         }
 
         public DeviceGroups DeviceGroups { get; set; }
@@ -26,7 +25,8 @@ namespace userspace_backend.Model
 
         public ObservableCollection<DeviceModel> Devices { get; set; }
 
-        public ObservableCollection<MultiHandleDevice> SystemDevices { get; protected set; }
+
+        public ISystemDevicesProvider SystemDevices { get; protected set; }
 
         protected DeviceModelNameValidator DeviceModelNameValidator { get; }
 
@@ -104,16 +104,6 @@ namespace userspace_backend.Model
         {
             return Devices.Remove(device);
         }
-
-        protected void RefreshSystemDevices()
-        {
-            SystemDevices.Clear();
-            var systemDevicesList = MultiHandleDevice.GetList();
-            foreach (var systemDevice in systemDevicesList)
-            {
-                SystemDevices.Add(systemDevice);
-            }
-        }
     }
 
     public class DeviceModelNameValidator : IModelValueValidator<string>
@@ -144,83 +134,5 @@ namespace userspace_backend.Model
         {
             return !Devices.DoesDeviceHardwareIDAlreadyExist(modelValue);
         }
-    }
-
-    public interface ISystemDevicesProvider
-    {
-        ReadOnlyObservableCollection<ISystemDevice> SystemDevices { get; }
-
-        void RefreshSystemDevices();
-    }
-
-    public class SystemDevicesProvider : ISystemDevicesProvider
-    {
-        public SystemDevicesProvider(ISystemDevicesRetriever devicesRetriever)
-        {
-            DevicesRetriever = devicesRetriever;
-            SystemDevicesInternal = new ObservableCollection<ISystemDevice>();
-            SystemDevices = new ReadOnlyObservableCollection<ISystemDevice>(SystemDevicesInternal);
-            RefreshSystemDevices();
-        }
-
-        public ReadOnlyObservableCollection<ISystemDevice> SystemDevices { get; }
-
-        protected ObservableCollection<ISystemDevice> SystemDevicesInternal { get; }
-
-        protected ISystemDevicesRetriever DevicesRetriever { get; }
-
-        public void RefreshSystemDevices()
-        {
-            // TODO: Replace with "addrange" equivalent from ObservableCollection child class
-            SystemDevicesInternal.Clear();
-            IList<ISystemDevice> retrievedDevices = DevicesRetriever.GetSystemDevices();
-
-            foreach (ISystemDevice retrievedDevice in retrievedDevices)
-            {
-                SystemDevicesInternal.Add(retrievedDevice);
-            }
-        }
-    }
-
-    public interface ISystemDevicesRetriever
-    {
-        IList<ISystemDevice> GetSystemDevices();
-    }
-
-    public sealed class SystemDevicesRetriever : ISystemDevicesRetriever
-    {
-        public IList<ISystemDevice> GetSystemDevices()
-        {
-            IList<MultiHandleDevice> rawDevices = MultiHandleDevice.GetList();
-            return rawDevices.Select(d => new SystemDevice(d) as ISystemDevice).ToList();
-        }
-    }
-
-    /// <summary>
-    /// Interface to represent devices as they come from windows.
-    /// The actual classes from windows are non-trivial to construct and test.
-    /// </summary>
-    public interface ISystemDevice
-    {
-        public string Name { get; }
-
-        public string HWID { get; }
-    }
-
-    /// <summary>
-    /// Data class to wrap <see cref="MultiHandleDevice"/>
-    /// </summary>
-    public class SystemDevice : ISystemDevice
-    {
-        public SystemDevice(MultiHandleDevice multiHandleDevice)
-        {
-            RawDevice = multiHandleDevice;
-        }
-
-        public string Name { get => RawDevice.name; }
-
-        public string HWID { get => RawDevice.id; }
-
-        private MultiHandleDevice RawDevice { get; }
     }
 }

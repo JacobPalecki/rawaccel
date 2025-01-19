@@ -28,7 +28,7 @@ namespace userspace_backend_tests.ModelTests
         }
 
         [TestMethod]
-        public void SystemDevicesProvider_RetrievesDevices()
+        public void SystemDevicesProvider_ProvidesDevices()
         {
             List<ISystemDevice> testSystemDevices = new List<ISystemDevice>()
             {
@@ -55,6 +55,24 @@ namespace userspace_backend_tests.ModelTests
             
             Assert.IsNotNull(testObject);
             Assert.AreEqual(testSystemDevices.Count, testObject.SystemDevices.Count);
+            CollectionAssert.AreEquivalent(testSystemDevices, testObject.SystemDevices);
+        }
+
+        // This test may need to be excluded if built from deviceless server.
+        [TestMethod]
+        public void SystemDevicesRetriever_RetrievesDevices()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<SystemDevicesRetriever>();
+            var serviceProvider = services.BuildServiceProvider();
+
+            SystemDevicesRetriever testObject = serviceProvider.GetRequiredService<SystemDevicesRetriever>();
+            Assert.IsNotNull(testObject);
+
+            // These devices will be different per user, but should not be null as long as the user has something giving mouse input.
+            IList<ISystemDevice> retrievedDevices = testObject.GetSystemDevices();
+            Assert.IsNotNull(retrievedDevices);
+            Assert.IsTrue(retrievedDevices.Count > 0);
         }
     }
 }

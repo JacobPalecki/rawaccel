@@ -3,19 +3,13 @@ using System;
 
 namespace userspace_backend.Model.EditableSettings
 {
-    public partial class EditableSetting<T> : ObservableObject, IEditableSetting where T : IComparable
+    public partial class EditableSetting<T> : ObservableObject, IEditableSettingSpecific<T> where T : IComparable
     {
         /// <summary>
         /// This value can be bound in UI for direct editing
         /// </summary>
         [ObservableProperty]
         public string interfaceValue;
-
-        /// <summary>
-        /// This value can be bound in UI for readonly display of validated input
-        /// </summary>
-        [ObservableProperty]
-        public string currentValidatedValueString;
 
         /// <summary>
         /// This value can be bound in UI for logic based on validated input
@@ -47,8 +41,6 @@ namespace userspace_backend.Model.EditableSettings
         public virtual T ModelValue { get; protected set; }
 
         public T LastWrittenValue { get; protected set; }
-
-        public string EditedValueForDiplay { get => ModelValue?.ToString() ?? string.Empty; }
 
         /// <summary>
         /// Interface can set this for cases when new value arrives all at once (such as menu selection)
@@ -106,7 +98,6 @@ namespace userspace_backend.Model.EditableSettings
         {
             ModelValue = value;
             CurrentValidatedValue = ModelValue;
-            CurrentValidatedValueString = ModelValue?.ToString();
         }
 
         partial void OnInterfaceValueChanged(string value)
