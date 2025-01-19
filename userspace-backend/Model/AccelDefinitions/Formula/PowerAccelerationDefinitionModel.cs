@@ -15,13 +15,13 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
         {
         }
 
-        public EditableSetting<double> Scale { get; set; }
+        public IEditableSettingSpecific<double> Scale { get; set; }
 
-        public EditableSetting<double> Exponent { get; set; }
+        public IEditableSettingSpecific<double> Exponent { get; set; }
 
-        public EditableSetting<double> OutputOffset { get; set; }
+        public IEditableSettingSpecific<double> OutputOffset { get; set; }
 
-        public EditableSetting<double> Cap { get; set; }
+        public IEditableSettingSpecific<double> Cap { get; set; }
 
         public override AccelArgs MapToDriver()
         {

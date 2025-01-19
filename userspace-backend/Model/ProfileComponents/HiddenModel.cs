@@ -14,17 +14,17 @@ namespace userspace_backend.Model.ProfileComponents
         {
         }
 
-        public EditableSetting<double> RotationDegrees { get; set; }
+        public IEditableSettingSpecific<double> RotationDegrees { get; set; }
 
-        public EditableSetting<double> AngleSnappingDegrees { get; set; }
+        public IEditableSettingSpecific<double> AngleSnappingDegrees { get; set; }
 
-        public EditableSetting<double> LeftRightRatio { get; set; }
+        public IEditableSettingSpecific<double> LeftRightRatio { get; set; }
 
-        public EditableSetting<double> UpDownRatio { get; set; }
+        public IEditableSettingSpecific<double> UpDownRatio { get; set; }
 
-        public EditableSetting<double> SpeedCap { get; set; }
+        public IEditableSettingSpecific<double> SpeedCap { get; set; }
 
-        public EditableSetting<double> OutputSmoothingHalfLife { get; set; }
+        public IEditableSettingSpecific<double> OutputSmoothingHalfLife { get; set; }
 
         public override Hidden MapToData()
         {

@@ -14,17 +14,17 @@ namespace userspace_backend.Model.ProfileComponents
         {
         }
 
-        public EditableSetting<double> DomainX { get; set; }
+        public IEditableSettingSpecific<double> DomainX { get; set; }
 
-        public EditableSetting<double> DomainY { get; set; }
+        public IEditableSettingSpecific<double> DomainY { get; set; }
 
-        public EditableSetting<double> RangeX { get; set; }
+        public IEditableSettingSpecific<double> RangeX { get; set; }
 
-        public EditableSetting<double> RangeY { get; set; }
+        public IEditableSettingSpecific<double> RangeY { get; set; }
 
-        public EditableSetting<double> LPNorm { get; set; }
+        public IEditableSettingSpecific<double> LPNorm { get; set; }
 
-        public EditableSetting<bool> CombineXYComponents { get; set; }
+        public IEditableSettingSpecific<bool> CombineXYComponents { get; set; }
 
         public override Anisotropy MapToData()
         {

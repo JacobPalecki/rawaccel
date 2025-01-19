@@ -14,9 +14,9 @@ namespace userspace_backend.Model.ProfileComponents
         {
         }
 
-        public EditableSetting<double> InputSmoothingHalfLife { get; set; }
+        public IEditableSettingSpecific<double> InputSmoothingHalfLife { get; set; }
 
-        public EditableSetting<double> ScaleSmoothingHalfLife { get; set; }
+        public IEditableSettingSpecific<double> ScaleSmoothingHalfLife { get; set; }
 
         public override Coalescion MapToData()
         {

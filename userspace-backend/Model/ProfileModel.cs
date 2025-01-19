@@ -23,11 +23,11 @@ namespace userspace_backend.Model
 
         public string CurrentNameForDisplay => Name.ModelValue;
 
-        public EditableSetting<string> Name { get; set; }
+        public IEditableSettingSpecific<string> Name { get; set; }
 
-        public EditableSetting<int> OutputDPI { get; set; }
+        public IEditableSettingSpecific<int> OutputDPI { get; set; }
 
-        public EditableSetting<double> YXRatio { get; set; }
+        public IEditableSettingSpecific<double> YXRatio { get; set; }
 
         public AccelerationModel Acceleration { get; set; }
 

@@ -20,7 +20,7 @@ namespace userspace_backend.Model.AccelDefinitions
         }
 
 
-        public EditableSetting<FormulaAccel.AccelerationFormulaType> FormulaType { get; set; }
+        public IEditableSettingSpecific<FormulaAccel.AccelerationFormulaType> FormulaType { get; set; }
 
         public int FormulaTypeIndex { get => (int)FormulaType.ModelValue; }
 

@@ -35,7 +35,7 @@ namespace userspace_backend.Model
 
         public bool SetActive { get; set; }
 
-        public EditableSetting<string> Name { get; set; }
+        public IEditableSettingSpecific<string> Name { get; set; }
 
         public ObservableCollection<MappingGroup> IndividualMappings { get; protected set; }
 

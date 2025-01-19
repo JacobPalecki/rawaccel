@@ -15,11 +15,11 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
         {
         }
 
-        public EditableSetting<double> Smooth { get; set; }
+        public IEditableSettingSpecific<double> Smooth { get; set; }
 
-        public EditableSetting<double> Input { get; set; }
+        public IEditableSettingSpecific<double> Input { get; set; }
 
-        public EditableSetting<double> Output { get; set; }
+        public IEditableSettingSpecific<double> Output { get; set; }
 
         public override AccelArgs MapToDriver()
         {

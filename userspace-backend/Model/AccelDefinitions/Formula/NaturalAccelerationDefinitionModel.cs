@@ -14,11 +14,11 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
         public NaturalAccelerationDefinitionModel(Acceleration dataObject) : base(dataObject)
         {
         }
-        public EditableSetting<double> DecayRate { get; set; }
+        public IEditableSettingSpecific<double> DecayRate { get; set; }
 
-        public EditableSetting<double> InputOffset { get; set; }
+        public IEditableSettingSpecific<double> InputOffset { get; set; }
 
-        public EditableSetting<double> Limit { get; set; }
+        public IEditableSettingSpecific<double> Limit { get; set; }
 
         public override AccelArgs MapToDriver()
         {

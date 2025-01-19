@@ -15,7 +15,7 @@ namespace userspace_backend.Model.AccelDefinitions
             DefinitionType.PropertyChanged += DefinitionTypeChangedEventHandler;
         }
 
-        public EditableSetting<AccelerationDefinitionType> DefinitionType { get; set; }
+        public IEditableSettingSpecific<AccelerationDefinitionType> DefinitionType { get; set; }
 
         protected Dictionary<AccelerationDefinitionType, IAccelDefinitionModel> DefinitionModels { get; set; }
 

@@ -12,13 +12,13 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
         {
         }
 
-        public EditableSetting<double> Gamma { get; set; }
+        public IEditableSettingSpecific<double> Gamma { get; set; }
 
-        public EditableSetting<double> Motivity { get; set; }
+        public IEditableSettingSpecific<double> Motivity { get; set; }
 
-        public EditableSetting<double> SyncSpeed { get; set; }
+        public IEditableSettingSpecific<double> SyncSpeed { get; set; }
 
-        public EditableSetting<double> Smoothness { get; set; }
+        public IEditableSettingSpecific<double> Smoothness { get; set; }
 
         public override AccelArgs MapToDriver()
         {

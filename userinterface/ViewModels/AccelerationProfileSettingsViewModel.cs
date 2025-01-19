@@ -26,7 +26,8 @@ namespace userinterface.ViewModels
             AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(accelerationBE.LookupTableAccel);
             AnisotropySettings = new AnisotropyProfileSettingsViewModel(accelerationBE.Anisotropy);
             CoalescionSettings = new CoalescionProfileSettingsViewModel(accelerationBE.Coalescion);
-            AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;
+            // TODO: editable settings composition
+            //AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;
             AccelerationBE.DefinitionType.PropertyChanged += OnDefinitionTypeChanged;
         }
 

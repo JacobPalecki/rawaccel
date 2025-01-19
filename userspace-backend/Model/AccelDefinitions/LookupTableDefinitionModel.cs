@@ -16,9 +16,9 @@ namespace userspace_backend.Model.AccelDefinitions
         {
         }
 
-        public EditableSetting<LookupTableType> ApplyAs { get; set; }
+        public IEditableSettingSpecific<LookupTableType> ApplyAs { get; set; }
 
-        public EditableSetting<LookupTableData> Data { get; set; }
+        public IEditableSettingSpecific<LookupTableData> Data { get; set; }
 
         public override AccelArgs MapToDriver()
         {
