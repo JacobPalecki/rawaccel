@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DATA = userspace_backend.Data;
-using userspace_backend.IO;
 using userspace_backend.Model;
-using userspace_backend.Data.Profiles;
 
 namespace userspace_backend
 {
+    public interface IBackEnd
+    {
+        void Load();
+
+        void Apply();
+    }
+
     public class BackEnd
     {
 

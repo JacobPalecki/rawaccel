@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using userspace_backend.Model.EditableSettings;
 using DATA = userspace_backend.Data;
@@ -72,6 +73,23 @@ namespace userspace_backend.Model
             ProfileModel profileModel = new ProfileModel(profileToAdd, NameValidator);
             Profiles.Add(profileModel);
             return true;
+        }
+
+        protected bool TryCreateNewDefaultProfile([MaybeNullWhen(false)] out DATA.Profile newDefaultProfile)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                string newProfileName = $"Profile{i}";
+
+                if (!TryGetProfile(newProfileName, out _))
+                {
+                    newDefaultProfile = GenerateNewDefaultProfile(newProfileName);
+                    return false;
+                }
+            }
+
+            newDefaultProfile = null;
+            return false;
         }
 
         public bool RemoveProfile(ProfileModel profile)
