@@ -63,7 +63,7 @@ namespace userspace_backend.Model.EditableSettings
 
         protected void EditableSettingChangedEventHandler(object? sender, PropertyChangedEventArgs e)
         {
-            if (string.Equals(e.PropertyName, nameof(EditableSetting<string>.CurrentValidatedValue)))
+            if (string.Equals(e.PropertyName, nameof(IEditableSettingSpecific<IComparable>.ModelValue)))
             {
                 OnAnySettingChanged();
             }

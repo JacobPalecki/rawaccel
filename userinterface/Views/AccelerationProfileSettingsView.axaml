@@ -20,7 +20,7 @@
           />
       </StackPanel>
 		<Carousel
-			SelectedIndex="{Binding AccelerationBE.DefinitionType.CurrentValidatedValue}">
+			SelectedIndex="{Binding AccelerationBE.DefinitionType.ModelValue}">
 		<Panel IsVisible="False"/>
 	    <UserControl Content="{Binding AccelerationFormulaSettings}" />
 	    <UserControl Content="{Binding AccelerationLUTSettings}" />

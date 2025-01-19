@@ -16,6 +16,6 @@ namespace userspace_backend.Model.EditableSettings
 
     public interface IEditableSettingSpecific<T> : IEditableSetting where T : IComparable
     {
-        public T CurrentValidatedValue { get; }
+        public T ModelValue { get; }
     }
 }

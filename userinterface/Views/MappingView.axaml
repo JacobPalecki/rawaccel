@@ -12,7 +12,7 @@
     <TextBlock
       DockPanel.Dock="Top"
       HorizontalAlignment="Left"
-      Text="{Binding MappingBE.Name.CurrentValidatedValue}"/>
+      Text="{Binding MappingBE.Name.ModelValue}"/>
 
     <Button
       DockPanel.Dock="Left"
@@ -32,7 +32,7 @@
             ItemsSource="{Binding MappingBE.DeviceGroupsStillUnmapped}">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding CurrentValidatedValue}"/>
+                <TextBlock Text="{Binding ModelValue}"/>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
@@ -51,7 +51,7 @@
               Grid.Column="0"
               Grid.Row="0"
               HorizontalAlignment="Left"
-              Text="{Binding DeviceGroup.CurrentValidatedValue}"/>
+              Text="{Binding DeviceGroup.ModelValue}"/>
             <TextBlock
               Grid.Column="1"
               Grid.Row="0"
@@ -67,7 +67,7 @@
                 <DataTemplate>
                   <TextBlock
                     HorizontalAlignment="Right"
-                    Text="{Binding Name.CurrentValidatedValue}"/>
+                    Text="{Binding Name.ModelValue}"/>
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>

@@ -21,7 +21,7 @@ namespace userspace_backend.Model
             RecalculateDriverDataAndCurvePreview();
         }
 
-        public string CurrentNameForDisplay => Name.CurrentValidatedValue;
+        public string CurrentNameForDisplay => Name.ModelValue;
 
         public EditableSetting<string> Name { get; set; }
 
@@ -53,7 +53,7 @@ namespace userspace_backend.Model
 
         protected void AnyNonPreviewPropertyChangedEventHandler(object? send, PropertyChangedEventArgs e)
         {
-            if (string.Equals(e.PropertyName, nameof(EditableSetting<string>.CurrentValidatedValue)))
+            if (string.Equals(e.PropertyName, nameof(IEditableSettingSpecific<IComparable>.ModelValue)))
             {
                 RecalculateDriverData();
             }
@@ -61,7 +61,7 @@ namespace userspace_backend.Model
 
         protected void AnyCurvePreviewPropertyChangedEventHandler(object? send, PropertyChangedEventArgs e)
         {
-            if (string.Equals(e.PropertyName, nameof(EditableSetting<string>.CurrentValidatedValue)))
+            if (string.Equals(e.PropertyName, nameof(IEditableSettingSpecific<IComparable>.ModelValue)))
             {
                 RecalculateDriverDataAndCurvePreview();
             }

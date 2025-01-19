@@ -62,7 +62,7 @@ namespace userspace_backend.Model.AccelDefinitions
         protected void DefinitionTypeChangedEventHandler(object? sender, PropertyChangedEventArgs e)
         {
             // When the definition type changes, contained editable settings collections need to correspond to new type
-            if (string.Equals(e.PropertyName, nameof(DefinitionType.CurrentValidatedValue)))
+            if (string.Equals(e.PropertyName, nameof(DefinitionType.ModelValue)))
             {
                 GatherEditableSettingsCollections();
             }

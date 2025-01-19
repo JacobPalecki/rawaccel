@@ -44,7 +44,7 @@ namespace userinterface.ViewModels
 
         private void OnDefinitionTypeChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(AccelerationBE.DefinitionType.CurrentValidatedValue))
+            if (e.PropertyName == nameof(AccelerationBE.DefinitionType.ModelValue))
             {
                 AreAccelSettingsVisible = AccelerationBE.DefinitionType.ModelValue != BEData.AccelerationDefinitionType.None;
             }

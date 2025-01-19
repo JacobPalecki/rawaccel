@@ -17,7 +17,7 @@
         />
     </StackPanel>
     <Carousel Name="FormulaCarousel"
-              SelectedIndex="{Binding FormulaAccelBE.FormulaType.CurrentValidatedValue}">
+              SelectedIndex="{Binding FormulaAccelBE.FormulaType.ModelValue}">
       <Carousel.Items>
         <!-- The accel formula carousel items must appear in same order as in
              accel formula data enum declaration, because that enum is used to determine selected index -->

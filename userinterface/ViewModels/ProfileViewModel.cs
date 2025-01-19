@@ -20,7 +20,7 @@ namespace userinterface.ViewModels
 
         protected BE.ProfileModel ProfileModelBE { get; }
 
-        public string CurrentName => ProfileModelBE.Name.CurrentValidatedValue;
+        public string CurrentName => ProfileModelBE.Name.ModelValue;
 
         public ProfileSettingsViewModel Settings { get; set; }
 

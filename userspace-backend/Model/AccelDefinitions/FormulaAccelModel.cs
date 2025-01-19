@@ -44,7 +44,7 @@ namespace userspace_backend.Model.AccelDefinitions
         protected void FormulaTypeChangedEventHandler(object? sender, PropertyChangedEventArgs e)
         {
             // When the formula type changes, contained editable settings collections need to correspond to new type
-            if (string.Equals(e.PropertyName, nameof(FormulaType.CurrentValidatedValue)))
+            if (string.Equals(e.PropertyName, nameof(FormulaType.ModelValue)))
             {
                 GatherEditableSettingsCollections();
             }

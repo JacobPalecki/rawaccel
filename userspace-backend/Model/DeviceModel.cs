@@ -16,19 +16,20 @@ namespace userspace_backend.Model
             : base(device)
         {
             DeviceGroup = deviceGroup;
-            Name.Validator = deviceModelNameValidator;
-            HardwareID.Validator = deviceModelHWIDValidator;
+            // TODO: validator composition
+            //Name.Validator = deviceModelNameValidator;
+            //HardwareID.Validator = deviceModelHWIDValidator;
         }
 
-        public EditableSetting<string> Name { get; protected set; }
+        public IEditableSettingSpecific<string> Name { get; protected set; }
 
-        public EditableSetting<string> HardwareID { get; protected set; }
+        public IEditableSettingSpecific<string> HardwareID { get; protected set; }
 
-        public EditableSetting<int> DPI { get; protected set; }
+        public IEditableSettingSpecific<int> DPI { get; protected set; }
 
-        public EditableSetting<int> PollRate { get; protected set; }
+        public IEditableSettingSpecific<int> PollRate { get; protected set; }
 
-        public EditableSetting<bool> Ignore { get; protected set; }
+        public IEditableSettingSpecific<bool> Ignore { get; protected set; }
 
         public DeviceGroupModel DeviceGroup { get; set; }
 

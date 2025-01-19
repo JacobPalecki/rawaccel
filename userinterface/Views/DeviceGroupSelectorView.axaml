@@ -26,7 +26,7 @@
       <ComboBox.ItemTemplate>
         <DataTemplate>
           <TextBlock
-            Text="{Binding CurrentValidatedValue}"/>
+            Text="{Binding ModelValue}"/>
         </DataTemplate>
       </ComboBox.ItemTemplate>
     </ComboBox>

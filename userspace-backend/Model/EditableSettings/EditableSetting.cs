@@ -15,7 +15,7 @@ namespace userspace_backend.Model.EditableSettings
         /// This value can be bound in UI for logic based on validated input
         /// </summary>
         [ObservableProperty]
-        public T currentValidatedValue;
+        public T modelValue;
 
         public EditableSetting(
             string displayName,
@@ -37,8 +37,6 @@ namespace userspace_backend.Model.EditableSettings
         /// Display name for this setting in UI
         /// </summary>
         public string DisplayName { get; }
-
-        public virtual T ModelValue { get; protected set; }
 
         public T LastWrittenValue { get; protected set; }
 
@@ -97,7 +95,6 @@ namespace userspace_backend.Model.EditableSettings
         protected void UpdatedModeValue(T value)
         {
             ModelValue = value;
-            CurrentValidatedValue = ModelValue;
         }
 
         partial void OnInterfaceValueChanged(string value)
