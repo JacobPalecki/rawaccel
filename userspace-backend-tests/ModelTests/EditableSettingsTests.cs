@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,55 +11,115 @@ namespace userspace_backend_tests.ModelTests
     [TestClass]
     public class EditableSettingsTests
     {
-        protected class TestDataType
-        {
-            public int Property { get; set; }
-        }
-
-        protected interface IEditableSettingsTestCollection : IEditableSettingsCollectionV2
-        {
-            public IEditableSettingSpecific<int> PropertySetting { get; }
-        }
-
-        protected class EditableSettingsTestCollection : EditableSettingsCollectionV2<TestDataType>, IEditableSettingsTestCollection
-        {
-            public const string ProperySettingName = $"{nameof(EditableSettingsTestCollection)}.{nameof(PropertySetting)}";
-
-            public EditableSettingsTestCollection(
-                [FromKeyedServices(ProperySettingName)]IEditableSettingSpecific<int> propertySetting)
-                : base([propertySetting], [])
-            {
-                PropertySetting = propertySetting;
-            }
-
-            public IEditableSettingSpecific<int> PropertySetting { get; protected set; }
-
-            public override TestDataType MapToData()
-            {
-                return new TestDataType()
-                {
-                    Property = PropertySetting.ModelValue,
-                };
-            }
-        }
-
         [TestMethod]
-        public void EditableSettings_Construction()
+        public void EditableSetting_Construction()
         {
             string testSettingName = "Test Setting";
             int testSettingInitialValue = 0;
 
-            var services = new ServiceCollection();
-            services.AddTransient<IEditableSettingsTestCollection, EditableSettingsTestCollection>();
-            services.AddKeyedTransient<IEditableSettingSpecific<int>>(
-                EditableSettingsTestCollection.ProperySettingName, (_, _) =>
-                    new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false));
-            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            EditableSettingV2<int> testObject = 
+                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false);
 
-            IEditableSettingsTestCollection testObject = serviceProvider.GetRequiredService<IEditableSettingsTestCollection>();
             Assert.IsNotNull(testObject);
-            Assert.AreEqual(testSettingInitialValue, testObject.PropertySetting.ModelValue);
-            Assert.AreEqual(0, testObject.PropertySetting.ModelValue);
+            Assert.AreEqual(testSettingInitialValue, testObject.ModelValue);
+            Assert.AreEqual(testSettingName, testObject.DisplayName);
+        }
+
+        [TestMethod]
+        public void EditableSetting_SetFromInterface()
+        {
+            int propertyChangedHookCalls = 0;
+
+            void TestObject_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+            {
+                if (string.Equals(e.PropertyName, nameof(EditableSettingV2<IComparable>.ModelValue)))
+                {
+                    propertyChangedHookCalls++;
+                }
+            }
+
+            string testSettingName = "Test Setting";
+            int testSettingInitialValue = 0;
+            int testSettingSecondValue = 500;
+
+            EditableSettingV2<int> testObject = 
+                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false);
+
+            testObject.PropertyChanged += TestObject_PropertyChanged;
+            testObject.InterfaceValue = testSettingSecondValue.ToString();
+            bool updateResult = testObject.TryUpdateFromInterface();
+
+            Assert.IsTrue(updateResult);
+            Assert.AreEqual(testSettingSecondValue, testObject.ModelValue);
+            Assert.AreEqual(1, propertyChangedHookCalls);
+        }
+
+        [TestMethod]
+        public void EditableSetting_SetFromInterface_Automatic()
+        {
+            int propertyChangedHookCalls = 0;
+
+            void TestObject_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+            {
+                if (string.Equals(e.PropertyName, nameof(EditableSettingV2<IComparable>.ModelValue)))
+                {
+                    propertyChangedHookCalls++;
+                }
+            }
+
+            string testSettingName = "Test Setting";
+            int testSettingInitialValue = 0;
+            int testSettingSecondValue = 500;
+
+            EditableSettingV2<int> testObject = 
+                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, true);
+
+            testObject.PropertyChanged += TestObject_PropertyChanged;
+            testObject.InterfaceValue = testSettingSecondValue.ToString();
+
+            Assert.AreEqual(testSettingSecondValue, testObject.ModelValue);
+            Assert.AreEqual(1, propertyChangedHookCalls);
+        }
+
+        [TestMethod]
+        public void EditableSetting_SetFromInterface_BadValue()
+        {
+            int propertyChangedHookCalls = 0;
+
+            void TestObject_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+            {
+                if (string.Equals(e.PropertyName, nameof(EditableSettingV2<IComparable>.ModelValue)))
+                {
+                    propertyChangedHookCalls++;
+                }
+            }
+
+            string testSettingName = "Test Setting";
+            int testSettingInitialValue = 0;
+
+            // Test case: bad value, cannot parse
+            EditableSettingV2<int> testObject = 
+                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false);
+
+            testObject.PropertyChanged += TestObject_PropertyChanged;
+            testObject.InterfaceValue = "ASDFJLKL";
+            bool updateResult = testObject.TryUpdateFromInterface();
+
+            Assert.IsFalse(updateResult);
+            Assert.AreEqual(testSettingInitialValue, testObject.ModelValue);
+            Assert.AreEqual(0, propertyChangedHookCalls);
+
+            // Test case: validator determines input is invalid
+            testObject = 
+                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, new AllChangeInvalidValueValidator<int>(), false);
+
+            testObject.PropertyChanged += TestObject_PropertyChanged;
+            testObject.InterfaceValue = 500.ToString();
+            updateResult = testObject.TryUpdateFromInterface();
+
+            Assert.IsFalse(updateResult);
+            Assert.AreEqual(testSettingInitialValue, testObject.ModelValue);
+            Assert.AreEqual(0, propertyChangedHookCalls);
         }
     }
 }

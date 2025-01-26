@@ -38,6 +38,7 @@ namespace userspace_backend.Model.EditableSettings
         /// </summary>
         public string DisplayName { get; }
 
+        // TODO: test or remove
         public T LastWrittenValue { get; protected set; }
 
         /// <summary>
@@ -208,5 +209,4 @@ namespace userspace_backend.Model.EditableSettings
             }
         }
     }
-
 }
