@@ -106,6 +106,11 @@ namespace userspace_backend.Model.EditableSettings
         public EventHandler AnySettingChanged { get; set; }
     }
 
+    public interface IEditableSettingsCollectionSpecific<T> : IEditableSettingsCollectionV2
+    {
+        T MapToData();
+    }
+
     /// <summary>
     /// Base class for settings collections.
     /// </summary>
@@ -116,7 +121,7 @@ namespace userspace_backend.Model.EditableSettings
     /// The actual settings collections in the model do not need to each be tested beyond composition.
     /// </remarks>
     /// <typeparam name="T"></typeparam>
-    public abstract class EditableSettingsCollectionV2<T> : ObservableObject, IEditableSettingsCollection
+    public abstract class EditableSettingsCollectionV2<T> : ObservableObject, IEditableSettingsCollectionSpecific<T>
     {
         public EditableSettingsCollectionV2(
             IEnumerable<IEditableSetting> editableSettings,

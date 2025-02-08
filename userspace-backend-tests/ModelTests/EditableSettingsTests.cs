@@ -1,9 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend_tests.ModelTests
@@ -11,14 +7,32 @@ namespace userspace_backend_tests.ModelTests
     [TestClass]
     public class EditableSettingsTests
     {
+        #region Init
+
+        public static EditableSettingV2<int> InitTestObject(
+            string testSettingName,
+            int testSettingInitialValue,
+            bool autoUpddateFromInterface = false)
+        {
+            return new EditableSettingV2<int>(
+                testSettingName,
+                testSettingInitialValue,
+                UserInputParsers.IntParser,
+                ModelValueValidators.DefaultIntValidator,
+                autoUpdateFromInterface: autoUpddateFromInterface);
+        }
+
+        #endregion Init
+
+        #region Tests
+
         [TestMethod]
         public void EditableSetting_Construction()
         {
             string testSettingName = "Test Setting";
             int testSettingInitialValue = 0;
 
-            EditableSettingV2<int> testObject = 
-                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false);
+            EditableSettingV2<int> testObject = InitTestObject(testSettingName, testSettingInitialValue);
 
             Assert.IsNotNull(testObject);
             Assert.AreEqual(testSettingInitialValue, testObject.ModelValue);
@@ -42,8 +56,7 @@ namespace userspace_backend_tests.ModelTests
             int testSettingInitialValue = 0;
             int testSettingSecondValue = 500;
 
-            EditableSettingV2<int> testObject = 
-                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false);
+            EditableSettingV2<int> testObject = InitTestObject(testSettingName, testSettingInitialValue);
 
             testObject.PropertyChanged += TestObject_PropertyChanged;
             testObject.InterfaceValue = testSettingSecondValue.ToString();
@@ -71,8 +84,7 @@ namespace userspace_backend_tests.ModelTests
             int testSettingInitialValue = 0;
             int testSettingSecondValue = 500;
 
-            EditableSettingV2<int> testObject = 
-                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, true);
+            EditableSettingV2<int> testObject = InitTestObject(testSettingName, testSettingInitialValue, autoUpddateFromInterface: true);
 
             testObject.PropertyChanged += TestObject_PropertyChanged;
             testObject.InterfaceValue = testSettingSecondValue.ToString();
@@ -98,8 +110,7 @@ namespace userspace_backend_tests.ModelTests
             int testSettingInitialValue = 0;
 
             // Test case: bad value, cannot parse
-            EditableSettingV2<int> testObject = 
-                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, ModelValueValidators.DefaultIntValidator, false);
+            EditableSettingV2<int> testObject = InitTestObject(testSettingName, testSettingInitialValue);
 
             testObject.PropertyChanged += TestObject_PropertyChanged;
             testObject.InterfaceValue = "ASDFJLKL";
@@ -111,7 +122,12 @@ namespace userspace_backend_tests.ModelTests
 
             // Test case: validator determines input is invalid
             testObject = 
-                new EditableSettingV2<int>(testSettingName, testSettingInitialValue, UserInputParsers.IntParser, new AllChangeInvalidValueValidator<int>(), false);
+                new EditableSettingV2<int>(
+                    testSettingName,
+                    testSettingInitialValue,
+                    UserInputParsers.IntParser,
+                    new AllChangeInvalidValueValidator<int>(),
+                    autoUpdateFromInterface: false);
 
             testObject.PropertyChanged += TestObject_PropertyChanged;
             testObject.InterfaceValue = 500.ToString();
@@ -121,5 +137,7 @@ namespace userspace_backend_tests.ModelTests
             Assert.AreEqual(testSettingInitialValue, testObject.ModelValue);
             Assert.AreEqual(0, propertyChangedHookCalls);
         }
+
+        #endregion Tests
     }
 }
