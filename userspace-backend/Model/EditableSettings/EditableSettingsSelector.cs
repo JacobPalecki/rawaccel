@@ -1,43 +1,61 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace userspace_backend.Model.EditableSettings
 {
-    public interface IEditableSettingsSelector<T, U, V> : IEditableSettingsCollectionSpecific<V> where T : Enum where U : IEditableSettingsCollectionV2
+    public interface IEditableSettingsSelector<T, U> : IEditableSettingsCollectionSpecific<U> where T : Enum
     {
         public IEditableSettingSpecific<T> Selection { get; }
 
-        public U GetSelectable(T choice);
+        public IEditableSettingsCollectionSpecific<U> GetSelectable(T choice);
     }
 
-    public abstract class EditableSettingsSelector<T, U, V>
-        : EditableSettingsCollectionV2<V>,
-          IEditableSettingsSelector<T, U, V> where T : Enum where U : IEditableSettingsCollectionV2
+    public static class EditableSettingsSelectorHelper
+    {
+        public static string GetSelectionKey<T>(T value) where T : Enum
+        {
+            return $"{typeof(T)}.{value.ToString()}";
+        }
+
+    }
+
+    public abstract class EditableSettingsSelector<T, U>
+        : EditableSettingsCollectionV2<U>,
+          IEditableSettingsSelector<T, U> where T : Enum
     {
         protected EditableSettingsSelector(
             IEditableSettingSpecific<T> selection,
             IServiceProvider serviceProvider,
             IEnumerable<IEditableSetting> editableSettings,
             IEnumerable<IEditableSettingsCollectionV2> editableSettingsCollections)
-            : base(editableSettings, editableSettingsCollections)
+            : base(editableSettings.Union([selection]), editableSettingsCollections)
         {
-            SelectionLookup = new Dictionary<T, U>();
+            SelectionLookup = new Dictionary<T, IEditableSettingsCollectionSpecific<U>>();
+            InitSelectionLookup(serviceProvider);
             Selection = selection;
         }
 
         public IEditableSettingSpecific<T> Selection { get; }
 
-        protected IDictionary<T, U> SelectionLookup { get; }
+        protected IDictionary<T, IEditableSettingsCollectionSpecific<U>> SelectionLookup { get; }
 
-        public U GetSelectable(T choice) => SelectionLookup[choice];
+        public IEditableSettingsCollectionSpecific<U> GetSelectable(T choice) => SelectionLookup[choice];
 
         protected void InitSelectionLookup(IServiceProvider serviceProvider)
         {
             foreach (T value in Enum.GetValues(typeof(T)))
             {
-                SelectionLookup.Add(value, serviceProvider.GetRequiredService<U>());
+                string key = EditableSettingsSelectorHelper.GetSelectionKey(value);
+                SelectionLookup.Add(value, serviceProvider.GetRequiredKeyedService<IEditableSettingsCollectionSpecific<U>>(key));
             }
         }
+
+        public override U MapToData()
+        {
+            return GetSelectable(Selection.ModelValue).MapToData();
+        }
+
     }
 }
