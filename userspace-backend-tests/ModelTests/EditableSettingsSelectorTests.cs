@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend_tests.ModelTests
@@ -9,7 +8,6 @@ namespace userspace_backend_tests.ModelTests
     [TestClass]
     public class EditableSettingsSelectorTests
     {
-
         #region TestClasses
 
         public abstract class TestDataAbstract
@@ -168,6 +166,8 @@ namespace userspace_backend_tests.ModelTests
 
         #endregion TestClasses
 
+        #region InitDI
+
         protected static IEditableSettingsTestSelector InitTestObject(
             string selectionName,
             string aName,
@@ -213,6 +213,8 @@ namespace userspace_backend_tests.ModelTests
             IEditableSettingsTestSelector testObject = serviceProvider.GetRequiredService<IEditableSettingsTestSelector>();
             return testObject;
         }
+
+        #endregion InitDI
 
         #region Tests
 
