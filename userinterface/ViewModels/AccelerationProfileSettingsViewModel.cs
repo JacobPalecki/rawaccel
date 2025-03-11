@@ -27,7 +27,7 @@ namespace userinterface.ViewModels
             AnisotropySettings = new AnisotropyProfileSettingsViewModel(accelerationBE.Anisotropy);
             CoalescionSettings = new CoalescionProfileSettingsViewModel(accelerationBE.Coalescion);
             // TODO: editable settings composition
-            //AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;
+            AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;
             AccelerationBE.DefinitionType.PropertyChanged += OnDefinitionTypeChanged;
         }
 

@@ -11,6 +11,8 @@ namespace userspace_backend.Model.EditableSettings
 
         bool HasChanged();
 
+        bool AutoUpdateFromInterface { get; set; }
+
         bool TryUpdateFromInterface();
     }
 
