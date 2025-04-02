@@ -8,10 +8,8 @@ using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions
 {
-    public interface IAccelDefinitionModel : IEditableSettingsCollection
+    public interface IAccelDefinitionModel : IEditableSettingsCollectionSpecific<Acceleration>
     {
-        Acceleration MapToData();
-
         AccelArgs MapToDriver();
     }
 
