@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace userspace_backend.Model.EditableSettings
 {
-    public interface IEditableSettingsList<T, U> : IEditableSettingsCollectionSpecific<U> where T : class, IEditableSettingsCollectionV2
+    public interface IEditableSettingsList<T, U>
+        : IEditableSettingsCollectionSpecific<IEnumerable<U>> where T : class, IEditableSettingsCollectionSpecific<U>
     {
         public ReadOnlyObservableCollection<T> Elements { get; }
 
@@ -18,7 +20,8 @@ namespace userspace_backend.Model.EditableSettings
         public bool TryRemoveElement(T element);
     }
 
-    public abstract class EditableSettingsList<T, U> : EditableSettingsCollectionV2<U>, IEditableSettingsList<T, U> where T : class, IEditableSettingsCollectionV2
+    public abstract class EditableSettingsList<T, U>
+        : EditableSettingsCollectionV2<IEnumerable<U>>, IEditableSettingsList<T, U> where T : class, IEditableSettingsCollectionSpecific<U>
     {
         public EditableSettingsList(
             IServiceProvider serviceProvider,
@@ -38,6 +41,11 @@ namespace userspace_backend.Model.EditableSettings
         protected IServiceProvider ServiceProvider { get; }
 
         protected abstract string DefaultNameTemplate { get; }
+
+        public override IEnumerable<U> MapToData()
+        {
+            return ElementsInternal.Select(e => e.MapToData());
+        }
 
         public bool TryAdd(T element)
         {

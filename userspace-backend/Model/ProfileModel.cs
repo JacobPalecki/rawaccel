@@ -12,11 +12,30 @@ using userspace_backend.Display;
 
 namespace userspace_backend.Model
 {
-    public class ProfileModel : EditableSettingsCollection<DATA.Profile>
+    public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>
     {
-        public ProfileModel(DATA.Profile dataObject, IModelValueValidator<string> nameValidator) : base(dataObject)
+        public ProfileModel(
+            IEditableSettingSpecific<string> name,
+            IEditableSettingSpecific<int> outputDPI,
+            IEditableSettingSpecific<double> yxRatio,
+            IAccelerationModel acceleration,
+            IHiddenModel hidden
+            ) : base([name, outputDPI, yxRatio], [acceleration, hidden])
         {
-            NameValidator = nameValidator;
+            Name = name;
+            OutputDPI = outputDPI;
+            YXRatio = yxRatio;
+            Acceleration = acceleration;
+            Hidden = hidden;
+            // Name and Output DPI do not need to generate a new curve preview
+            Name.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
+            OutputDPI.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
+
+            // The rest of settings should generate a new curve preview
+            YXRatio.PropertyChanged += AnyCurvePreviewPropertyChangedEventHandler;
+            Acceleration.AnySettingChanged += AnyCurveSettingCollectionChangedEventHandler;
+            Hidden.AnySettingChanged += AnyCurveSettingCollectionChangedEventHandler;
+
             CurvePreview = new CurvePreview();
             RecalculateDriverDataAndCurvePreview();
         }
@@ -29,9 +48,9 @@ namespace userspace_backend.Model
 
         public IEditableSettingSpecific<double> YXRatio { get; set; }
 
-        public AccelerationModel Acceleration { get; set; }
+        public IAccelerationModel Acceleration { get; set; }
 
-        public HiddenModel Hidden { get; set; }
+        public IHiddenModel Hidden { get; set; }
 
         public Profile CurrentValidatedDriverProfile { get; protected set; }
 
@@ -84,16 +103,7 @@ namespace userspace_backend.Model
             CurvePreview.GeneratePoints(CurrentValidatedDriverProfile);
         }
 
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [Name, OutputDPI, YXRatio];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [Acceleration, Hidden];
-        }
-
+        // TODO: DI - Add init to composition
         protected override void InitEditableSettingsAndCollections(DATA.Profile dataObject)
         {
             Name = new EditableSetting<string>(

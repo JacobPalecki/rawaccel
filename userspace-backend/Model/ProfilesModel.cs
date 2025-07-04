@@ -8,113 +8,28 @@ using DATA = userspace_backend.Data;
 
 namespace userspace_backend.Model
 {
-    public class ProfilesModel : EditableSettingsCollection<IEnumerable<DATA.Profile>>
+    public class ProfilesModel : EditableSettingsList<ProfileModel, DATA.Profile>
     {
+        // TODO: DI - hand default profile to profiles model
         public static readonly ProfileModel DefaultProfile = new ProfileModel(
             GenerateNewDefaultProfile("Default"), ModelValueValidators.AllChangesInvalidStringValidator);
 
-        public ProfilesModel(IEnumerable<DATA.Profile> dataObject) : base(dataObject)
+        public ProfilesModel(IServiceProvider serviceProvider)
+            : base(serviceProvider, [], [])
         {
-            NameValidator = new ProfileNameValidator(this);
         }
 
-        public ObservableCollection<ProfileModel> Profiles { get; protected set; }
 
-        protected ProfileNameValidator NameValidator { get; }
+        protected override string DefaultNameTemplate => "Profile";
 
-        public override IEnumerable<DATA.Profile> MapToData()
+        protected override string GetNameFromElement(ProfileModel element)
         {
-            return Profiles.Select(p => p.MapToData());
+            return element.Name.ModelValue;
         }
 
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
+        protected override void SetElementName(ProfileModel element, string name)
         {
-            return [];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return Profiles;
-        }
-
-        protected override void InitEditableSettingsAndCollections(IEnumerable<DATA.Profile> dataObject)
-        {
-            Profiles = new ObservableCollection<ProfileModel>() { DefaultProfile, };
-        }
-
-        public bool TryGetProfile(string name, out ProfileModel? profileModel)
-        {
-            profileModel = Profiles.FirstOrDefault(
-                p => string.Equals(p.Name.ModelValue, name, StringComparison.InvariantCultureIgnoreCase));
-
-            return profileModel != null;
-        }
-
-        public bool TryAddNewDefaultProfile(string name)
-        {
-            if (TryGetProfile(name, out _))
-            {
-                return false;
-            }
-
-            DATA.Profile profile = GenerateNewDefaultProfile(name);
-            ProfileModel profileModel = new ProfileModel(profile, NameValidator);
-            Profiles.Add(profileModel);
-            return true;
-        }
-
-        public bool TryAddProfile(DATA.Profile profileToAdd)
-        {
-            if (TryGetProfile(profileToAdd.Name, out _))
-            {
-                return false;
-            }
-
-            ProfileModel profileModel = new ProfileModel(profileToAdd, NameValidator);
-            Profiles.Add(profileModel);
-            return true;
-        }
-
-        protected bool TryCreateNewDefaultProfile([MaybeNullWhen(false)] out DATA.Profile newDefaultProfile)
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                string newProfileName = $"Profile{i}";
-
-                if (!TryGetProfile(newProfileName, out _))
-                {
-                    newDefaultProfile = GenerateNewDefaultProfile(newProfileName);
-                    return false;
-                }
-            }
-
-            newDefaultProfile = null;
-            return false;
-        }
-
-        public bool RemoveProfile(ProfileModel profile)
-        {
-            return Profiles.Remove(profile);
-        }
-
-        protected static DATA.Profile GenerateNewDefaultProfile(string name)
-        {
-            return new DATA.Profile()
-            {
-                Name = name,
-                OutputDPI = 1000,
-                YXRatio = 1,
-            };
-        }
-    }
-
-    public class ProfileNameValidator(ProfilesModel profilesModel) : IModelValueValidator<string>
-    {
-        ProfilesModel ProfilesModel { get; } = profilesModel;
-
-        public bool Validate(string value)
-        {
-            return !ProfilesModel.TryGetProfile(value, out _);
+            element.Name.InterfaceValue = name;
         }
     }
 }

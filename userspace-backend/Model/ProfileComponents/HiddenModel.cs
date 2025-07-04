@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,27 @@ using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.ProfileComponents
 {
-    public class HiddenModel : EditableSettingsCollection<Hidden>
+    public interface IHiddenModel : IEditableSettingsCollectionSpecific<Hidden>
     {
-        public HiddenModel(Hidden dataObject) : base(dataObject)
+    }
+
+    public class HiddenModel : EditableSettingsCollectionV2<Hidden>, IHiddenModel
+    {
+        public const string RotationDegreesDIKey = $"{nameof(HiddenModel)}.{nameof(RotationDegrees)}";
+        public const string AngleSnappingDegreesDIKey = $"{nameof(HiddenModel)}.{nameof(AngleSnappingDegrees)}";
+        public const string LeftRightRatioDIKey = $"{nameof(HiddenModel)}.{nameof(LeftRightRatio)}";
+        public const string UpDownRatioDIKey = $"{nameof(HiddenModel)}.{nameof(UpDownRatio)}";
+        public const string SpeedCapDIKey = $"{nameof(HiddenModel)}.{nameof(SpeedCap)}";
+        public const string OutputSmoothingHalfLifeDIKey = $"{nameof(HiddenModel)}.{nameof(OutputSmoothingHalfLife)}";
+
+        public HiddenModel(
+            [FromKeyedServices(RotationDegreesDIKey)]IEditableSettingSpecific<double> rotationDegrees,
+            [FromKeyedServices(AngleSnappingDegreesDIKey)]IEditableSettingSpecific<double> angleSnappingDegrees,
+            [FromKeyedServices(LeftRightRatioDIKey)]IEditableSettingSpecific<double> leftRightRatio,
+            [FromKeyedServices(UpDownRatioDIKey)]IEditableSettingSpecific<double> upDownRatio,
+            [FromKeyedServices(SpeedCapDIKey)]IEditableSettingSpecific<double> speedCap,
+            [FromKeyedServices(OutputSmoothingHalfLifeDIKey)]IEditableSettingSpecific<double> outputSmoothingHalfLife
+            ) : base([rotationDegrees, angleSnappingDegrees, leftRightRatio, upDownRatio, speedCap, outputSmoothingHalfLife], [])
         {
         }
 
@@ -37,50 +56,6 @@ namespace userspace_backend.Model.ProfileComponents
                 SpeedCap = SpeedCap.ModelValue,
                 OutputSmoothingHalfLife = OutputSmoothingHalfLife.ModelValue,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ RotationDegrees, AngleSnappingDegrees, LeftRightRatio, UpDownRatio, SpeedCap ];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return Enumerable.Empty<IEditableSettingsCollectionV2>();
-        }
-
-        protected override void InitEditableSettingsAndCollections(Hidden dataObject)
-        {
-            RotationDegrees = new EditableSetting<double>(
-                displayName: "Rotation",
-                initialValue: dataObject?.RotationDegrees ?? 0,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            AngleSnappingDegrees = new EditableSetting<double>(
-                displayName: "Angle Snapping",
-                initialValue: dataObject?.AngleSnappingDegrees ?? 0,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            LeftRightRatio = new EditableSetting<double>(
-                displayName: "L/R Ratio",
-                initialValue: dataObject?.LeftRightRatio ?? 1,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            UpDownRatio = new EditableSetting<double>(
-                displayName: "U/D Ratio",
-                initialValue: dataObject?.UpDownRatio ?? 1,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            SpeedCap = new EditableSetting<double>(
-                displayName: "Speed Cap",
-                initialValue: dataObject?.SpeedCap ?? 0,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            OutputSmoothingHalfLife = new EditableSetting<double>(
-                displayName: "Output Smoothing Half-Life",
-                initialValue: dataObject?.OutputSmoothingHalfLife ?? 0,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }

@@ -8,7 +8,11 @@ using static userspace_backend.Data.Profiles.Acceleration;
 
 namespace userspace_backend.Model.AccelDefinitions
 {
-    public class AccelerationModel : EditableSettingsCollection<Acceleration>
+    public interface IAccelerationModel : IEditableSettingsCollectionSpecific<Acceleration>
+    {
+    }
+
+    public class AccelerationModel : IAccelerationModel
     {
         public AccelerationModel(Acceleration dataObject) : base(dataObject)
         {

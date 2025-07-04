@@ -21,13 +21,6 @@ namespace userspace_backend_tests.ModelTests
             public int Property { get; set; }
         }
 
-        public class TestDataList
-        {
-            public TestData[] Data { get; set; }
-
-            public int OtherProperty { get; set; }
-        }
-
         public interface IEditableSettingsTestCollection : IEditableSettingsCollectionSpecific<TestData>
         {
             public IEditableSettingSpecific<string> NameSetting { get; }
@@ -35,9 +28,8 @@ namespace userspace_backend_tests.ModelTests
             public IEditableSettingSpecific<int> PropertySetting { get; }
         }
 
-        public interface IEditableSettingsTestList : IEditableSettingsList<IEditableSettingsTestCollection, TestDataList>
+        public interface IEditableSettingsTestList : IEditableSettingsList<IEditableSettingsTestCollection, TestData>
         {
-            public IEditableSettingSpecific<int> OtherPropertySetting { get; }
         }
 
         public class EditableSettingsTestCollection : EditableSettingsCollectionV2<TestData>, IEditableSettingsTestCollection
@@ -68,29 +60,20 @@ namespace userspace_backend_tests.ModelTests
             }
         }
 
-        public class EditableSettingsTestList : EditableSettingsList<IEditableSettingsTestCollection, TestDataList>, IEditableSettingsTestList
+        public class EditableSettingsTestList : EditableSettingsList<IEditableSettingsTestCollection, TestData>, IEditableSettingsTestList
         {
-            public const string OtherProperySettingName = $"{nameof(EditableSettingsTestCollection)}.{nameof(OtherPropertySetting)}";
             public const string TestNameTemplate = "TestData";
 
-            public EditableSettingsTestList([FromKeyedServices(OtherProperySettingName)]IEditableSettingSpecific<int> otherPropertySetting,
-                IServiceProvider serviceProvider)
-                : base(serviceProvider, [otherPropertySetting], [])
+            public EditableSettingsTestList(IServiceProvider serviceProvider)
+                : base(serviceProvider, [], [])
             {
-                OtherPropertySetting = otherPropertySetting;
             }
-
-            public IEditableSettingSpecific<int> OtherPropertySetting { get; }
 
             protected override string DefaultNameTemplate => TestNameTemplate;
 
-            public override TestDataList MapToData()
+            public override IEnumerable<TestData> MapToData()
             {
-                return new TestDataList()
-                {
-                    Data = ElementsInternal.Select(e => e.MapToData()).ToArray(),
-                    OtherProperty = OtherPropertySetting.ModelValue,
-                };
+                return ElementsInternal.Select(e => e.MapToData());
             }
 
             protected override string GetNameFromElement(IEditableSettingsTestCollection element) => element.NameSetting.ModelValue;
@@ -107,8 +90,6 @@ namespace userspace_backend_tests.ModelTests
         #region InitDI
 
         public (IEditableSettingsTestList, IServiceProvider) InitTestObject(
-            string otherPropertyName,
-            int otherPropertyValue,
             string propertyName,
             int propertyValue,
             string nameName,
@@ -116,14 +97,6 @@ namespace userspace_backend_tests.ModelTests
         {
             ServiceCollection services = new ServiceCollection();
             services.AddTransient<IEditableSettingsTestList, EditableSettingsTestList>();
-            services.AddKeyedTransient<IEditableSettingSpecific<int>>(
-                EditableSettingsTestList.OtherProperySettingName, (_, _) =>
-                    new EditableSettingV2<int>(
-                        otherPropertyName,
-                        otherPropertyValue,
-                        UserInputParsers.IntParser,
-                        ModelValueValidators.DefaultIntValidator,
-                        autoUpdateFromInterface: false));
             services.AddTransient<IEditableSettingsTestCollection, EditableSettingsTestCollection>();
             services.AddKeyedTransient<IEditableSettingSpecific<int>>(
                 EditableSettingsTestCollection.ProperySettingName, (_, _) =>
@@ -154,40 +127,29 @@ namespace userspace_backend_tests.ModelTests
         [TestMethod]
         public void EditableSettingsList_Construction()
         {
-            string otherPropertyName = "Other Property";
-            int otherPropertyInitialValue = 1;
             string propertyName = "Property";
             int propertyInitialValue = 2;
             string nameName = "Name";
             string nameInitialValue = "My test data list";
             (IEditableSettingsTestList testObject, _) = InitTestObject(
-                otherPropertyName,
-                otherPropertyInitialValue,
                 propertyName,
                 propertyInitialValue,
                 nameName,
                 nameInitialValue);
             
             Assert.IsNotNull(testObject);
-            Assert.IsNotNull(testObject.OtherPropertySetting);
             Assert.IsNotNull(testObject.Elements);
             Assert.AreEqual(0, testObject.Elements.Count);
-            Assert.AreEqual(otherPropertyName, testObject.OtherPropertySetting.DisplayName);
-            Assert.AreEqual(otherPropertyInitialValue, testObject.OtherPropertySetting.ModelValue);
         }
 
         [TestMethod]
         public void EditableSettingsList_AddRemoveElements()
         {
-            string otherPropertyName = "Other Property";
-            int otherPropertyInitialValue = 1;
             string propertyName = "Property";
             int propertyInitialValue = 2;
             string nameName = "Name";
             string nameInitialValue = "My test data list";
             (IEditableSettingsTestList testObject, IServiceProvider serviceProvider) = InitTestObject(
-                otherPropertyName,
-                otherPropertyInitialValue,
                 propertyName,
                 propertyInitialValue,
                 nameName,
