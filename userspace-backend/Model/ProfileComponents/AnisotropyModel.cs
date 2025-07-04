@@ -41,9 +41,9 @@ namespace userspace_backend.Model.ProfileComponents
             return [DomainX, DomainY, RangeX, RangeY, LPNorm];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
-            return Enumerable.Empty<IEditableSettingsCollection>();
+            return [];
         }
 
         protected override void InitEditableSettingsAndCollections(Anisotropy dataObject)

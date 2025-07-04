@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace userspace_backend.Model.EditableSettings
 {
-    public abstract class EditableSettingsCollection<T> : ObservableObject, IEditableSettingsCollection
+    public abstract class EditableSettingsCollection<T> : ObservableObject, IEditableSettingsCollectionV2
     {
         public EditableSettingsCollection(T dataObject)
         {
@@ -19,7 +19,7 @@ namespace userspace_backend.Model.EditableSettings
 
         public IEnumerable<IEditableSetting> AllContainedEditableSettings { get; set; }
 
-        public IEnumerable<IEditableSettingsCollection> AllContainedEditableSettingsCollections { get; set; }
+        public IEnumerable<IEditableSettingsCollectionV2> AllContainedEditableSettingsCollections { get; set; }
 
         public bool HasChanged { get; protected set; }
 
@@ -83,7 +83,7 @@ namespace userspace_backend.Model.EditableSettings
 
         protected abstract IEnumerable<IEditableSetting> EnumerateEditableSettings();
 
-        protected abstract IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections();
+        protected abstract IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections();
 
         public abstract T MapToData();
     }

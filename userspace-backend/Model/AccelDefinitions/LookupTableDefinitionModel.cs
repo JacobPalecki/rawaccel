@@ -48,9 +48,9 @@ namespace userspace_backend.Model.AccelDefinitions
             return [ApplyAs, Data];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
-            return Enumerable.Empty<IEditableSettingsCollection>();
+            return [];
         }
 
         protected override LookupTableAccel GenerateDefaultDataObject()

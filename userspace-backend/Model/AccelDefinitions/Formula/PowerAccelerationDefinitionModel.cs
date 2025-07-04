@@ -46,9 +46,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             return [ Scale, Exponent, OutputOffset, Cap ];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
-            return Enumerable.Empty<IEditableSettingsCollection>();
+            return [];
         }
 
         protected override PowerAccel GenerateDefaultDataObject()

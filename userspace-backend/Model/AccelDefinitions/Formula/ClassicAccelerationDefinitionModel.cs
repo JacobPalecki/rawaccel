@@ -51,9 +51,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             return [ Acceleration, Exponent, Offset, Cap ];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
-            return Enumerable.Empty<IEditableSettingsCollection>();
+            return [];
         }
 
         protected override ClassicAccel GenerateDefaultDataObject()

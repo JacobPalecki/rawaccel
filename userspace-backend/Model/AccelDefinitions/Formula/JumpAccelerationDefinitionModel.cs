@@ -46,9 +46,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             return [ Smooth, Input, Output ];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
-            return Enumerable.Empty<IEditableSettingsCollection>();
+            return [];
         }
 
         protected override JumpAccel GenerateDefaultDataObject()

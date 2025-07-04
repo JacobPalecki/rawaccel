@@ -132,7 +132,7 @@
 			</Button>
 			<TextBlock Grid.Column="1"
 					   Classes="MappingTitle"
-					   Text="{Binding MappingBE.Name.CurrentValidatedValue}"
+					   Text="{Binding MappingBE.Name.InterfaceValue}"
 					   VerticalAlignment="Center"/>
 		</Grid>
 
@@ -155,7 +155,7 @@
 								 BorderThickness="0">
 							<ListBox.ItemTemplate>
 								<DataTemplate>
-									<TextBlock Text="{Binding CurrentValidatedValue}"/>
+									<TextBlock Text="{Binding InterfaceValue}"/>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 						</ListBox>
@@ -173,7 +173,7 @@
 						<TextBlock Grid.Column="0"
 								   HorizontalAlignment="Left"
 								   VerticalAlignment="Center"
-								   Text="{Binding DeviceGroup.CurrentValidatedValue}"/>
+								   Text="{Binding DeviceGroup.InterfaceValue}"/>
 						<TextBlock Grid.Column="1"
 								   Classes="Arrow"
 								   HorizontalAlignment="Center"
@@ -187,7 +187,7 @@
 								  SelectedItem="{Binding Profile}">
 							<ComboBox.ItemTemplate>
 								<DataTemplate>
-									<TextBlock Text="{Binding Name.CurrentValidatedValue}"/>
+									<TextBlock Text="{Binding Name.InterfaceValue}"/>
 								</DataTemplate>
 							</ComboBox.ItemTemplate>
 						</ComboBox>

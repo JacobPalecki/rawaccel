@@ -44,9 +44,9 @@ namespace userspace_backend.Model.ProfileComponents
             return [ RotationDegrees, AngleSnappingDegrees, LeftRightRatio, UpDownRatio, SpeedCap ];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
-            return Enumerable.Empty<IEditableSettingsCollection>();
+            return Enumerable.Empty<IEditableSettingsCollectionV2>();
         }
 
         protected override void InitEditableSettingsAndCollections(Hidden dataObject)

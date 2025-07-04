@@ -95,7 +95,7 @@ namespace userspace_backend.Model
             return DeviceGroupModels;
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
             return [];
         }

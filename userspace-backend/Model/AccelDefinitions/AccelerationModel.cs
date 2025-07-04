@@ -73,7 +73,7 @@ namespace userspace_backend.Model.AccelDefinitions
             return [DefinitionType];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
             return [DefinitionModels[DefinitionType.ModelValue]];
         }

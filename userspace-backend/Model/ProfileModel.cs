@@ -89,7 +89,7 @@ namespace userspace_backend.Model
             return [Name, OutputDPI, YXRatio];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
             return [Acceleration, Hidden];
         }

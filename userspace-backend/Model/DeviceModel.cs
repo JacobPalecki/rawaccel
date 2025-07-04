@@ -42,7 +42,7 @@ namespace userspace_backend.Model
             return [Name, HardwareID, DPI, PollRate, Ignore, DeviceGroup];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
             return [];
         }

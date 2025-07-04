@@ -55,7 +55,7 @@ namespace userspace_backend.Model.AccelDefinitions
             return [ FormulaType ];
         }
 
-        protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
+        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
         {
             return [ FormulaModels[FormulaType.ModelValue] ];
         }
