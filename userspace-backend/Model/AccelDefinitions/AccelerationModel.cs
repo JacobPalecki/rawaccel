@@ -12,20 +12,25 @@ namespace userspace_backend.Model.AccelDefinitions
     {
     }
 
-    public class AccelerationModel : IAccelerationModel
+    public class AccelerationModel : EditableSettingsSelector<AccelerationDefinitionType, Acceleration>, IAccelerationModel
     {
-        public AccelerationModel(Acceleration dataObject) : base(dataObject)
+        public AccelerationModel(
+            IEditableSettingSpecific<AccelerationDefinitionType> definitionType,
+            IServiceProvider serviceProvider,
+            IAnisotropyModel anisotropy,
+            ICoalescionModel coalescion)
+            : base(definitionType, serviceProvider, [], [anisotropy, coalescion])
         {
-            DefinitionType.PropertyChanged += DefinitionTypeChangedEventHandler;
+            Anisotropy = anisotropy;
+            Coalescion = coalescion;
+            Selection.PropertyChanged += DefinitionTypeChangedEventHandler;
         }
-
-        public IEditableSettingSpecific<AccelerationDefinitionType> DefinitionType { get; set; }
 
         protected Dictionary<AccelerationDefinitionType, IAccelDefinitionModel> DefinitionModels { get; set; }
 
-        public AnisotropyModel Anisotropy { get; set; }
+        public IAnisotropyModel Anisotropy { get; set; }
 
-        public CoalescionModel Coalescion { get; set; }
+        public ICoalescionModel Coalescion { get; set; }
 
         public FormulaAccelModel FormulaAccel
         {

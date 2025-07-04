@@ -27,6 +27,7 @@ namespace userspace_backend.Model
             YXRatio = yxRatio;
             Acceleration = acceleration;
             Hidden = hidden;
+
             // Name and Output DPI do not need to generate a new curve preview
             Name.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
             OutputDPI.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
@@ -36,6 +37,7 @@ namespace userspace_backend.Model
             Acceleration.AnySettingChanged += AnyCurveSettingCollectionChangedEventHandler;
             Hidden.AnySettingChanged += AnyCurveSettingCollectionChangedEventHandler;
 
+            // TODO: DI - Curve preview to DI
             CurvePreview = new CurvePreview();
             RecalculateDriverDataAndCurvePreview();
         }

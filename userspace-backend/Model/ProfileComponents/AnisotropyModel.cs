@@ -1,17 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.ProfileComponents
 {
-    public class AnisotropyModel : EditableSettingsCollection<Anisotropy>
+    public interface IAnisotropyModel : IEditableSettingsCollectionSpecific<Anisotropy>
     {
-        public AnisotropyModel(Anisotropy dataObject) : base(dataObject)
+    }
+
+    public class AnisotropyModel : EditableSettingsCollectionV2<Anisotropy>, IAnisotropyModel
+    {
+        public const string DomainXDIKey = $"{nameof(AnisotropyModel)}.{nameof(DomainX)}";
+        public const string DomainYDIKey = $"{nameof(AnisotropyModel)}.{nameof(DomainY)}";
+        public const string RangeXDIKey = $"{nameof(AnisotropyModel)}.{nameof(RangeX)}";
+        public const string RangeYDIKey = $"{nameof(AnisotropyModel)}.{nameof(RangeYDIKey)}";
+        public const string LPNormDIKey = $"{nameof(AnisotropyModel)}.{nameof(LPNorm)}";
+        public const string CombineXYComponentsDIKey = $"{nameof(AnisotropyModel)}.{nameof(CombineXYComponents)}";
+
+        public AnisotropyModel(
+            [FromKeyedServices(DomainXDIKey)]IEditableSettingSpecific<double> domainX,
+            [FromKeyedServices(DomainYDIKey)]IEditableSettingSpecific<double> domainY,
+            [FromKeyedServices(RangeXDIKey)]IEditableSettingSpecific<double> rangeX,
+            [FromKeyedServices(RangeYDIKey)]IEditableSettingSpecific<double> rangeY,
+            [FromKeyedServices(LPNormDIKey)]IEditableSettingSpecific<double> lpNorm,
+            [FromKeyedServices(CombineXYComponentsDIKey)]IEditableSettingSpecific<bool> combineXYComponents
+            ) : base([domainX, domainY, rangeX, rangeY, lpNorm, combineXYComponents], [])
         {
+            DomainX = domainX;
+            DomainY = domainY;
+            RangeX = rangeX;
+            RangeY = rangeY;
+            LPNorm = lpNorm;
+            CombineXYComponents = combineXYComponents;
         }
 
         public IEditableSettingSpecific<double> DomainX { get; set; }
@@ -34,50 +54,6 @@ namespace userspace_backend.Model.ProfileComponents
                 Range = new Vector2() { X = RangeX.ModelValue, Y = RangeY.ModelValue },
                 LPNorm = LPNorm.ModelValue,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [DomainX, DomainY, RangeX, RangeY, LPNorm];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override void InitEditableSettingsAndCollections(Anisotropy dataObject)
-        {
-            DomainX = new EditableSetting<double>(
-                displayName: "Domain X",
-                initialValue: dataObject?.Domain?.X ?? 1,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            DomainY = new EditableSetting<double>(
-                displayName: "Domain Y",
-                initialValue: dataObject?.Domain?.Y ?? 1,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            RangeX = new EditableSetting<double>(
-                displayName: "Range X",
-                initialValue: dataObject?.Range?.X ?? 1,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            RangeY = new EditableSetting<double>(
-                displayName: "Range Y",
-                initialValue: dataObject?.Range?.Y ?? 1,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            LPNorm = new EditableSetting<double>(
-                displayName: "LP Norm",
-                initialValue: dataObject?.LPNorm ?? 2,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            CombineXYComponents = new EditableSetting<bool>(
-                displayName: "Combine X and Y Components",
-                initialValue: dataObject?.CombineXYComponents ?? false,
-                parser: UserInputParsers.BoolParser,
-                validator: ModelValueValidators.DefaultBoolValidator);
         }
     }
 }

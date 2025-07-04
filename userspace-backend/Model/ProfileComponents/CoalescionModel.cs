@@ -1,17 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.ProfileComponents
 {
-    public class CoalescionModel : EditableSettingsCollection<Coalescion>
+    public interface ICoalescionModel : IEditableSettingsCollectionSpecific<Coalescion>
     {
-        public CoalescionModel(Coalescion dataObject) : base(dataObject)
+    }
+
+    public class CoalescionModel : EditableSettingsCollectionV2<Coalescion>, ICoalescionModel
+    {
+        public const string InputSmoothingHalfLifeDIKey = $"{nameof(CoalescionModel)}.{nameof(InputSmoothingHalfLife)}";
+        public const string ScaleSmoothingHalfLifeDIKey = $"{nameof(CoalescionModel)}.{nameof(ScaleSmoothingHalfLife)}";
+
+        public CoalescionModel(
+            [FromKeyedServices(InputSmoothingHalfLifeDIKey)]IEditableSettingSpecific<double> inputSmoothingHalfLife,
+            [FromKeyedServices(ScaleSmoothingHalfLifeDIKey)]IEditableSettingSpecific<double> scaleSmoothHalfLife)
+            : base([inputSmoothingHalfLife, scaleSmoothHalfLife], [])
         {
+            InputSmoothingHalfLife = inputSmoothingHalfLife;
+            ScaleSmoothingHalfLife = scaleSmoothHalfLife;
         }
 
         public IEditableSettingSpecific<double> InputSmoothingHalfLife { get; set; }
@@ -25,30 +33,6 @@ namespace userspace_backend.Model.ProfileComponents
                 InputSmoothingHalfLife = InputSmoothingHalfLife.ModelValue,
                 ScaleSmoothingHalfLife = ScaleSmoothingHalfLife.ModelValue,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ InputSmoothingHalfLife, ScaleSmoothingHalfLife ];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override void InitEditableSettingsAndCollections(Coalescion dataObject)
-        {
-            InputSmoothingHalfLife = new EditableSetting<double>(
-                displayName: "Input Smoothing Half-Life",
-                initialValue: dataObject?.InputSmoothingHalfLife ?? 0,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            ScaleSmoothingHalfLife = new EditableSetting<double>(
-                displayName: "Scale Smoothing Half-Life",
-                initialValue: dataObject?.ScaleSmoothingHalfLife ?? 0,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }

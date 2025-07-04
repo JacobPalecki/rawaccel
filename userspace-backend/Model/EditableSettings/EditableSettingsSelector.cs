@@ -56,6 +56,5 @@ namespace userspace_backend.Model.EditableSettings
         {
             return GetSelectable(Selection.ModelValue).MapToData();
         }
-
     }
 }
