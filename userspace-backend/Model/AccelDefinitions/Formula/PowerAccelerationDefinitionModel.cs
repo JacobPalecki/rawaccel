@@ -1,18 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions.Formula
 {
-    public class PowerAccelerationDefinitionModel : AccelDefinitionModel<PowerAccel>
+    public interface IPowerAccelerationDefinitionModel : IAccelDefinitionModelSpecific<PowerAccel>
     {
-        public PowerAccelerationDefinitionModel(Acceleration dataObject) : base(dataObject)
+    }
+
+    public class PowerAccelerationDefinitionModel : EditableSettingsCollectionV2<PowerAccel>, IPowerAccelerationDefinitionModel
+    {
+        public const string ScaleDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Scale)}";
+        public const string ExponentDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Exponent)}";
+        public const string OutputOffsetDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(OutputOffset)}";
+        public const string CapDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(CapDIKey)}";
+
+        public PowerAccelerationDefinitionModel(
+            [FromKeyedServices(ScaleDIKey)]IEditableSettingSpecific<double> scale,
+            [FromKeyedServices(ExponentDIKey)]IEditableSettingSpecific<double> exponent,
+            [FromKeyedServices(OutputOffsetDIKey)]IEditableSettingSpecific<double> outputOffset,
+            [FromKeyedServices(CapDIKey)]IEditableSettingSpecific<double> cap)
+            : base([scale, exponent, outputOffset, cap], [])
         {
+            Scale = scale;
+            Exponent = exponent;
+            OutputOffset = outputOffset;
+            Cap = cap;
         }
 
         public IEditableSettingSpecific<double> Scale { get; set; }
@@ -23,7 +37,7 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
 
         public IEditableSettingSpecific<double> Cap { get; set; }
 
-        public override AccelArgs MapToDriver()
+        public AccelArgs MapToDriver()
         {
             return new AccelArgs
             {
@@ -36,54 +50,15 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        public override Acceleration MapToData()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ Scale, Exponent, OutputOffset, Cap ];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override PowerAccel GenerateDefaultDataObject()
+        public override PowerAccel MapToData()
         {
             return new PowerAccel()
             {
-                Scale = 1,
-                Exponent = 0.05,
-                Cap = 0,
-                OutputOffset = 0,
+                Scale = Scale.ModelValue,
+                Exponent = Exponent.ModelValue,
+                OutputOffset = OutputOffset.ModelValue,
+                Cap = Cap.ModelValue,
             };
-        }
-
-        protected override void InitSpecificSettingsAndCollections(PowerAccel dataObject)
-        {
-            Scale = new EditableSetting<double>(
-                displayName: "Scale",
-                initialValue: dataObject.Scale,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Exponent = new EditableSetting<double>(
-                displayName: "Exponent",
-                initialValue: dataObject.Exponent,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            OutputOffset = new EditableSetting<double>(
-                displayName: "Output Offset",
-                initialValue: dataObject.OutputOffset,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Cap = new EditableSetting<double>(
-                displayName: "Cap",
-                initialValue: dataObject.Cap,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }

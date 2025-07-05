@@ -26,8 +26,8 @@ namespace userspace_backend.Model.EditableSettings
           IEditableSettingsSelector<T, U> where T : Enum
     {
         protected EditableSettingsSelector(
-            IEditableSettingSpecific<T> selection,
             IServiceProvider serviceProvider,
+            IEditableSettingSpecific<T> selection,
             IEnumerable<IEditableSetting> editableSettings,
             IEnumerable<IEditableSettingsCollectionV2> editableSettingsCollections)
             : base(editableSettings.Union([selection]), editableSettingsCollections)
@@ -43,6 +43,8 @@ namespace userspace_backend.Model.EditableSettings
 
         public IEditableSettingsCollectionSpecific<U> GetSelectable(T choice) => SelectionLookup[choice];
 
+        public IEditableSettingsCollectionSpecific<U> Selected => GetSelectable(Selection.ModelValue);
+
         protected void InitSelectionLookup(IServiceProvider serviceProvider)
         {
             foreach (T value in Enum.GetValues(typeof(T)))
@@ -54,7 +56,7 @@ namespace userspace_backend.Model.EditableSettings
 
         public override U MapToData()
         {
-            return GetSelectable(Selection.ModelValue).MapToData();
+            return Selected.MapToData();
         }
     }
 }

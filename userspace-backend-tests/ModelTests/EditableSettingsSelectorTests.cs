@@ -119,7 +119,7 @@ namespace userspace_backend_tests.ModelTests
 
             public IEditableSettingSpecific<int> PropertyA { get; }
 
-            public override TestDataAbstract MapToData()
+            public override TestDataA MapToData()
             {
                 return new TestDataA()
                 {
@@ -157,9 +157,9 @@ namespace userspace_backend_tests.ModelTests
             public const string SelectionName = $"{nameof(EditableSettingsTestSelector)}.{nameof(Selection)}";
 
             public EditableSettingsTestSelector(
-                [FromKeyedServices(SelectionName)]IEditableSettingSpecific<TestDataAbstract.TestDataType> selection,
-                IServiceProvider serviceProvider)
-                : base(selection, serviceProvider, [], [])
+                IServiceProvider serviceProvider,
+                [FromKeyedServices(SelectionName)]IEditableSettingSpecific<TestDataAbstract.TestDataType> selection)
+                : base(serviceProvider, selection, [], [])
             {
             }
         }

@@ -23,7 +23,9 @@ namespace userinterface.ViewModels.Mapping
         {
             if (e.AddedItems.Count > 0 && e.AddedItems[0] is BE.DeviceGroupModel deviceGroup)
             {
-                MappingBE.TryAddMapping(deviceGroup.ModelValue, BE.ProfilesModel.DefaultProfile.CurrentNameForDisplay);
+                // TODO: re-add default profile
+                // MappingBE.TryAddMapping(deviceGroup.ModelValue, BE.ProfilesModel.DefaultProfile.CurrentNameForDisplay);
+                MappingBE.TryAddMapping(deviceGroup.ModelValue, "Default");
             }
         }
 

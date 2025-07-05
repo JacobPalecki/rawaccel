@@ -101,7 +101,7 @@ namespace userspace_backend.Model
                 return false;
             }
 
-            if (!Profiles.TryGetProfile(profileName, out ProfileModel? profile)
+            if (!Profiles.TryGetElement(profileName, out ProfileModel? profile)
                 || profile == null)
             {
                 return false;

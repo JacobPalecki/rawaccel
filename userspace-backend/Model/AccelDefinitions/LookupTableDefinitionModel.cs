@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Data.Profiles.Accel;
 using userspace_backend.Model.EditableSettings;
@@ -10,17 +9,29 @@ using static userspace_backend.Data.Profiles.Accel.LookupTableAccel;
 
 namespace userspace_backend.Model.AccelDefinitions
 {
-    public class LookupTableDefinitionModel : AccelDefinitionModel<LookupTableAccel>
+    public interface ILookupTableDefinitionModel : IAccelDefinitionModelSpecific<LookupTableAccel>
     {
-        public LookupTableDefinitionModel(Acceleration dataObject) : base(dataObject)
+    }
+
+    public class LookupTableDefinitionModel : EditableSettingsCollectionV2<LookupTableAccel>, ILookupTableDefinitionModel
+    {
+        public const string ApplyAsDIKey = $"{nameof(LookupTableDefinitionModel)}.{nameof(ApplyAs)}";
+        public const string DataDIKey = $"{nameof(LookupTableDefinitionModel)}.{nameof(Data)}";
+
+        public LookupTableDefinitionModel(
+            [FromKeyedServices(ApplyAsDIKey)]IEditableSettingSpecific<LookupTableType> applyAs,
+            [FromKeyedServices(DataDIKey)]IEditableSettingSpecific<LookupTableData> data)
+            : base([applyAs, data], [])
         {
+            ApplyAs = applyAs;
+            Data = data;
         }
 
         public IEditableSettingSpecific<LookupTableType> ApplyAs { get; set; }
 
         public IEditableSettingSpecific<LookupTableData> Data { get; set; }
 
-        public override AccelArgs MapToDriver()
+        public AccelArgs MapToDriver()
         {
             // data in driver profile must be predefined length for marshalling purposes
             var accelArgsData = new float[AccelArgs.MaxLutPoints*2];
@@ -34,46 +45,13 @@ namespace userspace_backend.Model.AccelDefinitions
             };
         }
 
-        public override Acceleration MapToData()
+        public override LookupTableAccel MapToData()
         {
             return new LookupTableAccel()
             {
                 ApplyAs = this.ApplyAs.ModelValue,
                 Data = this.Data.ModelValue.Data,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ApplyAs, Data];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override LookupTableAccel GenerateDefaultDataObject()
-        {
-            return new LookupTableAccel()
-            {
-                ApplyAs = LookupTableType.Velocity,
-                Data = [],
-            };
-        }
-
-        protected override void InitSpecificSettingsAndCollections(LookupTableAccel dataObject)
-        {
-            ApplyAs = new EditableSetting<LookupTableType>(
-                displayName: "Apply as",
-                initialValue: dataObject.ApplyAs,
-                parser: UserInputParsers.LookupTableTypeParser,
-                validator: ModelValueValidators.DefaultLookupTableTypeValidator);
-            Data = new EditableSetting<LookupTableData>(
-                displayName: "Data",
-                initialValue: new LookupTableData(dataObject.Data),
-                parser: UserInputParsers.LookupTableDataParser,
-                validator: ModelValueValidators.DefaultLookupTableDataValidator);
         }
     }
 

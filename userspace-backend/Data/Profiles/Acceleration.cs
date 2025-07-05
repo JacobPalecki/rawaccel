@@ -23,8 +23,8 @@ namespace userspace_backend.Data.Profiles
 
         public virtual AccelerationDefinitionType Type { get; init; }
 
-        public Anisotropy Anisotropy { get; init; }
+        public Anisotropy Anisotropy { get; set; }
 
-        public Coalescion Coalescion { get; init; }
+        public Coalescion Coalescion { get; set; }
     }
 }

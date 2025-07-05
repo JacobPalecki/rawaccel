@@ -1,26 +1,42 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using userspace_backend.Data.Profiles;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions.Formula
 {
-    public class SynchronousAccelerationDefinitionModel : AccelDefinitionModel<SynchronousAccel>
+    public interface ISynchronousAccelerationDefinitionModel : IEditableSettingsCollectionSpecific<SynchronousAccel>
     {
-        public SynchronousAccelerationDefinitionModel(Acceleration dataObject) : base(dataObject)
+    }
+
+    public class SynchronousAccelerationDefinitionModel : EditableSettingsCollectionV2<SynchronousAccel>, ISynchronousAccelerationDefinitionModel
+    {
+        public const string SyncSpeedDIKey = $"{nameof(SynchronousAccelerationDefinitionModel)}.{nameof(SyncSpeed)}";
+        public const string MotivityDIKey = $"{nameof(SynchronousAccelerationDefinitionModel)}.{nameof(Motivity)}";
+        public const string GammaDIKey = $"{nameof(SynchronousAccelerationDefinitionModel)}.{nameof(Gamma)}";
+        public const string SmoothnessDIKey = $"{nameof(SynchronousAccelerationDefinitionModel)}.{nameof(Smoothness)}";
+
+        public SynchronousAccelerationDefinitionModel(
+            [FromKeyedServices(SyncSpeedDIKey)]IEditableSettingSpecific<double> syncSpeed,
+            [FromKeyedServices(MotivityDIKey)]IEditableSettingSpecific<double> motivity,
+            [FromKeyedServices(GammaDIKey)]IEditableSettingSpecific<double> gamma,
+            [FromKeyedServices(SmoothnessDIKey)]IEditableSettingSpecific<double> smoothness)
+            : base([syncSpeed, motivity, gamma, smoothness], [])
         {
+            SyncSpeed = syncSpeed;
+            Motivity = motivity;
+            Gamma = gamma;
+            Smoothness = smoothness;
         }
-
-        public IEditableSettingSpecific<double> Gamma { get; set; }
-
-        public IEditableSettingSpecific<double> Motivity { get; set; }
 
         public IEditableSettingSpecific<double> SyncSpeed { get; set; }
 
+        public IEditableSettingSpecific<double> Motivity { get; set; }
+
+        public IEditableSettingSpecific<double> Gamma { get; set; }
+
         public IEditableSettingSpecific<double> Smoothness { get; set; }
 
-        public override AccelArgs MapToDriver()
+        public AccelArgs MapToDriver()
         {
             return new AccelArgs
             {
@@ -32,60 +48,15 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        public override Acceleration MapToData()
+        public override SynchronousAccel MapToData()
         {
             return new SynchronousAccel()
             {
-                Gamma = Gamma.ModelValue,
-                Motivity = Motivity.ModelValue,
                 SyncSpeed = SyncSpeed.ModelValue,
+                Motivity = Motivity.ModelValue,
+                Gamma = Gamma.ModelValue,
                 Smoothness = Smoothness.ModelValue,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [Gamma, Motivity, SyncSpeed, Smoothness];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override SynchronousAccel GenerateDefaultDataObject()
-        {
-            return new SynchronousAccel()
-            {
-                Gamma = 1,
-                Motivity = 1.4,
-                SyncSpeed = 12,
-                Smoothness = 0.5,
-            };
-        }
-
-        protected override void InitSpecificSettingsAndCollections(SynchronousAccel dataObject)
-        {
-            Gamma = new EditableSetting<double>(
-                displayName: "Gamma",
-                dataObject.Gamma,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Motivity = new EditableSetting<double>(
-                displayName: "Motivity",
-                dataObject.Motivity,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            SyncSpeed = new EditableSetting<double>(
-                displayName: "Sync Speed",
-                dataObject.SyncSpeed,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Smoothness = new EditableSetting<double>(
-                displayName: "Smoothness",
-                dataObject.Smoothness,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }

@@ -1,18 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using userspace_backend.Data.Profiles;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions.Formula
 {
-    public class LinearAccelerationDefinitionModel : AccelDefinitionModel<LinearAccel>
+    public interface ILinearAccelerationDefinitionModel : IAccelDefinitionModelSpecific<LinearAccel>
     {
-        public LinearAccelerationDefinitionModel(Acceleration dataObject) : base(dataObject)
+    }
+
+    public class LinearAccelerationDefinitionModel : EditableSettingsCollectionV2<LinearAccel>, ILinearAccelerationDefinitionModel
+    {
+        public const string AccelerationDIKey = $"{nameof(LinearAccelerationDefinitionModel)}.{nameof(Acceleration)}";
+        public const string OffsetDIKey = $"{nameof(LinearAccelerationDefinitionModel)}.{nameof(Offset)}";
+        public const string CapDIKey = $"{nameof(LinearAccelerationDefinitionModel)}.{nameof(CapDIKey)}";
+
+        public LinearAccelerationDefinitionModel(
+            [FromKeyedServices(AccelerationDIKey)]IEditableSettingSpecific<double> acceleration,
+            [FromKeyedServices(OffsetDIKey)]IEditableSettingSpecific<double> offset,
+            [FromKeyedServices(CapDIKey)]IEditableSettingSpecific<double> cap)
+            : base([acceleration, offset, cap], [])
         {
+            Acceleration = acceleration;
+            Offset = offset;
+            Cap = cap;
         }
 
         public IEditableSettingSpecific<double> Acceleration { get; set; }
@@ -21,7 +31,7 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
 
         public IEditableSettingSpecific<double> Cap { get; set; }
 
-        public override AccelArgs MapToDriver()
+        public AccelArgs MapToDriver()
         {
             return new AccelArgs
             {
@@ -34,7 +44,7 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        public override Acceleration MapToData()
+        public override LinearAccel MapToData()
         {
             return new LinearAccel()
             {
@@ -42,45 +52,6 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 Offset = Offset.ModelValue,
                 Cap = Cap.ModelValue,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ Acceleration, Offset, Cap ];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override LinearAccel GenerateDefaultDataObject()
-        {
-            return new LinearAccel()
-            {
-                Acceleration = 0.001,
-                Offset = 0,
-                Cap = 0,
-            };
-        }
-
-        protected override void InitSpecificSettingsAndCollections(LinearAccel dataObject)
-        {
-            Acceleration = new EditableSetting<double>(
-                displayName: "Acceleration",
-                initialValue: dataObject.Acceleration,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Offset = new EditableSetting<double>(
-                displayName: "Offset",
-                initialValue: dataObject.Offset,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Cap = new EditableSetting<double>(
-                displayName: "Cap",
-                initialValue: dataObject.Cap,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }

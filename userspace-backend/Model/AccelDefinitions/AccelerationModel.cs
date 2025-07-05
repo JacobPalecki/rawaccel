@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend.Model.ProfileComponents;
@@ -10,23 +10,27 @@ namespace userspace_backend.Model.AccelDefinitions
 {
     public interface IAccelerationModel : IEditableSettingsCollectionSpecific<Acceleration>
     {
+        IAnisotropyModel Anisotropy { get; }
+
+        ICoalescionModel Coalescion { get; }
+
+        AccelArgs MapToDriver();
     }
 
     public class AccelerationModel : EditableSettingsSelector<AccelerationDefinitionType, Acceleration>, IAccelerationModel
     {
+        public const string SelectionDIKey = $"{nameof(AccelerationModel)}.{nameof(Selection)}";
+
         public AccelerationModel(
-            IEditableSettingSpecific<AccelerationDefinitionType> definitionType,
             IServiceProvider serviceProvider,
+            [FromKeyedServices(SelectionDIKey)]IEditableSettingSpecific<AccelerationDefinitionType> definitionType,
             IAnisotropyModel anisotropy,
             ICoalescionModel coalescion)
-            : base(definitionType, serviceProvider, [], [anisotropy, coalescion])
+            : base(serviceProvider, definitionType, [], [anisotropy, coalescion])
         {
             Anisotropy = anisotropy;
             Coalescion = coalescion;
-            Selection.PropertyChanged += DefinitionTypeChangedEventHandler;
         }
-
-        protected Dictionary<AccelerationDefinitionType, IAccelDefinitionModel> DefinitionModels { get; set; }
 
         public IAnisotropyModel Anisotropy { get; set; }
 
@@ -34,89 +38,26 @@ namespace userspace_backend.Model.AccelDefinitions
 
         public FormulaAccelModel FormulaAccel
         {
-            get   
-            {
-                if (DefinitionModels.TryGetValue(AccelerationDefinitionType.Formula, out IAccelDefinitionModel value))
-                {
-                    return value as FormulaAccelModel;
-                }
-
-                return null;
-            }
+            get => SelectionLookup.TryGetValue(AccelerationDefinitionType.Formula, out IEditableSettingsCollectionSpecific<Acceleration> value)
+                    ? value as FormulaAccelModel
+                    : null;
         }
 
         public LookupTableDefinitionModel LookupTableAccel
         {
-            get   
-            {
-                if (DefinitionModels.TryGetValue(AccelerationDefinitionType.LookupTable, out IAccelDefinitionModel value))
-                {
-                    return value as LookupTableDefinitionModel;
-                }
-
-                return null;
-            }
+            get => SelectionLookup.TryGetValue(AccelerationDefinitionType.LookupTable, out IEditableSettingsCollectionSpecific<Acceleration> value)
+                    ? value as LookupTableDefinitionModel
+                    : null;
         }
 
         public override Acceleration MapToData()
         {
-            return DefinitionModels[DefinitionType.ModelValue].MapToData();
+            Acceleration acceleration = base.MapToData();
+            acceleration.Anisotropy = Anisotropy.MapToData();
+            acceleration.Coalescion = Coalescion.MapToData();
+            return acceleration;
         }
 
-        public AccelArgs MapToDriver()
-        {
-            return DefinitionModels[DefinitionType.ModelValue].MapToDriver();
-        }
-
-        protected void DefinitionTypeChangedEventHandler(object? sender, PropertyChangedEventArgs e)
-        {
-            // When the definition type changes, contained editable settings collections need to correspond to new type
-            if (string.Equals(e.PropertyName, nameof(DefinitionType.ModelValue)))
-            {
-                GatherEditableSettingsCollections();
-            }
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [DefinitionType];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [DefinitionModels[DefinitionType.ModelValue]];
-        }
-
-        protected override void InitEditableSettingsAndCollections(Acceleration dataObject)
-        {
-            DefinitionType = new EditableSetting<AccelerationDefinitionType>(
-                displayName: "Definition Type",
-                initialValue: dataObject?.Type ?? AccelerationDefinitionType.None,
-                parser: UserInputParsers.AccelerationDefinitionTypeParser,
-                validator: ModelValueValidators.DefaultAccelerationTypeValidator);
-
-            DefinitionModels = new Dictionary<AccelerationDefinitionType, IAccelDefinitionModel>();
-            foreach (AccelerationDefinitionType defnType in Enum.GetValues(typeof(AccelerationDefinitionType)))
-            {
-                DefinitionModels.Add(defnType, CreateAccelerationDefinitionModelOfType(defnType, dataObject));
-            }
-
-            Anisotropy = new AnisotropyModel(dataObject?.Anisotropy);
-            Coalescion = new CoalescionModel(dataObject?.Coalescion);
-        }
-
-        protected IAccelDefinitionModel CreateAccelerationDefinitionModelOfType(AccelerationDefinitionType definitionType, Acceleration dataObject)
-        {
-            switch (definitionType)
-            {
-                case AccelerationDefinitionType.Formula:
-                    return new FormulaAccelModel(dataObject);
-                case AccelerationDefinitionType.LookupTable:
-                    return new LookupTableDefinitionModel(dataObject);
-                case AccelerationDefinitionType.None:
-                default:
-                    return new NoAccelDefinitionModel(dataObject);
-            }
-        }
+        public AccelArgs MapToDriver() => ((IAccelDefinitionModel)Selected)?.MapToDriver() ?? new AccelArgs();
     }
 }

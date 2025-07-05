@@ -25,7 +25,7 @@ namespace userspace_backend
 
             BackEndLoader = backEndLoader;
             Devices = new DevicesModel(serviceProvider.GetRequiredService<ISystemDevicesProvider>());
-            Profiles = new ProfilesModel([]);
+            Profiles = new ProfilesModel(serviceProvider);
         }
 
         public DevicesModel Devices { get; set; }
@@ -60,7 +60,7 @@ namespace userspace_backend
         {
             foreach (var profile in profileData)
             {
-                Profiles.TryAddProfile(profile);
+                Profiles.TryAdd(profile);
             }
         }
 
@@ -83,7 +83,7 @@ namespace userspace_backend
             BackEndLoader.WriteSettingsToDisk(
                 Devices.DevicesEnumerable,
                 Mappings,
-                Profiles.Profiles);
+                Profiles.Elements);
         }
 
         protected void WriteToDriver()

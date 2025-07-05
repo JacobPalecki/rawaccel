@@ -6,6 +6,9 @@ namespace userspace_backend.Model.ProfileComponents
 {
     public interface ICoalescionModel : IEditableSettingsCollectionSpecific<Coalescion>
     {
+        IEditableSettingSpecific<double> InputSmoothingHalfLife { get; }
+
+        IEditableSettingSpecific<double> ScaleSmoothingHalfLife { get; }
     }
 
     public class CoalescionModel : EditableSettingsCollectionV2<Coalescion>, ICoalescionModel

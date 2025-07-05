@@ -1,26 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using userspace_backend.Data.Profiles;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions.Formula
 {
-    public class NaturalAccelerationDefinitionModel : AccelDefinitionModel<NaturalAccel>
+    public interface INaturalAccelerationDefinitionModel : IAccelDefinitionModelSpecific<NaturalAccel>
     {
-        public NaturalAccelerationDefinitionModel(Acceleration dataObject) : base(dataObject)
+    }
+
+    public class NaturalAccelerationDefinitionModel : EditableSettingsCollectionV2<NaturalAccel>, INaturalAccelerationDefinitionModel
+    {
+        public const string DecayRateDIKey = $"{nameof(NaturalAccelerationDefinitionModel)}.{nameof(DecayRate)}";
+        public const string InputOffsetDIKey = $"{nameof(NaturalAccelerationDefinitionModel)}.{nameof(InputOffset)}";
+        public const string LimitDIKey = $"{nameof(NaturalAccelerationDefinitionModel)}.{nameof(Limit)}";
+
+        public NaturalAccelerationDefinitionModel(
+            [FromKeyedServices(DecayRateDIKey)]IEditableSettingSpecific<double> decayRate,
+            [FromKeyedServices(InputOffsetDIKey)]IEditableSettingSpecific<double> inputOffset,
+            [FromKeyedServices(LimitDIKey)]IEditableSettingSpecific<double> limit)
+            : base([decayRate, inputOffset, limit], [])
         {
+            DecayRate = decayRate;
+            InputOffset = inputOffset;
+            Limit = limit;
         }
+
         public IEditableSettingSpecific<double> DecayRate { get; set; }
 
         public IEditableSettingSpecific<double> InputOffset { get; set; }
 
         public IEditableSettingSpecific<double> Limit { get; set; }
 
-        public override AccelArgs MapToDriver()
+        public AccelArgs MapToDriver()
         {
             return new AccelArgs
             {
@@ -31,7 +42,7 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        public override Acceleration MapToData()
+        public override NaturalAccel MapToData()
         {
             return new NaturalAccel()
             {
@@ -39,45 +50,6 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 InputOffset = InputOffset.ModelValue,
                 Limit = Limit.ModelValue,
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ DecayRate, InputOffset, Limit ];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override NaturalAccel GenerateDefaultDataObject()
-        {
-            return new NaturalAccel()
-            {
-                DecayRate = 0.1,
-                InputOffset = 0,
-                Limit = 1.5,
-            };
-        }
-
-        protected override void InitSpecificSettingsAndCollections(NaturalAccel dataObject)
-        {
-            DecayRate = new EditableSetting<double>(
-                displayName: "Decay Rate",
-                initialValue: dataObject.DecayRate,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            InputOffset = new EditableSetting<double>(
-                displayName: "Input Offset",
-                initialValue: dataObject.InputOffset,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Limit = new EditableSetting<double>(
-                displayName: "Limit",
-                initialValue: dataObject.Limit,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }

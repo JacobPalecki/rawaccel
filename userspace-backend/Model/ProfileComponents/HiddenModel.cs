@@ -6,6 +6,17 @@ namespace userspace_backend.Model.ProfileComponents
 {
     public interface IHiddenModel : IEditableSettingsCollectionSpecific<Hidden>
     {
+        IEditableSettingSpecific<double> RotationDegrees { get; }
+
+        IEditableSettingSpecific<double> AngleSnappingDegrees { get; }
+
+        IEditableSettingSpecific<double> LeftRightRatio { get; }
+
+        IEditableSettingSpecific<double> UpDownRatio { get; }
+
+        IEditableSettingSpecific<double> SpeedCap { get; }
+
+        IEditableSettingSpecific<double> OutputSmoothingHalfLife { get; }
     }
 
     public class HiddenModel : EditableSettingsCollectionV2<Hidden>, IHiddenModel

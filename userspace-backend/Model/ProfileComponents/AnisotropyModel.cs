@@ -6,6 +6,17 @@ namespace userspace_backend.Model.ProfileComponents
 {
     public interface IAnisotropyModel : IEditableSettingsCollectionSpecific<Anisotropy>
     {
+        IEditableSettingSpecific<double> DomainX { get; }
+
+        IEditableSettingSpecific<double> DomainY { get; }
+
+        IEditableSettingSpecific<double> RangeX { get; }
+
+        IEditableSettingSpecific<double> RangeY { get; }
+
+        IEditableSettingSpecific<double> LPNorm { get; }
+
+        IEditableSettingSpecific<bool> CombineXYComponents { get; }
     }
 
     public class AnisotropyModel : EditableSettingsCollectionV2<Anisotropy>, IAnisotropyModel

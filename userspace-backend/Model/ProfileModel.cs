@@ -9,15 +9,24 @@ using userspace_backend.Common;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using userspace_backend.Display;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace userspace_backend.Model
 {
-    public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>
+    public interface IProfileModel : IEditableSettingsCollectionSpecific<DATA.Profile>
     {
+    }
+
+    public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>, IProfileModel
+    {
+        public const string NameDIKey = $"{nameof(ProfileModel)}.{nameof(Name)}";
+        public const string OutputDPIDIKey = $"{nameof(ProfileModel)}.{nameof(OutputDPI)}";
+        public const string YXRatioDIKey = $"{nameof(ProfileModel)}.{nameof(YXRatio)}";
+
         public ProfileModel(
-            IEditableSettingSpecific<string> name,
-            IEditableSettingSpecific<int> outputDPI,
-            IEditableSettingSpecific<double> yxRatio,
+            [FromKeyedServices(NameDIKey)]IEditableSettingSpecific<string> name,
+            [FromKeyedServices(OutputDPIDIKey)]IEditableSettingSpecific<int> outputDPI,
+            [FromKeyedServices(YXRatioDIKey)]IEditableSettingSpecific<double> yxRatio,
             IAccelerationModel acceleration,
             IHiddenModel hidden
             ) : base([name, outputDPI, yxRatio], [acceleration, hidden])
@@ -103,37 +112,6 @@ namespace userspace_backend.Model
         {
             RecalculateDriverData();
             CurvePreview.GeneratePoints(CurrentValidatedDriverProfile);
-        }
-
-        // TODO: DI - Add init to composition
-        protected override void InitEditableSettingsAndCollections(DATA.Profile dataObject)
-        {
-            Name = new EditableSetting<string>(
-                displayName: "Name",
-                initialValue: dataObject.Name,
-                parser: UserInputParsers.StringParser,
-                validator: NameValidator);
-            OutputDPI = new EditableSetting<int>(
-                displayName: "Output DPI",
-                initialValue: dataObject.OutputDPI,
-                parser: UserInputParsers.IntParser,
-                validator: ModelValueValidators.DefaultIntValidator);
-            YXRatio = new EditableSetting<double>(
-                displayName: "Y/X Ratio",
-                initialValue: dataObject.YXRatio,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Acceleration = new AccelerationModel(dataObject.Acceleration);
-            Hidden = new HiddenModel(dataObject.Hidden);
-
-            // Name and Output DPI do not need to generate a new curve preview
-            Name.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
-            OutputDPI.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
-
-            // The rest of settings should generate a new curve preview
-            YXRatio.PropertyChanged += AnyCurvePreviewPropertyChangedEventHandler;
-            Acceleration.AnySettingChanged += AnyCurveSettingCollectionChangedEventHandler;
-            Hidden.AnySettingChanged += AnyCurveSettingCollectionChangedEventHandler;
         }
     }
 }

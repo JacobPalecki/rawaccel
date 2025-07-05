@@ -8,27 +8,12 @@ using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions
 {
-    public interface IAccelDefinitionModel : IEditableSettingsCollectionSpecific<Acceleration>
+    public interface IAccelDefinitionModel : IEditableSettingsCollectionV2
     {
         AccelArgs MapToDriver();
     }
 
-    public abstract class AccelDefinitionModel<T> : EditableSettingsCollection<Acceleration>, IAccelDefinitionModel where T : Acceleration
+    public interface IAccelDefinitionModelSpecific<T> : IAccelDefinitionModel, IEditableSettingsCollectionSpecific<T> where T : Acceleration
     {
-        protected AccelDefinitionModel(Acceleration dataObject) : base(dataObject)
-        {
-        }
-
-        protected override void InitEditableSettingsAndCollections(Acceleration dataObject)
-        {
-            T dataAccel = dataObject as T ?? GenerateDefaultDataObject();
-            InitSpecificSettingsAndCollections(dataAccel);
-        }
-
-        protected abstract void InitSpecificSettingsAndCollections(T dataObject);
-
-        protected abstract T GenerateDefaultDataObject();
-
-        public abstract AccelArgs MapToDriver();
-    }
+    }    
 }

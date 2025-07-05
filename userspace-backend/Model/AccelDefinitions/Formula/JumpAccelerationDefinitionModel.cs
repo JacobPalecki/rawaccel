@@ -1,18 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using userspace_backend.Data.Profiles;
+﻿using Microsoft.Extensions.DependencyInjection;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model.AccelDefinitions.Formula
 {
-    public class JumpAccelerationDefinitionModel : AccelDefinitionModel<JumpAccel>
+    public interface IJumpAccelerationDefinitionModel : IAccelDefinitionModelSpecific<JumpAccel>
     {
-        public JumpAccelerationDefinitionModel(Acceleration dataObject) : base(dataObject)
+    }
+
+    public class JumpAccelerationDefinitionModel : EditableSettingsCollectionV2<JumpAccel>, IJumpAccelerationDefinitionModel
+    {
+        public const string SmoothDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Smooth)}";
+        public const string InputDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Input)}";
+        public const string OutputDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Output)}";
+
+        public JumpAccelerationDefinitionModel(
+            [FromKeyedServices(SmoothDIKey)]IEditableSettingSpecific<double> smooth,
+            [FromKeyedServices(InputDIKey)]IEditableSettingSpecific<double> input,
+            [FromKeyedServices(OutputDIKey)]IEditableSettingSpecific<double> output)
+            : base([smooth, input, output], [])
         {
+            Smooth = smooth;
+            Input = input;
+            Output = output;
         }
 
         public IEditableSettingSpecific<double> Smooth { get; set; }
@@ -21,7 +31,7 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
 
         public IEditableSettingSpecific<double> Output { get; set; }
 
-        public override AccelArgs MapToDriver()
+        public AccelArgs MapToDriver()
         {
             return new AccelArgs
             {
@@ -31,7 +41,7 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        public override Acceleration MapToData()
+        public override JumpAccel MapToData()
         {
             return new JumpAccel()
             {
@@ -39,45 +49,6 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 Input = Input.ModelValue,
                 Output = Output.ModelValue
             };
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [ Smooth, Input, Output ];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override JumpAccel GenerateDefaultDataObject()
-        {
-            return new JumpAccel()
-            {
-                Smooth = 0.5,
-                Input = 15,
-                Output = 1.5,
-            };
-        }
-
-        protected override void InitSpecificSettingsAndCollections(JumpAccel dataObject)
-        {
-            Smooth = new EditableSetting<double>(
-                displayName: "Smooth",
-                initialValue: dataObject.Smooth,
-                parser: UserInputParsers.DoubleParser, 
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Input = new EditableSetting<double>(
-                displayName: "Input",
-                initialValue: dataObject.Input,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
-            Output = new EditableSetting<double>(
-                displayName: "Output",
-                initialValue: dataObject.Output,
-                parser: UserInputParsers.DoubleParser,
-                validator: ModelValueValidators.DefaultDoubleValidator);
         }
     }
 }
