@@ -105,6 +105,11 @@ namespace userspace_backend.Model.EditableSettings
                 TryUpdateFromInterface();
             }
         }
+
+        public bool TrySetFromData(T data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public partial class EditableSettingV2<T> : ObservableObject, IEditableSettingSpecific<T> where T : IComparable
@@ -155,6 +160,8 @@ namespace userspace_backend.Model.EditableSettings
         //TODO: change settings collections init so that this can be made private for non-static validators
         public IModelValueValidator<T> Validator { get; set; }
 
+        private bool AllowAutoUpdateFromInterface { get; set; } = true;
+
         public bool HasChanged() => ModelValue.CompareTo(LastWrittenValue) == 0;
 
         public bool TryUpdateFromInterface()
@@ -182,31 +189,46 @@ namespace userspace_backend.Model.EditableSettings
                 return false;
             }
 
-            UpdatedModeValue(parsedValue);
+            UpdateModeValue(parsedValue);
             return true;
         }
 
         protected void UpdateInterfaceValue()
         {
+            bool previous = AllowAutoUpdateFromInterface;
+            AllowAutoUpdateFromInterface = false;
             InterfaceValue = ModelValue?.ToString();
+            AllowAutoUpdateFromInterface = true;
         }
 
         protected void UpdateModelValueFromLastKnown()
         {
-            UpdatedModeValue(LastWrittenValue);
+            UpdateModeValue(LastWrittenValue);
         }
 
-        protected void UpdatedModeValue(T value)
+        protected void UpdateModeValue(T value)
         {
             ModelValue = value;
         }
 
         partial void OnInterfaceValueChanged(string value)
         {
-            if (AutoUpdateFromInterface)
+            // TODO: double-check race conditions
+            if (AutoUpdateFromInterface && AllowAutoUpdateFromInterface)
             {
                 TryUpdateFromInterface();
             }
+        }
+
+        // TODO: unit test
+        public bool TrySetFromData(T data)
+        {
+            bool previous = AllowAutoUpdateFromInterface;
+            AllowAutoUpdateFromInterface = false;
+            InterfaceValue = data.ToString();
+            bool result = TryUpdateFromInterface();
+            AllowAutoUpdateFromInterface = previous;
+            return result;
         }
     }
 }

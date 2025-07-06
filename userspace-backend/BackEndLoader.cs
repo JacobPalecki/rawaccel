@@ -21,7 +21,7 @@ namespace userspace_backend
         public void WriteSettingsToDisk(
             IEnumerable<DeviceModel> devices,
             MappingsModel mappings,
-            IEnumerable<ProfileModel> profiles);
+            IEnumerable<IProfileModel> profiles);
     }
 
     public class BackEndLoader : IBackEndLoader
@@ -60,7 +60,7 @@ namespace userspace_backend
         public void WriteSettingsToDisk(
             IEnumerable<DeviceModel> devices,
             MappingsModel mappings,
-            IEnumerable<ProfileModel> profiles)
+            IEnumerable<IProfileModel> profiles)
         {
             WriteDevices(devices);
             WriteMappings(mappings);
@@ -83,7 +83,7 @@ namespace userspace_backend
             File.WriteAllText(mappingsFilePath, mappingsFileText);
         }
         
-        protected void WriteProfiles(IEnumerable<ProfileModel> profiles)
+        protected void WriteProfiles(IEnumerable<IProfileModel> profiles)
         {
             string profilesDirectory = GetProfilesDirectory(SettingsDirectory);
             Directory.CreateDirectory(profilesDirectory);

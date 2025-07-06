@@ -60,5 +60,13 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 Cap = Cap.ModelValue,
             };
         }
+
+        protected override void TryMapEditableSettingsFromData(ClassicAccel data)
+        {
+            Acceleration.InterfaceValue = data.Acceleration.ToString();
+            Exponent.InterfaceValue = data.Exponent.ToString();
+            Offset.InterfaceValue = data.Offset.ToString();
+            Cap.InterfaceValue = data.Cap.ToString();
+        }
     }
 }

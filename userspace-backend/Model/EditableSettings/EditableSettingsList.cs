@@ -7,7 +7,7 @@ using System.Linq;
 namespace userspace_backend.Model.EditableSettings
 {
     public interface IEditableSettingsList<T, U>
-        : IEditableSettingsCollectionSpecific<IEnumerable<U>> where T : class, IEditableSettingsCollectionSpecific<U>
+        : IEditableSettingsCollectionSpecific<IEnumerable<U>> where T : IEditableSettingsCollectionSpecific<U>
     {
         public ReadOnlyObservableCollection<T> Elements { get; }
 
@@ -21,7 +21,7 @@ namespace userspace_backend.Model.EditableSettings
     }
 
     public abstract class EditableSettingsList<T, U>
-        : EditableSettingsCollectionV2<IEnumerable<U>>, IEditableSettingsList<T, U> where T : class, IEditableSettingsCollectionSpecific<U>
+        : EditableSettingsCollectionV2<IEnumerable<U>>, IEditableSettingsList<T, U> where T : IEditableSettingsCollectionSpecific<U>
     {
         public EditableSettingsList(
             IServiceProvider serviceProvider,
@@ -80,7 +80,7 @@ namespace userspace_backend.Model.EditableSettings
 
         public bool TryGetElement(string name, out T? element)
         {
-            element = null;
+            element = default;
 
             foreach (T elementInList in ElementsInternal)
             {

@@ -59,5 +59,15 @@ namespace userspace_backend.Model.AccelDefinitions
         }
 
         public AccelArgs MapToDriver() => ((IAccelDefinitionModel)Selected)?.MapToDriver() ?? new AccelArgs();
+
+        protected override void TryMapEditableSettingsFromData(Acceleration data)
+        {
+        }
+
+        protected override void TryMapEditableSettingsCollectionsFromData(Acceleration data)
+        {
+            Anisotropy.TryMapFromData(data.Anisotropy);
+            Coalescion.TryMapFromData(data.Coalescion);
+        }
     }
 }

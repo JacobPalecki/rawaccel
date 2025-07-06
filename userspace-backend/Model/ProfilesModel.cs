@@ -8,7 +8,7 @@ using DATA = userspace_backend.Data;
 
 namespace userspace_backend.Model
 {
-    public class ProfilesModel : EditableSettingsList<ProfileModel, DATA.Profile>
+    public class ProfilesModel : EditableSettingsList<IProfileModel, DATA.Profile>
     {
         // TODO: DI - hand default profile to profiles model
         // public static readonly ProfileModel DefaultProfile = new ProfileModel(
@@ -22,12 +22,17 @@ namespace userspace_backend.Model
 
         protected override string DefaultNameTemplate => "Profile";
 
-        protected override string GetNameFromElement(ProfileModel element)
+        protected override string GetNameFromElement(IProfileModel element)
         {
             return element.Name.ModelValue;
         }
 
-        protected override void SetElementName(ProfileModel element, string name)
+        protected override void TryMapEditableSettingsFromData(IEnumerable<DATA.Profile> data)
+        {
+            // No editable settings in this class
+        }
+
+        protected override void SetElementName(IProfileModel element, string name)
         {
             element.Name.InterfaceValue = name;
         }

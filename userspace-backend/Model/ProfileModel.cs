@@ -15,6 +15,12 @@ namespace userspace_backend.Model
 {
     public interface IProfileModel : IEditableSettingsCollectionSpecific<DATA.Profile>
     {
+        IEditableSettingSpecific<string> Name { get; }
+
+        IEditableSettingSpecific<int> OutputDPI { get; }
+
+        IEditableSettingSpecific<double> YXRatio { get; }
+
     }
 
     public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>, IProfileModel
@@ -112,6 +118,13 @@ namespace userspace_backend.Model
         {
             RecalculateDriverData();
             CurvePreview.GeneratePoints(CurrentValidatedDriverProfile);
+        }
+
+        protected override void TryMapEditableSettingsFromData(DATA.Profile data)
+        {
+            Name.InterfaceValue = data.Name;
+            OutputDPI.InterfaceValue = data.OutputDPI.ToString();
+            YXRatio.InterfaceValue = data.YXRatio.ToString();
         }
     }
 }

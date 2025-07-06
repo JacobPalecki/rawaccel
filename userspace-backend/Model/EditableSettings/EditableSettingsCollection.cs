@@ -109,6 +109,8 @@ namespace userspace_backend.Model.EditableSettings
     public interface IEditableSettingsCollectionSpecific<T> : IEditableSettingsCollectionV2
     {
         T MapToData();
+
+        bool TryMapFromData(T data);
     }
 
     /// <summary>
@@ -155,6 +157,16 @@ namespace userspace_backend.Model.EditableSettings
 
         public bool HasChanged { get; protected set; }
 
+        public bool TryMapFromData(T data)
+        {
+            bool result = true;
+
+            result &= TryMapEditableSettingsFromData(data);
+            result &= TryMapEditableSettingsCollectionsFromData(data);
+
+            return result;
+        }
+
         public void EvaluateWhetherHasChanged()
         {
             if (AllContainedEditableSettings.Any(s => s.HasChanged()) ||
@@ -187,5 +199,9 @@ namespace userspace_backend.Model.EditableSettings
         }
 
         public abstract T MapToData();
+
+        protected abstract bool TryMapEditableSettingsFromData(T data);
+
+        protected abstract bool TryMapEditableSettingsCollectionsFromData(T data);
     }
 }
