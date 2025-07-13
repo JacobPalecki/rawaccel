@@ -93,4 +93,29 @@ namespace userspace_backend.Model.EditableSettings
             return Selected.MapToData();
         }
     }
+
+    public abstract class EditableSettingsSelectableSelector<T, U, V>
+        : EditableSettingsSelector<T, U> ,
+        IEditableSettingsCollectionSpecific<V> where U : class, V where T : Enum
+    {
+        protected EditableSettingsSelectableSelector(
+            IServiceProvider serviceProvider,
+            IEditableSettingSpecific<T> selection,
+            IEnumerable<IEditableSetting> editableSettings,
+            IEnumerable<IEditableSettingsCollectionV2> editableSettingsCollections)
+            : base(serviceProvider, selection, editableSettings, editableSettingsCollections)
+        {
+        }
+
+        public bool TryMapFromData(V data)
+        {
+            U dataCasted = data as U;
+            return dataCasted == null ? false : TryMapFromData(dataCasted);
+        }
+
+        V IEditableSettingsCollectionSpecific<V>.MapToData()
+        {
+            return MapToData();
+        }
+    }
 }

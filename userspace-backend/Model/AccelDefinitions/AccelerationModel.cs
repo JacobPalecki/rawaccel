@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend.Model.ProfileComponents;

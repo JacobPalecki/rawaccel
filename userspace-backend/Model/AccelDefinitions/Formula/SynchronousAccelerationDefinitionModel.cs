@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using userspace_backend.Data.Profiles.Accel;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
@@ -15,7 +16,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
         IEditableSettingSpecific<double> Smoothness { get; }
     }
 
-    public class SynchronousAccelerationDefinitionModel : EditableSettingsCollectionV2<SynchronousAccel>, ISynchronousAccelerationDefinitionModel
+    public class SynchronousAccelerationDefinitionModel
+        : EditableSettingsSelectable<SynchronousAccel, FormulaAccel>,
+        ISynchronousAccelerationDefinitionModel
     {
         public const string SyncSpeedDIKey = $"{nameof(SynchronousAccelerationDefinitionModel)}.{nameof(SyncSpeed)}";
         public const string MotivityDIKey = $"{nameof(SynchronousAccelerationDefinitionModel)}.{nameof(Motivity)}";

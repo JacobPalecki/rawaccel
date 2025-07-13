@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using userspace_backend.Data.Profiles.Accel;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
@@ -9,7 +10,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
     {
     }
 
-    public class ClassicAccelerationDefinitionModel : EditableSettingsCollectionV2<ClassicAccel>, IClassicAccelerationDefinitionModel
+    public class ClassicAccelerationDefinitionModel
+        : EditableSettingsSelectable<ClassicAccel, FormulaAccel>,
+        IClassicAccelerationDefinitionModel
     {
         public const string AccelerationDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Acceleration)}";
         public const string ExponentDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Exponent)}";

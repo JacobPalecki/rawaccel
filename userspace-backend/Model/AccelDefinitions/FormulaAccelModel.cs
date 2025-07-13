@@ -15,7 +15,9 @@ namespace userspace_backend.Model.AccelDefinitions
     {
     }
 
-    public class FormulaAccelModel : EditableSettingsSelector<AccelerationFormulaType, FormulaAccel>, IFormulaAccelModel
+    public class FormulaAccelModel : 
+        EditableSettingsSelectableSelector<AccelerationFormulaType, FormulaAccel, Acceleration>,
+        IFormulaAccelModel
     {
         public const string SelectionDIKey = $"{nameof(FormulaAccelModel)}.{nameof(Selection)}";
         public const string GainDIKey = $"{nameof(FormulaAccelModel)}.{nameof(Gain)}";

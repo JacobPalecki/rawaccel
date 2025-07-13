@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Data.Profiles.Accel;
@@ -17,7 +16,7 @@ namespace userspace_backend.Model.AccelDefinitions
 
     }
 
-    public class LookupTableDefinitionModel : EditableSettingsCollectionV2<LookupTableAccel>, ILookupTableDefinitionModel
+    public class LookupTableDefinitionModel : EditableSettingsSelectable<LookupTableAccel, Acceleration>, ILookupTableDefinitionModel
     {
         public const string ApplyAsDIKey = $"{nameof(LookupTableDefinitionModel)}.{nameof(ApplyAs)}";
         public const string DataDIKey = $"{nameof(LookupTableDefinitionModel)}.{nameof(Data)}";

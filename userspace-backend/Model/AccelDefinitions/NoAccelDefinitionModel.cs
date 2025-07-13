@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using userspace_backend.Data.Profiles;
+﻿using userspace_backend.Data.Profiles;
 using userspace_backend.Data.Profiles.Accel;
 using userspace_backend.Model.EditableSettings;
 
@@ -11,7 +8,7 @@ namespace userspace_backend.Model.AccelDefinitions
     {
     }
 
-    public class NoAccelDefinitionModel : EditableSettingsCollectionV2<NoAcceleration>, INoAccelDefinitionModel
+    public class NoAccelDefinitionModel : EditableSettingsSelectable<NoAcceleration, Acceleration>, INoAccelDefinitionModel
     {
         public NoAccelDefinitionModel()
             : base([], [])

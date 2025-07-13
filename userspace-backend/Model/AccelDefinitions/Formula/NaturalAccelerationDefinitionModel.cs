@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using userspace_backend.Data.Profiles.Accel;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
@@ -8,7 +9,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
     {
     }
 
-    public class NaturalAccelerationDefinitionModel : EditableSettingsCollectionV2<NaturalAccel>, INaturalAccelerationDefinitionModel
+    public class NaturalAccelerationDefinitionModel
+        : EditableSettingsSelectable<NaturalAccel, FormulaAccel>,
+        INaturalAccelerationDefinitionModel
     {
         public const string DecayRateDIKey = $"{nameof(NaturalAccelerationDefinitionModel)}.{nameof(DecayRate)}";
         public const string InputOffsetDIKey = $"{nameof(NaturalAccelerationDefinitionModel)}.{nameof(InputOffset)}";

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using userspace_backend.Data.Profiles.Accel;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
 
@@ -8,7 +9,9 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
     {
     }
 
-    public class JumpAccelerationDefinitionModel : EditableSettingsCollectionV2<JumpAccel>, IJumpAccelerationDefinitionModel
+    public class JumpAccelerationDefinitionModel
+        : EditableSettingsSelectable<JumpAccel, FormulaAccel>,
+        IJumpAccelerationDefinitionModel
     {
         public const string SmoothDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Smooth)}";
         public const string InputDIKey = $"{nameof(ClassicAccelerationDefinitionModel)}.{nameof(Input)}";
