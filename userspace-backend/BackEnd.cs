@@ -58,10 +58,7 @@ namespace userspace_backend
 
         protected void LoadProfilesFromData(IEnumerable<DATA.Profile> profileData)
         {
-            foreach (var profile in profileData)
-            {
-                Profiles.TryAdd(profile);
-            }
+            Profiles.TryMapFromData(profileData);
         }
 
         public void Apply()

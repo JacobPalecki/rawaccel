@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
+using userspace_backend.Model;
 using BE = userspace_backend.Model;
 
 namespace userinterface.ViewModels.Profile
@@ -20,7 +21,7 @@ namespace userinterface.ViewModels.Profile
             SelectionChangeAction = selectionChangeAction;
         }
 
-        public ObservableCollection<BE.ProfileModel> Profiles => profilesModel.Profiles;
+        public ReadOnlyObservableCollection<BE.IProfileModel> Profiles => profilesModel.Elements;
         public Action SelectionChangeAction { get; }
 
         partial void OnCurrentSelectedProfileChanged(BE.ProfileModel? value)
@@ -30,22 +31,14 @@ namespace userinterface.ViewModels.Profile
 
         public bool TryAddProfile()
         {
-            for (int i = 0; i < MaxProfileAttempts; i++)
-            {
-                string newProfileName = $"Profile{i}";
-                if (profilesModel.TryAddNewDefaultProfile(newProfileName))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return profilesModel.TryAddNewDefault();
         }
 
         public void RemoveSelectedProfile()
         {
             if (CurrentSelectedProfile != null)
             {
-                _ = profilesModel.RemoveProfile(CurrentSelectedProfile);
+                _ = profilesModel.TryRemoveElement(CurrentSelectedProfile);
             }
         }
     }

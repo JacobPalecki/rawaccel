@@ -37,5 +37,16 @@ namespace userspace_backend.Model.ProfileComponents
                 ScaleSmoothingHalfLife = ScaleSmoothingHalfLife.ModelValue,
             };
         }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(Coalescion data)
+        {
+            return true;
+        }
+
+        protected override bool TryMapEditableSettingsFromData(Coalescion data)
+        {
+            return InputSmoothingHalfLife.TryUpdateModelDirectly(data.InputSmoothingHalfLife)
+                & ScaleSmoothingHalfLife.TryUpdateModelDirectly(data.ScaleSmoothingHalfLife);
+        }
     }
 }

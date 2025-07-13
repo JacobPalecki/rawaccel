@@ -8,7 +8,7 @@ using static userspace_backend.Data.Profiles.Acceleration;
 
 namespace userspace_backend.Model.AccelDefinitions
 {
-    public interface IAccelerationModel : IEditableSettingsCollectionSpecific<Acceleration>
+    public interface IAccelerationModel : IEditableSettingsSelector<AccelerationDefinitionType, Acceleration>
     {
         IAnisotropyModel Anisotropy { get; }
 
@@ -60,14 +60,16 @@ namespace userspace_backend.Model.AccelDefinitions
 
         public AccelArgs MapToDriver() => ((IAccelDefinitionModel)Selected)?.MapToDriver() ?? new AccelArgs();
 
-        protected override void TryMapEditableSettingsFromData(Acceleration data)
+        protected override bool TryMapEditableSettingsFromData(Acceleration data)
         {
+            return Selection.TryUpdateModelDirectly(data.Type);
         }
 
-        protected override void TryMapEditableSettingsCollectionsFromData(Acceleration data)
+        protected override bool TryMapEditableSettingsCollectionsFromData(Acceleration data)
         {
-            Anisotropy.TryMapFromData(data.Anisotropy);
-            Coalescion.TryMapFromData(data.Coalescion);
+            return Anisotropy.TryMapFromData(data.Anisotropy)
+            & Coalescion.TryMapFromData(data.Coalescion)
+            & Selected.TryMapFromData(data);
         }
     }
 }

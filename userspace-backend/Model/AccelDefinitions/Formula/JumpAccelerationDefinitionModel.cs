@@ -51,11 +51,16 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        protected override void TryMapEditableSettingsFromData(JumpAccel data)
+        protected override bool TryMapEditableSettingsFromData(JumpAccel data)
         {
-            Smooth.InterfaceValue = data.Smooth.ToString();
-            Input.InterfaceValue = data.Input.ToString();
-            Output.InterfaceValue = data.Output.ToString();
+            return Smooth.TryUpdateModelDirectly(data.Smooth)
+                & Input.TryUpdateModelDirectly(data.Input)
+                & Output.TryUpdateModelDirectly(data.Output);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(JumpAccel data)
+        {
+            return true;
         }
     }
 }

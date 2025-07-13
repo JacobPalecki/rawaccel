@@ -51,5 +51,17 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 Limit = Limit.ModelValue,
             };
         }
+
+        protected override bool TryMapEditableSettingsFromData(NaturalAccel data)
+        {
+            return DecayRate.TryUpdateModelDirectly(data.DecayRate)
+                & InputOffset.TryUpdateModelDirectly(data.InputOffset)
+                & Limit.TryUpdateModelDirectly(data.Limit);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(NaturalAccel data)
+        {
+            return true;
+        }
     }
 }

@@ -183,7 +183,7 @@
 						<ComboBox Grid.Column="2"
 								  HorizontalAlignment="Stretch"
 								  VerticalAlignment="Center"
-								  ItemsSource="{Binding Profiles.Profiles}"
+								  ItemsSource="{Binding Profiles.Elements}"
 								  SelectedItem="{Binding Profile}">
 							<ComboBox.ItemTemplate>
 								<DataTemplate>

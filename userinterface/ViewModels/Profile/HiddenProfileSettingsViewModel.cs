@@ -5,7 +5,7 @@ namespace userinterface.ViewModels.Profile
 {
     public partial class HiddenProfileSettingsViewModel : ViewModelBase
     {
-        public HiddenProfileSettingsViewModel(BE.ProfileComponents.HiddenModel hiddenBE)
+        public HiddenProfileSettingsViewModel(BE.ProfileComponents.IHiddenModel hiddenBE)
         {
             HiddenBE = hiddenBE;
             RotationField = new EditableFieldViewModel(hiddenBE.RotationDegrees);
@@ -16,7 +16,7 @@ namespace userinterface.ViewModels.Profile
             OutputSmoothingHalfLifeField = new EditableFieldViewModel(hiddenBE.OutputSmoothingHalfLife);
         }
 
-        protected BE.ProfileComponents.HiddenModel HiddenBE { get; }
+        protected BE.ProfileComponents.IHiddenModel HiddenBE { get; }
 
         public EditableFieldViewModel RotationField { get; set; }
 

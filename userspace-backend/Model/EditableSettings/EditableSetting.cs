@@ -106,7 +106,7 @@ namespace userspace_backend.Model.EditableSettings
             }
         }
 
-        public bool TrySetFromData(T data)
+        public bool TryUpdateModelDirectly(T data)
         {
             throw new NotImplementedException();
         }
@@ -138,7 +138,7 @@ namespace userspace_backend.Model.EditableSettings
             Parser = parser;
             Validator = validator;
             UpdateModelValueFromLastKnown();
-            UpdateInterfaceValue();
+            SetInterfaceToModel();
             AutoUpdateFromInterface = autoUpdateFromInterface;
         }
 
@@ -166,34 +166,34 @@ namespace userspace_backend.Model.EditableSettings
 
         public bool TryUpdateFromInterface()
         {
+            bool result = TryUpdateFromInterfaceImpl(out bool editedInterfaceNeedsReset);
+
+            if (editedInterfaceNeedsReset)
+            {
+                SetInterfaceToModel();
+            }
+
+            return result;
+        }
+
+        protected bool TryUpdateFromInterfaceImpl(out bool editedInterfaceNeedsReset)
+        {
+            editedInterfaceNeedsReset = true;
+
             if (string.IsNullOrEmpty(InterfaceValue))
             {
-                UpdateInterfaceValue();
                 return false;
             }
 
             if (!Parser.TryParse(InterfaceValue.Trim(), out T parsedValue))
             {
-                UpdateInterfaceValue();
                 return false;
             }
 
-            if (parsedValue.CompareTo(ModelValue) == 0)
-            {
-                return true;
-            }
-
-            if (!Validator.Validate(parsedValue))
-            {
-                UpdateInterfaceValue();
-                return false;
-            }
-
-            UpdateModeValue(parsedValue);
-            return true;
+            return TryUpdateModelDirectlyImpl(parsedValue, out editedInterfaceNeedsReset);
         }
 
-        protected void UpdateInterfaceValue()
+        protected void SetInterfaceToModel()
         {
             bool previous = AllowAutoUpdateFromInterface;
             AllowAutoUpdateFromInterface = false;
@@ -221,14 +221,29 @@ namespace userspace_backend.Model.EditableSettings
         }
 
         // TODO: unit test
-        public bool TrySetFromData(T data)
+        public bool TryUpdateModelDirectly(T data)
         {
-            bool previous = AllowAutoUpdateFromInterface;
-            AllowAutoUpdateFromInterface = false;
-            InterfaceValue = data.ToString();
-            bool result = TryUpdateFromInterface();
-            AllowAutoUpdateFromInterface = previous;
-            return result;
+            return TryUpdateModelDirectlyImpl(data, out _);
+        }
+
+        private bool TryUpdateModelDirectlyImpl(T data, out bool editedInterfaceNeedsReset)
+        {
+            editedInterfaceNeedsReset = false;
+
+            if (data.CompareTo(ModelValue) == 0)
+            {
+                return true;
+            }
+
+            if (!Validator.Validate(data))
+            {
+                editedInterfaceNeedsReset = true;
+                return false;
+            }
+
+            UpdateModeValue(data);
+            return true;
+
         }
     }
 }

@@ -18,19 +18,21 @@ namespace userinterface.ViewModels.Profile
         [ObservableProperty]
         public bool areAccelSettingsVisible;
 
-        public AccelerationProfileSettingsViewModel(BE.AccelerationModel accelerationBE)
+        public AccelerationProfileSettingsViewModel(BE.IAccelerationModel accelerationBE)
         {
             AccelerationBE = accelerationBE;
-            AccelerationFormulaSettings = new AccelerationFormulaSettingsViewModel(accelerationBE.FormulaAccel);
-            AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(accelerationBE.LookupTableAccel);
+            AccelerationFormulaSettings = new AccelerationFormulaSettingsViewModel(
+                accelerationBE.GetSelectable(BEData.AccelerationDefinitionType.Formula) as BE.IFormulaAccelModel);
+            AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(
+                accelerationBE.GetSelectable(BEData.AccelerationDefinitionType.LookupTable) as BE.ILookupTableDefinitionModel);
             AnisotropySettings = new AnisotropyProfileSettingsViewModel(accelerationBE.Anisotropy);
             CoalescionSettings = new CoalescionProfileSettingsViewModel(accelerationBE.Coalescion);
             // TODO: editable settings composition
-            AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;
-            AccelerationBE.DefinitionType.PropertyChanged += OnDefinitionTypeChanged;
+            AccelerationBE.Selection.AutoUpdateFromInterface = true;
+            AccelerationBE.Selection.PropertyChanged += OnDefinitionTypeChanged;
         }
 
-        public BE.AccelerationModel AccelerationBE { get; }
+        public BE.IAccelerationModel AccelerationBE { get; }
 
         public ObservableCollection<string> DefinitionTypesLocal => DefinitionTypes;
 
@@ -44,9 +46,9 @@ namespace userinterface.ViewModels.Profile
 
         private void OnDefinitionTypeChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(AccelerationBE.DefinitionType.ModelValue))
+            if (e.PropertyName == nameof(AccelerationBE.Selection.ModelValue))
             {
-                AreAccelSettingsVisible = AccelerationBE.DefinitionType.ModelValue != BEData.AccelerationDefinitionType.None;
+                AreAccelSettingsVisible = AccelerationBE.Selection.ModelValue != BEData.AccelerationDefinitionType.None;
             }
         }
     }

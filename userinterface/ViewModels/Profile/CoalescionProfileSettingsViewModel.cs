@@ -5,14 +5,14 @@ namespace userinterface.ViewModels.Profile
 {
     public partial class CoalescionProfileSettingsViewModel : ViewModelBase
     {
-        public CoalescionProfileSettingsViewModel(BE.CoalescionModel coalescionBE)
+        public CoalescionProfileSettingsViewModel(BE.ICoalescionModel coalescionBE)
         {
             CoalescionBE = coalescionBE;
             InputSmoothingHalfLife = new EditableFieldViewModel(coalescionBE.InputSmoothingHalfLife);
             ScaleSmoothingHalfLife = new EditableFieldViewModel(coalescionBE.ScaleSmoothingHalfLife);
         }
 
-        protected BE.CoalescionModel CoalescionBE { get; }
+        protected BE.ICoalescionModel CoalescionBE { get; }
 
         public EditableFieldViewModel InputSmoothingHalfLife { get; set; }
 

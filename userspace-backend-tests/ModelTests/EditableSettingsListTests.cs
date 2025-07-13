@@ -58,6 +58,17 @@ namespace userspace_backend_tests.ModelTests
                     Property = PropertySetting.ModelValue,
                 };
             }
+
+            protected override bool TryMapEditableSettingsCollectionsFromData(TestData data)
+            {
+                return PropertySetting.TryUpdateModelDirectly(data.Property)
+                    & NameSetting.TryUpdateModelDirectly(data.Name);
+            }
+
+            protected override bool TryMapEditableSettingsFromData(TestData data)
+            {
+                return true;
+            }
         }
 
         public class EditableSettingsTestList : EditableSettingsList<IEditableSettingsTestCollection, TestData>, IEditableSettingsTestList
@@ -76,12 +87,22 @@ namespace userspace_backend_tests.ModelTests
                 return ElementsInternal.Select(e => e.MapToData());
             }
 
+            protected override string GetNameFromData(TestData data)
+            {
+                return data.Name;
+            }
+
             protected override string GetNameFromElement(IEditableSettingsTestCollection element) => element.NameSetting.ModelValue;
 
             protected override void SetElementName(IEditableSettingsTestCollection element, string name)
             {
                 element.NameSetting.InterfaceValue = name;
                 element.NameSetting.TryUpdateFromInterface();
+            }
+
+            protected override bool TryMapEditableSettingsFromData(IEnumerable<TestData> data)
+            {
+                return true;
             }
         }
 

@@ -11,6 +11,10 @@ namespace userspace_backend.Model.AccelDefinitions
 {
     public interface ILookupTableDefinitionModel : IAccelDefinitionModelSpecific<LookupTableAccel>
     {
+        IEditableSettingSpecific<LookupTableType> ApplyAs { get; }
+
+        IEditableSettingSpecific<LookupTableData> Data { get; }
+
     }
 
     public class LookupTableDefinitionModel : EditableSettingsCollectionV2<LookupTableAccel>, ILookupTableDefinitionModel
@@ -52,6 +56,17 @@ namespace userspace_backend.Model.AccelDefinitions
                 ApplyAs = this.ApplyAs.ModelValue,
                 Data = this.Data.ModelValue.Data,
             };
+        }
+
+        protected override bool TryMapEditableSettingsFromData(LookupTableAccel data)
+        {
+            return ApplyAs.TryUpdateModelDirectly(data.ApplyAs)
+                & Data.TryUpdateModelDirectly(new LookupTableData(data.Data));
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(LookupTableAccel data)
+        {
+            return true;
         }
     }
 

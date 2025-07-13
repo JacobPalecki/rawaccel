@@ -66,5 +66,21 @@ namespace userspace_backend.Model.ProfileComponents
                 LPNorm = LPNorm.ModelValue,
             };
         }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(Anisotropy data)
+        {
+            // Nothing to do here
+            return true;
+        }
+
+        protected override bool TryMapEditableSettingsFromData(Anisotropy data)
+        {
+            return DomainX.TryUpdateModelDirectly(data.Domain.X)
+                & DomainY.TryUpdateModelDirectly(data.Domain.Y)
+                & RangeX.TryUpdateModelDirectly(data.Range.X)
+                & RangeY.TryUpdateModelDirectly(data.Range.Y)
+                & LPNorm.TryUpdateModelDirectly(data.LPNorm)
+                & CombineXYComponents.TryUpdateModelDirectly(data.CombineXYComponents);
+        }
     }
 }

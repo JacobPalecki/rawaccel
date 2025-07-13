@@ -11,7 +11,7 @@ using static userspace_backend.Data.Profiles.Accel.FormulaAccel;
 
 namespace userspace_backend.Model.AccelDefinitions
 {
-    public interface IFormulaAccelModel: IAccelDefinitionModelSpecific<FormulaAccel>
+    public interface IFormulaAccelModel: IEditableSettingsSelector<AccelerationFormulaType, FormulaAccel>
     {
     }
 
@@ -32,5 +32,15 @@ namespace userspace_backend.Model.AccelDefinitions
         public IEditableSettingSpecific<bool> Gain { get; set; }
 
         public AccelArgs MapToDriver() => ((IAccelDefinitionModel)Selected)?.MapToDriver() ?? new AccelArgs();
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(FormulaAccel data)
+        {
+            return Selected.TryMapFromData(data);
+        }
+
+        protected override bool TryMapEditableSettingsFromData(FormulaAccel data)
+        {
+            return Gain.TryUpdateModelDirectly(data.Gain);
+        }
     }
 }

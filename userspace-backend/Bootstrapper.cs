@@ -35,10 +35,7 @@ namespace userspace_backend
             return ProfilesToLoad;
         }
 
-        public void WriteSettingsToDisk(
-            IEnumerable<DeviceModel> devices,
-            MappingsModel mappings,
-            IEnumerable<ProfileModel> profiles)
+        public void WriteSettingsToDisk(IEnumerable<DeviceModel> devices, MappingsModel mappings, IEnumerable<IProfileModel> profiles)
         {
             BackEndLoader.WriteSettingsToDisk(devices, mappings, profiles);
         }

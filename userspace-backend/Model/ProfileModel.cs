@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using DATA = userspace_backend.Data;
+﻿using DATA = userspace_backend.Data;
 using userspace_backend.Model.AccelDefinitions;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend.Model.ProfileComponents;
 using System;
 using System.ComponentModel;
 using userspace_backend.Common;
-using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
 using userspace_backend.Display;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +18,13 @@ namespace userspace_backend.Model
 
         IEditableSettingSpecific<double> YXRatio { get; }
 
+        IAccelerationModel Acceleration { get; }
+
+        IHiddenModel Hidden { get; }
+
+        ICurvePreview CurvePreview { get; }
+
+        string CurrentNameForDisplay { get; }
     }
 
     public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>, IProfileModel
@@ -120,11 +124,17 @@ namespace userspace_backend.Model
             CurvePreview.GeneratePoints(CurrentValidatedDriverProfile);
         }
 
-        protected override void TryMapEditableSettingsFromData(DATA.Profile data)
+        protected override bool TryMapEditableSettingsFromData(DATA.Profile data)
         {
-            Name.InterfaceValue = data.Name;
-            OutputDPI.InterfaceValue = data.OutputDPI.ToString();
-            YXRatio.InterfaceValue = data.YXRatio.ToString();
+            return Name.TryUpdateModelDirectly(data.Name)
+                & OutputDPI.TryUpdateModelDirectly(data.OutputDPI)
+                & YXRatio.TryUpdateModelDirectly(data.YXRatio);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(DATA.Profile data)
+        {
+            return Acceleration.TryMapFromData(data.Acceleration)
+                & Hidden.TryMapFromData(data.Hidden);
         }
     }
 }

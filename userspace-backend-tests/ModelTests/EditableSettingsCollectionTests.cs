@@ -84,6 +84,16 @@ namespace userspace_backend_tests.ModelTests
                     SubData = SubCollection.MapToData(),
                 };
             }
+
+            protected override bool TryMapEditableSettingsCollectionsFromData(TestDataType data)
+            {
+                return SubCollection.TryMapFromData(data.SubData);
+            }
+
+            protected override bool TryMapEditableSettingsFromData(TestDataType data)
+            {
+                return PropertySetting.TryUpdateModelDirectly(data.Property);
+            }
         }
 
         protected class EditableSettingsTestSubCollection : EditableSettingsCollectionV2<TestSubDataType>, IEditableSettingsTestSubCollection
@@ -105,6 +115,16 @@ namespace userspace_backend_tests.ModelTests
                 {
                     SubProperty = SubPropertySetting.ModelValue,
                 };
+            }
+
+            protected override bool TryMapEditableSettingsCollectionsFromData(TestSubDataType data)
+            {
+                return true;
+            }
+
+            protected override bool TryMapEditableSettingsFromData(TestSubDataType data)
+            {
+                return SubPropertySetting.TryUpdateModelDirectly(data.SubProperty);
             }
         }
 

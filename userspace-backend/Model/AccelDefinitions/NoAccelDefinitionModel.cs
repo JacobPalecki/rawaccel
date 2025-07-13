@@ -33,5 +33,15 @@ namespace userspace_backend.Model.AccelDefinitions
         {
             return NoAcceleration;
         }
+
+        protected override bool TryMapEditableSettingsFromData(NoAcceleration data)
+        {
+            return true;
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(NoAcceleration data)
+        {
+            return true;
+        }
     }
 }

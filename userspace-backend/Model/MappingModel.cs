@@ -101,7 +101,7 @@ namespace userspace_backend.Model
                 return false;
             }
 
-            if (!Profiles.TryGetElement(profileName, out ProfileModel? profile)
+            if (!Profiles.TryGetElement(profileName, out IProfileModel? profile)
                 || profile == null)
             {
                 return false;
@@ -110,7 +110,7 @@ namespace userspace_backend.Model
             MappingGroup group = new MappingGroup()
             {
                 DeviceGroup = deviceGroup,
-                Profile = profile,
+                Profile = profile as ProfileModel,
                 Profiles = Profiles,
             };
 

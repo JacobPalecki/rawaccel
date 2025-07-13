@@ -91,12 +91,12 @@ namespace userspace_backend_tests.ModelTests
             }
         }
 
-        public interface IEditableSettingsTestA : IEditableSettingsCollectionSpecific<TestDataAbstract>
+        public interface IEditableSettingsTestA : IEditableSettingsCollectionSpecific<TestDataA>
         {
             public IEditableSettingSpecific<int> PropertyA { get; }
         }
 
-        public interface IEditableSettingsTestB : IEditableSettingsCollectionSpecific<TestDataAbstract>
+        public interface IEditableSettingsTestB : IEditableSettingsCollectionSpecific<TestDataB>
         {
             public IEditableSettingSpecific<int> PropertyB { get; }
         }
@@ -107,7 +107,7 @@ namespace userspace_backend_tests.ModelTests
         {
         }
 
-        public class EditableSettingsTestA : EditableSettingsCollectionV2<TestDataAbstract>, IEditableSettingsTestA
+        public class EditableSettingsTestA : EditableSettingsCollectionV2<TestDataA>, IEditableSettingsTestA
         {
             public const string PropertyAName = $"{nameof(EditableSettingsTestA)}.{nameof(PropertyA)}";
 
@@ -126,9 +126,19 @@ namespace userspace_backend_tests.ModelTests
                     PropertyA = PropertyA.ModelValue,
                 };
             }
+
+            protected override bool TryMapEditableSettingsCollectionsFromData(TestDataA data)
+            {
+                return true;
+            }
+
+            protected override bool TryMapEditableSettingsFromData(TestDataA data)
+            {
+                return PropertyA.TryUpdateModelDirectly(data.PropertyA);
+            }
         }
 
-        public class EditableSettingsTestB : EditableSettingsCollectionV2<TestDataAbstract>, IEditableSettingsTestB
+        public class EditableSettingsTestB : EditableSettingsCollectionV2<TestDataB>, IEditableSettingsTestB
         {
             public const string PropertyBName = $"{nameof(EditableSettingsTestB)}.{nameof(PropertyB)}";
 
@@ -147,6 +157,16 @@ namespace userspace_backend_tests.ModelTests
                     PropertyB = PropertyB.ModelValue,
                 };
             }
+
+            protected override bool TryMapEditableSettingsCollectionsFromData(TestDataB data)
+            {
+                return true;
+            }
+
+            protected override bool TryMapEditableSettingsFromData(TestDataB data)
+            {
+                return PropertyB.TryUpdateModelDirectly(data.PropertyB);
+            }
         }
 
         public class EditableSettingsTestSelector : EditableSettingsSelector<
@@ -161,6 +181,16 @@ namespace userspace_backend_tests.ModelTests
                 [FromKeyedServices(SelectionName)]IEditableSettingSpecific<TestDataAbstract.TestDataType> selection)
                 : base(serviceProvider, selection, [], [])
             {
+            }
+
+            protected override bool TryMapEditableSettingsCollectionsFromData(TestDataAbstract data)
+            {
+                return Selection.TryUpdateModelDirectly(data.Type);
+            }
+
+            protected override bool TryMapEditableSettingsFromData(TestDataAbstract data)
+            {
+                return Selected.TryMapFromData(data);
             }
         }
 
@@ -187,7 +217,7 @@ namespace userspace_backend_tests.ModelTests
                         TestDataAbstract.DefaultTestDataTypeValidator,
                         autoUpdateFromInterface: false));
             services.AddTransient<IEditableSettingsTestA, EditableSettingsTestA>();
-            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataAbstract>, EditableSettingsTestA>(
+            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataA>, EditableSettingsTestA>(
                 EditableSettingsSelectorHelper.GetSelectionKey(TestDataAbstract.TestDataType.A));
             services.AddKeyedTransient<IEditableSettingSpecific<int>>(
                 EditableSettingsTestA.PropertyAName, (_, _) => 
@@ -198,7 +228,7 @@ namespace userspace_backend_tests.ModelTests
                         ModelValueValidators.DefaultIntValidator,
                         autoUpdateFromInterface: false));
             services.AddTransient<IEditableSettingsTestB, EditableSettingsTestB>();
-            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataAbstract>, EditableSettingsTestB>(
+            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataB>, EditableSettingsTestB>(
                 EditableSettingsSelectorHelper.GetSelectionKey(TestDataAbstract.TestDataType.B));
             services.AddKeyedTransient<IEditableSettingSpecific<int>>(
                 EditableSettingsTestB.PropertyBName, (_, _) => 

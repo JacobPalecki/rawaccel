@@ -119,5 +119,26 @@ namespace userspace_backend.Model.EditableSettings
         protected abstract string GetNameFromElement(T element);
 
         protected abstract void SetElementName(T element, string name);
+
+        protected abstract string GetNameFromData(U data);
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(IEnumerable<U> data)
+        {
+            bool result = true;
+
+            foreach (U dataElement in data)
+            {
+                string elementName = GetNameFromData(dataElement);
+
+                if (!TryGetElement(elementName, out T? element))
+                {
+                    element = GenerateDefaultElement(elementName);
+                }
+
+                result &= element!.TryMapFromData(dataElement);
+            }
+
+            return result;
+        }
     }
 }

@@ -5,13 +5,13 @@ namespace userinterface.ViewModels.Profile
 {
     public partial class AccelerationLUTSettingsViewModel : ViewModelBase
     {
-        public AccelerationLUTSettingsViewModel(BE.LookupTableDefinitionModel lutAccelBE)
+        public AccelerationLUTSettingsViewModel(BE.ILookupTableDefinitionModel lutAccelBE)
         {
             LUTAccelBE = lutAccelBE;
             LUTPoints = new EditableFieldViewModel(lutAccelBE.Data);
         }
 
-        public BE.LookupTableDefinitionModel LUTAccelBE { get; }
+        public BE.ILookupTableDefinitionModel LUTAccelBE { get; }
 
         public EditableFieldViewModel LUTPoints { get; set; }
     }

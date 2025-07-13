@@ -27,14 +27,19 @@ namespace userspace_backend.Model
             return element.Name.ModelValue;
         }
 
-        protected override void TryMapEditableSettingsFromData(IEnumerable<DATA.Profile> data)
+        protected override bool TryMapEditableSettingsFromData(IEnumerable<DATA.Profile> data)
         {
-            // No editable settings in this class
+            return true;
         }
 
         protected override void SetElementName(IProfileModel element, string name)
         {
             element.Name.InterfaceValue = name;
+        }
+
+        protected override string GetNameFromData(DATA.Profile data)
+        {
+            return data.Name;
         }
     }
 }

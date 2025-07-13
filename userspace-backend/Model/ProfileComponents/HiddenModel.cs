@@ -63,5 +63,20 @@ namespace userspace_backend.Model.ProfileComponents
                 OutputSmoothingHalfLife = OutputSmoothingHalfLife.ModelValue,
             };
         }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(Hidden data)
+        {
+            return true;
+        }
+
+        protected override bool TryMapEditableSettingsFromData(Hidden data)
+        {
+            return RotationDegrees.TryUpdateModelDirectly(data.RotationDegrees)
+                & AngleSnappingDegrees.TryUpdateModelDirectly(data.AngleSnappingDegrees)
+                & LeftRightRatio.TryUpdateModelDirectly(data.LeftRightRatio)
+                & UpDownRatio.TryUpdateModelDirectly(data.UpDownRatio)
+                & SpeedCap.TryUpdateModelDirectly(data.SpeedCap)
+                & OutputSmoothingHalfLife.TryUpdateModelDirectly(data.OutputSmoothingHalfLife);
+        }
     }
 }

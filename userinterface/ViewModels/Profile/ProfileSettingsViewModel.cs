@@ -5,7 +5,7 @@ namespace userinterface.ViewModels.Profile
 {
     public partial class ProfileSettingsViewModel : ViewModelBase
     {
-        public ProfileSettingsViewModel(BE.ProfileModel profileBE)
+        public ProfileSettingsViewModel(BE.IProfileModel profileBE)
         {
             ProfileModelBE = profileBE;
             OutputDPIField = new EditableFieldViewModel(profileBE.OutputDPI);
@@ -14,7 +14,7 @@ namespace userinterface.ViewModels.Profile
             HiddenSettings = new HiddenProfileSettingsViewModel(profileBE.Hidden);
         }
 
-        protected BE.ProfileModel ProfileModelBE { get; }
+        protected BE.IProfileModel ProfileModelBE { get; }
 
         public EditableFieldViewModel OutputDPIField { get; set; }
 

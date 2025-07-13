@@ -61,12 +61,17 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
-        protected override void TryMapEditableSettingsFromData(ClassicAccel data)
+        protected override bool TryMapEditableSettingsFromData(ClassicAccel data)
         {
-            Acceleration.InterfaceValue = data.Acceleration.ToString();
-            Exponent.InterfaceValue = data.Exponent.ToString();
-            Offset.InterfaceValue = data.Offset.ToString();
-            Cap.InterfaceValue = data.Cap.ToString();
+            return Acceleration.TryUpdateModelDirectly(data.Acceleration)
+                & Exponent.TryUpdateModelDirectly(data.Exponent)
+                & Offset.TryUpdateModelDirectly(data.Offset)
+                & Cap.TryUpdateModelDirectly(data.Cap);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(ClassicAccel data)
+        {
+            return true;
         }
     }
 }

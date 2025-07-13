@@ -57,7 +57,7 @@ public partial class AccelerationProfileSettingsView : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             DataContext = viewModel,
             ItemsSource = viewModel.DefinitionTypesLocal,
-            SelectedItem = viewModel.AccelerationBE.DefinitionType.InterfaceValue
+            SelectedItem = viewModel.AccelerationBE.Selection.InterfaceValue
         };
 
         _accelerationComboBox.SelectionChanged += OnAccelerationTypeSelectionChanged;

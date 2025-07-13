@@ -6,6 +6,13 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
 {
     public interface ISynchronousAccelerationDefinitionModel : IEditableSettingsCollectionSpecific<SynchronousAccel>
     {
+        IEditableSettingSpecific<double> SyncSpeed { get; }
+
+        IEditableSettingSpecific<double> Motivity { get; }
+
+        IEditableSettingSpecific<double> Gamma { get; }
+
+        IEditableSettingSpecific<double> Smoothness { get; }
     }
 
     public class SynchronousAccelerationDefinitionModel : EditableSettingsCollectionV2<SynchronousAccel>, ISynchronousAccelerationDefinitionModel
@@ -57,6 +64,19 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 Gamma = Gamma.ModelValue,
                 Smoothness = Smoothness.ModelValue,
             };
+        }
+
+        protected override bool TryMapEditableSettingsFromData(SynchronousAccel data)
+        {
+            return SyncSpeed.TryUpdateModelDirectly(data.SyncSpeed)
+                & Motivity.TryUpdateModelDirectly(data.Motivity)
+                & Gamma.TryUpdateModelDirectly(data.Gamma)
+                & Smoothness.TryUpdateModelDirectly(data.Smoothness);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(SynchronousAccel data)
+        {
+            return true;
         }
     }
 }

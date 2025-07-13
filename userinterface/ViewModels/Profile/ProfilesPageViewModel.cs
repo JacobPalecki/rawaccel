@@ -14,7 +14,7 @@ namespace userinterface.ViewModels.Profile
 
         public ProfilesPageViewModel(BE.ProfilesModel profileModels)
         {
-            ProfileModels = profileModels.Profiles;
+            ProfileModels = profileModels.Elements;
             ProfileViewModels = new ObservableCollection<ProfileViewModel>();
             UpdateProfileViewModels();
             SelectedProfileView = ProfileViewModels.FirstOrDefault();
@@ -22,7 +22,7 @@ namespace userinterface.ViewModels.Profile
             ActiveProfilesListView = new ActiveProfilesListViewModel();
         }
 
-        protected IEnumerable<BE.ProfileModel> ProfileModels { get; }
+        protected IEnumerable<BE.IProfileModel> ProfileModels { get; }
 
         protected ObservableCollection<ProfileViewModel> ProfileViewModels { get; }
 

@@ -53,5 +53,17 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 Cap = Cap.ModelValue,
             };
         }
+
+        protected override bool TryMapEditableSettingsFromData(LinearAccel data)
+        {
+            return Acceleration.TryUpdateModelDirectly(data.Acceleration)
+                & Offset.TryUpdateModelDirectly(data.Offset)
+                & Cap.TryUpdateModelDirectly(data.Cap);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(LinearAccel data)
+        {
+            return true;
+        }
     }
 }

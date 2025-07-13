@@ -48,7 +48,7 @@ public partial class AccelerationFormulaSettingsView : UserControl
         }
 
         CreateFormulaFieldViewModel();
-        var currentFormulaType = GetCurrentFormulaType(viewModel.FormulaAccelBE.FormulaType.InterfaceValue);
+        var currentFormulaType = GetCurrentFormulaType(viewModel.FormulaAccelBE.Selection.InterfaceValue);
         AddFormulaSpecificFields(currentFormulaType, viewModel);
         AddControlToMainPanel();
     }
@@ -107,9 +107,9 @@ public partial class AccelerationFormulaSettingsView : UserControl
             return;
         }
 
-        viewModel.FormulaAccelBE.FormulaType.TryUpdateFromInterface();
+        viewModel.FormulaAccelBE.Selection.TryUpdateFromInterface();
         RemoveFormulaSpecificFields();
-        var currentFormulaType = GetCurrentFormulaType(viewModel.FormulaAccelBE.FormulaType.InterfaceValue);
+        var currentFormulaType = GetCurrentFormulaType(viewModel.FormulaAccelBE.Selection.InterfaceValue);
         AddFormulaSpecificFields(currentFormulaType, viewModel);
     }
 
