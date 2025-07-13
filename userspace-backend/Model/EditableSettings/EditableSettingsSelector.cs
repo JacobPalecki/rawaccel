@@ -21,6 +21,40 @@ namespace userspace_backend.Model.EditableSettings
 
     }
 
+    public abstract class EditableSettingsSelectableIntermediate<T> :
+        EditableSettingsCollectionV2<T>
+    {
+        protected EditableSettingsSelectableIntermediate(
+            IEnumerable<IEditableSetting> editableSettings,
+            IEnumerable<IEditableSettingsCollectionV2> editableSettingsCollections)
+            : base(editableSettings, editableSettingsCollections)
+        {
+        }
+    }
+
+    public abstract class EditableSettingsSelectable<T, U> :
+        EditableSettingsSelectableIntermediate<T>,
+        IEditableSettingsCollectionSpecific<U> where T : class, U
+    {
+        protected EditableSettingsSelectable(
+            IEnumerable<IEditableSetting> editableSettings,
+            IEnumerable<IEditableSettingsCollectionV2> editableSettingsCollections)
+            : base(editableSettings, editableSettingsCollections)
+        {
+        }
+
+        public bool TryMapFromData(U data)
+        {
+            T dataCasted = data as T;
+            return dataCasted == null ? false : TryMapFromData(dataCasted);
+        }
+
+        U IEditableSettingsCollectionSpecific<U>.MapToData()
+        {
+            return MapToData();
+        }
+    }
+
     public abstract class EditableSettingsSelector<T, U>
         : EditableSettingsCollectionV2<U>,
           IEditableSettingsSelector<T, U> where T : Enum

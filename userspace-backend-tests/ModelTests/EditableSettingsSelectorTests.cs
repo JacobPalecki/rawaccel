@@ -96,7 +96,8 @@ namespace userspace_backend_tests.ModelTests
             public IEditableSettingSpecific<int> PropertyA { get; }
         }
 
-        public interface IEditableSettingsTestB : IEditableSettingsCollectionSpecific<TestDataB>
+        public interface IEditableSettingsTestB : IEditableSettingsCollectionSpecific<TestDataB>,
+            IEditableSettingsCollectionSpecific<TestDataAbstract>
         {
             public IEditableSettingSpecific<int> PropertyB { get; }
         }
@@ -107,7 +108,7 @@ namespace userspace_backend_tests.ModelTests
         {
         }
 
-        public class EditableSettingsTestA : EditableSettingsCollectionV2<TestDataA>, IEditableSettingsTestA
+        public class EditableSettingsTestA : EditableSettingsSelectable<TestDataA, TestDataAbstract>, IEditableSettingsTestA
         {
             public const string PropertyAName = $"{nameof(EditableSettingsTestA)}.{nameof(PropertyA)}";
 
@@ -138,7 +139,7 @@ namespace userspace_backend_tests.ModelTests
             }
         }
 
-        public class EditableSettingsTestB : EditableSettingsCollectionV2<TestDataB>, IEditableSettingsTestB
+        public class EditableSettingsTestB : EditableSettingsSelectable<TestDataB, TestDataAbstract>, IEditableSettingsTestB
         {
             public const string PropertyBName = $"{nameof(EditableSettingsTestB)}.{nameof(PropertyB)}";
 
@@ -217,7 +218,7 @@ namespace userspace_backend_tests.ModelTests
                         TestDataAbstract.DefaultTestDataTypeValidator,
                         autoUpdateFromInterface: false));
             services.AddTransient<IEditableSettingsTestA, EditableSettingsTestA>();
-            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataA>, EditableSettingsTestA>(
+            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataAbstract>, EditableSettingsTestA>(
                 EditableSettingsSelectorHelper.GetSelectionKey(TestDataAbstract.TestDataType.A));
             services.AddKeyedTransient<IEditableSettingSpecific<int>>(
                 EditableSettingsTestA.PropertyAName, (_, _) => 
@@ -228,7 +229,7 @@ namespace userspace_backend_tests.ModelTests
                         ModelValueValidators.DefaultIntValidator,
                         autoUpdateFromInterface: false));
             services.AddTransient<IEditableSettingsTestB, EditableSettingsTestB>();
-            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataB>, EditableSettingsTestB>(
+            services.AddKeyedTransient<IEditableSettingsCollectionSpecific<TestDataAbstract>, EditableSettingsTestB>(
                 EditableSettingsSelectorHelper.GetSelectionKey(TestDataAbstract.TestDataType.B));
             services.AddKeyedTransient<IEditableSettingSpecific<int>>(
                 EditableSettingsTestB.PropertyBName, (_, _) => 
