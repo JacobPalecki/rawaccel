@@ -20,7 +20,7 @@ namespace userspace_backend.Model
             Mapping dataObject,
             IModelValueValidator<string> nameValidator,
             DeviceGroups deviceGroups,
-            ProfilesModel profiles) : base(dataObject)
+            IProfilesModel profiles) : base(dataObject)
         {
             NameValidator = nameValidator;
             SetActive = true;
@@ -45,7 +45,7 @@ namespace userspace_backend.Model
 
         protected DeviceGroups DeviceGroups { get; }
 
-        protected ProfilesModel Profiles { get; }
+        protected IProfilesModel Profiles { get; }
 
         public override Mapping MapToData()
         {
@@ -110,7 +110,7 @@ namespace userspace_backend.Model
             MappingGroup group = new MappingGroup()
             {
                 DeviceGroup = deviceGroup,
-                Profile = profile as ProfileModel,
+                Profile = profile,
                 Profiles = Profiles,
             };
 
@@ -141,9 +141,9 @@ namespace userspace_backend.Model
     {
         public DeviceGroupModel DeviceGroup { get; set; }
 
-        public ProfileModel Profile { get; set; }
+        public IProfileModel Profile { get; set; }
 
         // This is here for easy binding
-        public ProfilesModel Profiles { get; set; }
+        public IProfilesModel Profiles { get; set; }
     }
 }

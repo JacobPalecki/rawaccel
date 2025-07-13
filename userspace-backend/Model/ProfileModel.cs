@@ -25,6 +25,8 @@ namespace userspace_backend.Model
         ICurvePreview CurvePreview { get; }
 
         string CurrentNameForDisplay { get; }
+
+        Profile CurrentValidatedDriverProfile { get; }
     }
 
     public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>, IProfileModel

@@ -8,7 +8,11 @@ using DATA = userspace_backend.Data;
 
 namespace userspace_backend.Model
 {
-    public class ProfilesModel : EditableSettingsList<IProfileModel, DATA.Profile>
+    public interface IProfilesModel : IEditableSettingsList<IProfileModel, DATA.Profile>
+    {
+    }
+
+    public class ProfilesModel : EditableSettingsList<IProfileModel, DATA.Profile>, IProfilesModel
     {
         // TODO: DI - hand default profile to profiles model
         // public static readonly ProfileModel DefaultProfile = new ProfileModel(

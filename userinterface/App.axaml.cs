@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using userinterface.ViewModels;
 using userinterface.Views;
 using userspace_backend;
@@ -18,7 +20,9 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        BackEnd backEnd = new BackEnd(BootstrapBackEnd());
+        ServiceCollection services = new ServiceCollection();
+        IServiceProvider serviceProvider = BackEndComposer.Compose(services);
+        IBackEnd backEnd = serviceProvider.GetRequiredService<IBackEnd>();
         backEnd.Load();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

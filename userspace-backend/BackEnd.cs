@@ -12,12 +12,19 @@ namespace userspace_backend
         void Load();
 
         void Apply();
+
+        DevicesModel Devices { get; }
+
+        MappingsModel Mappings { get; }
+
+        IProfilesModel Profiles { get; }
     }
 
     public class BackEnd
     {
-
-        public BackEnd(IBackEndLoader backEndLoader)
+        public BackEnd(
+            IBackEndLoader backEndLoader,
+            IProfilesModel profilesModel)
         {
             // TODO: fully construct BackEnd via DI
             ServiceCollection services = new ServiceCollection();
@@ -25,14 +32,14 @@ namespace userspace_backend
 
             BackEndLoader = backEndLoader;
             Devices = new DevicesModel(serviceProvider.GetRequiredService<ISystemDevicesProvider>());
-            Profiles = new ProfilesModel(serviceProvider);
+            Profiles = profilesModel;
         }
 
         public DevicesModel Devices { get; set; }
 
         public MappingsModel Mappings { get; set; }
 
-        public ProfilesModel Profiles { get; set; }
+        public IProfilesModel Profiles { get; set; }
 
         protected IBackEndLoader BackEndLoader { get; set; }
 
@@ -117,7 +124,7 @@ namespace userspace_backend
 
         protected IEnumerable<Profile> MapToDriverProfiles(MappingModel mapping)
         {
-            IEnumerable<ProfileModel> ProfilesToMap = mapping.IndividualMappings.Select(m => m.Profile).Distinct();
+            IEnumerable<IProfileModel> ProfilesToMap = mapping.IndividualMappings.Select(m => m.Profile).Distinct();
             return ProfilesToMap.Select(p => p.CurrentValidatedDriverProfile);
         }
 

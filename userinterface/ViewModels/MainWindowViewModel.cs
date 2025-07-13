@@ -16,7 +16,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
     private string _selectedPage = DefaultPage;
 
-    public MainWindowViewModel(BE.BackEnd backEnd)
+    public MainWindowViewModel(BE.IBackEnd backEnd)
     {
         BackEnd = backEnd;
         DevicesPage = new DevicesPageViewModel(backEnd.Devices);
@@ -30,7 +30,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
     public MappingsPageViewModel MappingsPage { get; }
 
-    protected BE.BackEnd BackEnd { get; }
+    protected BE.IBackEnd BackEnd { get; }
 
     public string SelectedPage
     {

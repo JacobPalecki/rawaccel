@@ -12,7 +12,7 @@ namespace userinterface.ViewModels.Profile
         [ObservableProperty]
         public ProfileViewModel? selectedProfileView;
 
-        public ProfilesPageViewModel(BE.ProfilesModel profileModels)
+        public ProfilesPageViewModel(BE.IProfilesModel profileModels)
         {
             ProfileModels = profileModels.Elements;
             ProfileViewModels = new ObservableCollection<ProfileViewModel>();

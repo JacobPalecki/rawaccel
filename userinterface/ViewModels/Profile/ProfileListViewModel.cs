@@ -13,9 +13,9 @@ namespace userinterface.ViewModels.Profile
         [ObservableProperty]
         public BE.ProfileModel? currentSelectedProfile;
 
-        private BE.ProfilesModel profilesModel { get; }
+        private BE.IProfilesModel profilesModel { get; }
 
-        public ProfileListViewModel(BE.ProfilesModel profiles, Action selectionChangeAction)
+        public ProfileListViewModel(BE.IProfilesModel profiles, Action selectionChangeAction)
         {
             profilesModel = profiles;
             SelectionChangeAction = selectionChangeAction;

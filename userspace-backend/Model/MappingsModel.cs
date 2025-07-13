@@ -10,7 +10,7 @@ namespace userspace_backend.Model
 {
     public class MappingsModel : EditableSettingsCollection<DATA.MappingSet>
     {
-        public MappingsModel(DATA.MappingSet dataObject, DeviceGroups deviceGroups, ProfilesModel profiles)
+        public MappingsModel(DATA.MappingSet dataObject, DeviceGroups deviceGroups, IProfilesModel profiles)
             : base(dataObject)
         {
             DeviceGroups = deviceGroups;
@@ -23,7 +23,7 @@ namespace userspace_backend.Model
 
         protected DeviceGroups DeviceGroups { get; }
 
-        protected ProfilesModel Profiles { get; }
+        protected IProfilesModel Profiles { get; }
 
         protected MappingNameValidator NameValidator { get; }
 
