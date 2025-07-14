@@ -1,49 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DATA = userspace_backend.Data;
-using userspace_backend.Model.AccelDefinitions;
 using userspace_backend.Model.EditableSettings;
-using userspace_backend.Model.ProfileComponents;
 using userspace_backend.Data;
-using CommunityToolkit.Mvvm.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
 namespace userspace_backend.Model
 {
-    public class MappingModel : EditableSettingsCollection<DATA.Mapping>
+    public interface IMappingModel : IEditableSettingsCollectionSpecific<Mapping>
     {
+
+    }
+
+    public class MappingModel: EditableSettingsCollectionV2<Mapping>, IMappingModel
+    {
+        public const string NameDIKey = $"{nameof(MappingModel)}.{nameof(Name)}";
+
         public MappingModel(
-            Mapping dataObject,
+            IEditableSettingSpecific<string> name,
             IModelValueValidator<string> nameValidator,
-            DeviceGroups deviceGroups,
-            IProfilesModel profiles) : base(dataObject)
+            IDeviceGroups deviceGroups,
+            IProfilesModel profiles) : base([], [])
         {
+            Name = name;
             NameValidator = nameValidator;
             SetActive = true;
             DeviceGroups = deviceGroups;
             Profiles = profiles;
-            InitIndividualMappings(dataObject);
-            DeviceGroupsStillUnmapped = new ObservableCollection<DeviceGroupModel>();
-            FindDeviceGroupsStillUnmapped();
-            IndividualMappings.CollectionChanged += OnIndividualMappingsChanged;
-            DeviceGroups.DeviceGroupModels.CollectionChanged += OnIndividualMappingsChanged;
         }
 
         public bool SetActive { get; set; }
 
         public IEditableSettingSpecific<string> Name { get; set; }
 
-        public ObservableCollection<MappingGroup> IndividualMappings { get; protected set; }
-
-        public ObservableCollection<DeviceGroupModel> DeviceGroupsStillUnmapped { get; protected set; }
-        
         protected IModelValueValidator<string> NameValidator { get; }
 
-        protected DeviceGroups DeviceGroups { get; }
+        protected IDeviceGroups DeviceGroups { get; }
 
         protected IProfilesModel Profiles { get; }
 
@@ -61,27 +53,6 @@ namespace userspace_backend.Model
             }
 
             return mapping;
-        }
-
-        protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
-        {
-            return [];
-        }
-
-        protected override IEnumerable<IEditableSettingsCollectionV2> EnumerateEditableSettingsCollections()
-        {
-            return [];
-        }
-
-        protected override void InitEditableSettingsAndCollections(Mapping dataObject)
-        {
-            Name = new EditableSetting<string>(
-                displayName: "Name",
-                initialValue: dataObject.Name,
-                parser: UserInputParsers.StringParser,
-                validator: NameValidator);
-
-            IndividualMappings = new ObservableCollection<MappingGroup>();
         }
 
         protected void InitIndividualMappings(Mapping dataObject)
@@ -134,6 +105,16 @@ namespace userspace_backend.Model
         protected void OnIndividualMappingsChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             FindDeviceGroupsStillUnmapped();
+        }
+
+        protected override bool TryMapEditableSettingsFromData(Mapping data)
+        {
+            return Name.TryUpdateModelDirectly(data.Name);
+        }
+
+        protected override bool TryMapEditableSettingsCollectionsFromData(Mapping data)
+        {
+            return true;
         }
     }
 

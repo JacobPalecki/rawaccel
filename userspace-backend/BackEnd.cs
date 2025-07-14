@@ -128,9 +128,9 @@ namespace userspace_backend
             return ProfilesToMap.Select(p => p.CurrentValidatedDriverProfile);
         }
 
-        protected IEnumerable<DeviceSettings> MapToDriverDevices(DeviceGroupModel dg, string profileName)
+        protected IEnumerable<DeviceSettings> MapToDriverDevices(string dg, string profileName)
         {
-            IEnumerable<DeviceModel> deviceModels = Devices.Devices.Where(d => d.DeviceGroup.Equals(dg));
+            IEnumerable<DeviceModel> deviceModels = Devices.Devices.Where(d => d.DeviceGroup.ModelValue.Equals(dg));
             return deviceModels.Select(dm => MapToDriverDevice(dm, profileName));
         }
 

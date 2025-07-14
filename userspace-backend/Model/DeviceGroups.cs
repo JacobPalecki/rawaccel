@@ -7,6 +7,11 @@ using userspace_backend.Model.EditableSettings;
 
 namespace userspace_backend.Model
 {
+    public interface IDeviceGroups
+    {
+
+    }
+
     public class DeviceGroups : EditableSettingsCollection<IEnumerable<string>>
     {
         public static readonly DeviceGroupModel DefaultDeviceGroup =

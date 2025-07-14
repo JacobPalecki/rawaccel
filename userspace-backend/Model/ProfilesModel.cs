@@ -38,7 +38,7 @@ namespace userspace_backend.Model
 
         protected override void SetElementName(IProfileModel element, string name)
         {
-            element.Name.InterfaceValue = name;
+            element.Name.TryUpdateModelDirectly(name);
         }
 
         protected override string GetNameFromData(DATA.Profile data)

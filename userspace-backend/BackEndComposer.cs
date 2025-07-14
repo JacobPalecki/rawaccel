@@ -453,6 +453,19 @@ namespace userspace_backend
 
             #endregion DeviceGroup
 
+            #region Mapping
+
+            services.AddTransient<IMappingModel, MappingModel>();
+            services.AddKeyedTransient<IEditableSettingSpecific<string>>(
+                MappingModel.NameDIKey, (_, _) =>
+                    new EditableSettingV2<string>(
+                        displayName: "Name",
+                        initialValue: "name",
+                        parser: UserInputParsers.StringParser,
+                        validator: ModelValueValidators.DefaultStringValidator));
+
+            #endregion Mapping
+
             return services.BuildServiceProvider();
         }
     }
