@@ -2,17 +2,15 @@
 using System.Linq;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend.Data;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
 namespace userspace_backend.Model
 {
     public interface IMappingModel : IEditableSettingsCollectionSpecific<Mapping>
     {
-
     }
 
-    public class MappingModel: EditableSettingsCollectionV2<Mapping>, IMappingModel
+    public class MappingModel: NamedEditableSettingsCollection<Mapping>, IMappingModel
     {
         public const string NameDIKey = $"{nameof(MappingModel)}.{nameof(Name)}";
 
@@ -20,9 +18,9 @@ namespace userspace_backend.Model
             IEditableSettingSpecific<string> name,
             IModelValueValidator<string> nameValidator,
             IDeviceGroups deviceGroups,
-            IProfilesModel profiles) : base([], [])
+            IProfilesModel profiles)
+            : base(name, [], [])
         {
-            Name = name;
             NameValidator = nameValidator;
             SetActive = true;
             DeviceGroups = deviceGroups;
@@ -30,8 +28,6 @@ namespace userspace_backend.Model
         }
 
         public bool SetActive { get; set; }
-
-        public IEditableSettingSpecific<string> Name { get; set; }
 
         protected IModelValueValidator<string> NameValidator { get; }
 

@@ -18,7 +18,7 @@ namespace userspace_backend.Model
         IEditableSettingSpecific<string> DeviceGroup { get; }
     }
 
-    public class DeviceModel : EditableSettingsCollectionV2<Device>, IDeviceModel
+    public class DeviceModel : NamedEditableSettingsCollection<Device>, IDeviceModel
     {
         public const string NameDIKey = $"{nameof(DeviceModel)}.{nameof(Name)}";
         public const string HardwareIDDIKey = $"{nameof(DeviceModel)}.{nameof(HardwareID)}";
@@ -34,17 +34,14 @@ namespace userspace_backend.Model
             IEditableSettingSpecific<int> pollRate,
             IEditableSettingSpecific<bool> ignore,
             IEditableSettingSpecific<string> deviceGroup)
-            : base([name, hardwareID, dpi, pollRate, ignore, deviceGroup], [])
+            : base(name, [hardwareID, dpi, pollRate, ignore, deviceGroup], [])
         {
-            Name = name;
             HardwareID = hardwareID;
             DPI = dpi;
             PollRate = pollRate;
             Ignore = ignore;
             DeviceGroup = deviceGroup;
         }
-
-        public IEditableSettingSpecific<string> Name { get; protected set; }
 
         public IEditableSettingSpecific<string> HardwareID { get; protected set; }
 
@@ -55,10 +52,6 @@ namespace userspace_backend.Model
         public IEditableSettingSpecific<bool> Ignore { get; protected set; }
 
         public IEditableSettingSpecific<string> DeviceGroup { get; set; }
-
-        protected DeviceModelNameValidator DeviceModelNameValidator { get; }
-
-        protected DeviceModelHWIDValidator DeviceModelHWIDValidator { get; }
 
         public override Device MapToData()
         {

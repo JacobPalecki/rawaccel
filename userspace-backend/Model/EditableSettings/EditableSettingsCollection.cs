@@ -113,6 +113,11 @@ namespace userspace_backend.Model.EditableSettings
         bool TryMapFromData(T data);
     }
 
+    public interface INamedEditableSettingsCollectionSpecific<T> : IEditableSettingsCollectionSpecific<T>
+    {
+        public IEditableSettingSpecific<string> Name { get; }
+    }
+
     /// <summary>
     /// Base class for settings collections.
     /// </summary>
@@ -203,5 +208,19 @@ namespace userspace_backend.Model.EditableSettings
         protected abstract bool TryMapEditableSettingsFromData(T data);
 
         protected abstract bool TryMapEditableSettingsCollectionsFromData(T data);
+    }
+
+    public abstract class NamedEditableSettingsCollection<T> : EditableSettingsCollectionV2<T>, INamedEditableSettingsCollectionSpecific<T>
+    {
+        public NamedEditableSettingsCollection(
+            IEditableSettingSpecific<string> name,
+            IEnumerable<IEditableSetting> editableSettings,
+            IEnumerable<IEditableSettingsCollectionV2> editableSettingsCollections)
+            : base(editableSettings.Union([name]), editableSettingsCollections)
+        {
+            Name = name;
+        }
+
+        public IEditableSettingSpecific<string> Name { get; }
     }
 }

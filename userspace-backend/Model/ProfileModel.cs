@@ -29,7 +29,7 @@ namespace userspace_backend.Model
         Profile CurrentValidatedDriverProfile { get; }
     }
 
-    public class ProfileModel : EditableSettingsCollectionV2<DATA.Profile>, IProfileModel
+    public class ProfileModel : NamedEditableSettingsCollection<DATA.Profile>, IProfileModel
     {
         public const string NameDIKey = $"{nameof(ProfileModel)}.{nameof(Name)}";
         public const string OutputDPIDIKey = $"{nameof(ProfileModel)}.{nameof(OutputDPI)}";
@@ -41,16 +41,15 @@ namespace userspace_backend.Model
             [FromKeyedServices(YXRatioDIKey)]IEditableSettingSpecific<double> yxRatio,
             IAccelerationModel acceleration,
             IHiddenModel hidden
-            ) : base([name, outputDPI, yxRatio], [acceleration, hidden])
+            ) : base(name, [outputDPI, yxRatio], [acceleration, hidden])
         {
-            Name = name;
             OutputDPI = outputDPI;
             YXRatio = yxRatio;
             Acceleration = acceleration;
             Hidden = hidden;
 
             // Name and Output DPI do not need to generate a new curve preview
-            Name.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
+            Name!.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
             OutputDPI.PropertyChanged += AnyNonPreviewPropertyChangedEventHandler;
 
             // The rest of settings should generate a new curve preview
@@ -64,8 +63,6 @@ namespace userspace_backend.Model
         }
 
         public string CurrentNameForDisplay => Name.ModelValue;
-
-        public IEditableSettingSpecific<string> Name { get; set; }
 
         public IEditableSettingSpecific<int> OutputDPI { get; set; }
 
