@@ -9,18 +9,6 @@ using userspace_backend.Model.AccelDefinitions;
 
 namespace userspace_backend.Model.EditableSettings
 {
-    public static class UserInputParsers
-    {
-        public static StringParser StringParser = new StringParser();
-        public static IntParser IntParser = new IntParser();
-        public static DoubleParser DoubleParser = new DoubleParser();
-        public static BoolParser BoolParser = new BoolParser();
-        public static AccelerationDefinitionTypeParser AccelerationDefinitionTypeParser = new AccelerationDefinitionTypeParser();
-        public static LookupTableTypeParser LookupTableTypeParser = new LookupTableTypeParser();
-        public static LookupTableDataParser LookupTableDataParser = new LookupTableDataParser();
-        public static AccelerationFormulaTypeParser AccelerationFormulaTypeParser = new AccelerationFormulaTypeParser();
-    }
-
     public interface IUserInputParser<T>
     {
         bool TryParse(string input, out T parsedValue);
