@@ -158,7 +158,8 @@
                       HorizontalAlignment="Stretch"
                       VerticalAlignment="Center"
                       ItemsSource="{Binding AvailableProfiles}"
-                      SelectedItem="{Binding SelectedProfile}">
+                      SelectedItem="{Binding SelectedProfile}"
+                      PointerPressed="OnInteractiveElementPointerPressed">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
 						<TextBlock Text="{Binding Name.CurrentValidatedValue}"/>
@@ -171,7 +172,8 @@
                 Classes="DeleteButton"
 				Command="{Binding DeleteCommand}"
                 VerticalAlignment="Center"
-                IsEnabled="{Binding CanDelete}">
+                IsEnabled="{Binding CanDelete}"
+                PointerPressed="OnInteractiveElementPointerPressed">
 			<PathIcon Data="{StaticResource delete_regular}"
                       Width="12" Height="12"/>
 		</Button>

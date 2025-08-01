@@ -226,18 +226,20 @@
 		</Style>
 	</UserControl.Styles>
 
-	<Grid>
+	<Grid PointerPressed="OnBackgroundPointerPressed"
+          Background="Transparent">
 		<Button Classes="ActivationButton"
 				HorizontalAlignment="Right"
 				VerticalAlignment="Top"
 				Margin="0,8,8,0"
 				ZIndex="1"
-				Command="{Binding ActivateCommand}">
+				Command="{Binding ActivateCommand}"
+				PointerPressed="OnButtonPointerPressed">
 			<Ellipse Classes="ActiveIndicator"
 					 Name="ActivationIndicator"/>
 		</Button>
 
-		<DockPanel>
+		<DockPanel Background="Transparent">
 			<Grid DockPanel.Dock="Top"
                   ColumnDefinitions="Auto,*"
                   Margin="0,0,0,12">
@@ -245,7 +247,8 @@
                         Classes="DeleteButton"
                         Command="{Binding DeleteCommand}"
                         VerticalAlignment="Center"
-                        IsEnabled="{Binding !IsActiveMapping}">
+                        IsEnabled="{Binding !IsActiveMapping}"
+                        PointerPressed="OnButtonPointerPressed">
 					<PathIcon Data="{StaticResource delete_regular}" Width="16" Height="16"/>
 				</Button>
 				<TextBlock Grid.Column="1"
@@ -258,7 +261,8 @@
                     Classes="AddButton"
                     HorizontalAlignment="Stretch"
                     Name="AddEntryButton"
-                    IsEnabled="{Binding HasDeviceGroupsToAdd}">
+                    IsEnabled="{Binding HasDeviceGroupsToAdd}"
+                    PointerPressed="OnButtonPointerPressed">
 				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 					<PathIcon Data="{StaticResource text_bullet_list_add_regular}"
                               Width="16" Height="16"

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using System.Linq;
 using userinterface.ViewModels.Mapping;
@@ -58,5 +59,32 @@ namespace userinterface.Views.Mapping
                 }
             }
         }
+
+        private void OnBackgroundPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            var hitTest = e.Source as Control;
+            
+            var clickedElement = hitTest;
+            while (clickedElement != null && clickedElement != this)
+            {
+                if (clickedElement is Button || clickedElement is ComboBox || clickedElement is ListBoxItem)
+                {
+                    return;
+                }
+                
+                clickedElement = clickedElement.Parent as Control;
+            }
+            
+            if (DataContext is MappingViewModel viewModel && viewModel.ActivateCommand.CanExecute(null))
+            {
+                viewModel.ActivateCommand.Execute(null);
+            }
+        }
+
+        private void OnButtonPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            e.Handled = true;
+        }
+
     }
 }
