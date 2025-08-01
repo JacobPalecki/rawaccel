@@ -72,6 +72,10 @@ namespace userinterface.ViewModels.Profile
         private SolidColorPaint? cachedXStroke;
         private SolidColorPaint? cachedYStroke;
         
+        // Individual series for proper data binding
+        private LineSeries<CurvePoint>? xSeries;
+        private LineSeries<CurvePoint>? ySeries;
+        
         // Sync object for thread safety - single allocation
         private readonly object syncObject = new object();
 
@@ -118,12 +122,25 @@ namespace userinterface.ViewModels.Profile
             if (currentProfileModel == profileModel)
                 return;
 
+            // Unsubscribe from previous events
+            if (currentProfileModel != null)
+            {
+                UnsubscribeFromEvents();
+            }
+
             currentProfileModel = profileModel;
             XCurvePreview = profileModel.XCurvePreview;
             YCurvePreview = profileModel.YCurvePreview;
             YXRatio = profileModel.YXRatio;
 
-            YXRatio.PropertyChanged += OnYXRatioChanged;
+            // Initialize series first, then subscribe to events
+            if (XCurvePreview?.Points != null && YCurvePreview?.Points != null)
+            {
+                InitializeSeries();
+            }
+            
+            // Subscribe to events
+            SubscribeToEvents();
         }
 
 
@@ -155,8 +172,7 @@ namespace userinterface.ViewModels.Profile
                         // Initialize chart components on background thread
                         await Task.Run(() =>
                         {
-                            Series.Clear();
-                            CreateSeries();
+                            InitializeSeries();
                         });
                         
                         // UI updates must happen on UI thread
@@ -238,11 +254,10 @@ namespace userinterface.ViewModels.Profile
             IsLoadingChart = true;
             OnPropertyChanged(nameof(IsLoadingChart));
 
-            // Load full resolution data for interactive use
+            // Series are already bound to full resolution data
             await Task.Run(() =>
             {
-                Series.Clear();
-                CreateFullResolutionSeries();
+                // No action needed - LiveCharts automatically uses the full ObservableCollection data
             });
 
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -252,33 +267,54 @@ namespace userinterface.ViewModels.Profile
             });
         }
 
-        private void CreateFullResolutionSeries()
+        private void InitializeSeries()
         {
-            // Use full resolution data for interactive chart
-            var xPoints = XCurvePreview?.Points?.ToArray() ?? Array.Empty<CurvePoint>();
-            var yPoints = YCurvePreview?.Points?.ToArray() ?? Array.Empty<CurvePoint>();
-
             // Initialize cached stroke objects
             if (cachedXStroke == null)
                 cachedXStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = MainStrokeThickness };
             if (cachedYStroke == null)
                 cachedYStroke = new SolidColorPaint(SKColors.OrangeRed) { StrokeThickness = MainStrokeThickness };
             
-            // Optimize array allocation based on YX ratio
-            var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
-            var seriesArray = hasYCurve ? new ISeries[2] : new ISeries[1];
-            
-            seriesArray[0] = CreateOptimizedLineSeries(xPoints, cachedXStroke, "X Curve Profile", "X Output");
-            
-            if (hasYCurve)
+            // Create X series bound directly to the ObservableCollection
+            xSeries = new LineSeries<CurvePoint>
             {
-                seriesArray[1] = CreateOptimizedLineSeries(yPoints, cachedYStroke, "Y Curve Profile", "Y Output");
-            }
+                Values = XCurvePreview.Points,
+                Fill = null,
+                Stroke = cachedXStroke,
+                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                GeometrySize = 0,
+                GeometryStroke = null,
+                GeometryFill = null,
+                AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                Name = "X Curve Profile",
+                LineSmoothness = 0,
+                XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
+                YToolTipLabelFormatter = (chartPoint) => $"X Output: {chartPoint.Coordinate.PrimaryValue:F2}"
+            };
 
-            foreach (var series in seriesArray)
+            // Create Y series bound directly to the ObservableCollection
+            ySeries = new LineSeries<CurvePoint>
             {
-                Series.Add(series);
-            }
+                Values = YCurvePreview.Points,
+                Fill = null,
+                Stroke = cachedYStroke,
+                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                GeometrySize = 0,
+                GeometryStroke = null,
+                GeometryFill = null,
+                AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                Name = "Y Curve Profile",
+                LineSmoothness = 0,
+                XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
+                YToolTipLabelFormatter = (chartPoint) => $"Y Output: {chartPoint.Coordinate.PrimaryValue:F2}"
+            };
+
+            // Clear and add series
+            Series.Clear();
+            Series.Add(xSeries);
+            
+            // Add Y series based on current YX ratio
+            UpdateYSeriesVisibility();
         }
 
         private async void TransitionToInteractiveMode()
@@ -305,15 +341,25 @@ namespace userinterface.ViewModels.Profile
             if (currentProfileModel == profileModel && IsInitialized)
                 return Task.CompletedTask;
 
+            // Unsubscribe from previous events
+            if (currentProfileModel != null)
+            {
+                UnsubscribeFromEvents();
+            }
+
             currentProfileModel = profileModel;
             XCurvePreview = profileModel.XCurvePreview;
             YCurvePreview = profileModel.YCurvePreview;
             YXRatio = profileModel.YXRatio;
 
-            YXRatio.PropertyChanged += OnYXRatioChanged;
+            // Subscribe to events
+            SubscribeToEvents();
 
-            // Update chart data synchronously for instant response
-            CreateSeries();
+            // Update series visibility based on YX ratio
+            if (xSeries != null && ySeries != null)
+            {
+                UpdateYSeriesVisibility();
+            }
 
             return Task.CompletedTask;
         }
@@ -379,8 +425,7 @@ namespace userinterface.ViewModels.Profile
         {
             themeService.ThemeChanged -= OnThemeChanged;
             localizationService.PropertyChanged -= OnLocalizationChanged;
-            if (YXRatio != null)
-                YXRatio.PropertyChanged -= OnYXRatioChanged;
+            UnsubscribeFromEvents();
             
             // Dispose cached paint objects
             if (cachedXStroke != null)
@@ -398,100 +443,45 @@ namespace userinterface.ViewModels.Profile
             previewRenderer.ClearCache();
         }
 
-        // ================================================================================================
-        // CHART DATA MANAGEMENT
-        // ================================================================================================
-
-        private ISeries[] CreateSeriesData()
-        {
-            // Pre-calculate and cache data points
-            var xPoints = XCurvePreview?.Points?.ToArray() ?? Array.Empty<CurvePoint>();
-            var yPoints = YCurvePreview?.Points?.ToArray() ?? Array.Empty<CurvePoint>();
-
-            // Reduce points for better performance
-            var reducedXPoints = ReducePointsForPreview(xPoints, 64);
-            var reducedYPoints = ReducePointsForPreview(yPoints, 64);
-
-            // Initialize cached stroke objects
-            if (cachedXStroke == null)
-                cachedXStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = MainStrokeThickness };
-            if (cachedYStroke == null)
-                cachedYStroke = new SolidColorPaint(SKColors.OrangeRed) { StrokeThickness = MainStrokeThickness };
-            
-            // Optimize array allocation based on YX ratio
-            var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
-            var seriesArray = hasYCurve ? new ISeries[2] : new ISeries[1];
-            
-            seriesArray[0] = CreateOptimizedLineSeries(reducedXPoints, cachedXStroke, "X Curve Profile", "X Output");
-            
-            if (hasYCurve)
-            {
-                seriesArray[1] = CreateOptimizedLineSeries(reducedYPoints, cachedYStroke, "Y Curve Profile", "Y Output");
-            }
-
-            return seriesArray;
-        }
-
-        private CurvePoint[] ReducePointsForPreview(CurvePoint[] points, int targetCount = 64)
-        {
-            if (points.Length <= targetCount)
-                return points;
-
-            // Use uniform sampling for consistent performance
-            var step = (double)points.Length / targetCount;
-            var reducedPoints = new CurvePoint[targetCount];
-            
-            for (int i = 0; i < targetCount; i++)
-            {
-                var sourceIndex = (int)(i * step);
-                if (sourceIndex >= points.Length)
-                    sourceIndex = points.Length - 1;
-                
-                reducedPoints[i] = points[sourceIndex];
-            }
-            
-            return reducedPoints;
-        }
-
-        private LineSeries<CurvePoint> CreateOptimizedLineSeries(CurvePoint[] points, SolidColorPaint stroke, string name, string outputLabel)
-        {
-            return new LineSeries<CurvePoint>
-            {
-                Values = points,
-                Fill = null,
-                Stroke = stroke,
-                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
-                GeometrySize = 0,
-                GeometryStroke = null,
-                GeometryFill = null,
-                AnimationsSpeed = TimeSpan.FromMilliseconds(100), // Reduced animations for performance
-                Name = name,
-                LineSmoothness = 0, // Disable smoothing for better performance
-                XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
-                YToolTipLabelFormatter = (chartPoint) => $"{outputLabel}: {chartPoint.Coordinate.PrimaryValue:F2}"
-            };
-        }
-
-        private void CreateSeries()
-        {
-            var series = CreateSeriesData();
-            Series.Clear();
-            foreach (var s in series)
-            {
-                Series.Add(s);
-            }
-        }
 
         // ================================================================================================
         // EVENT HANDLERS
         // ================================================================================================
 
+        private void SubscribeToEvents()
+        {
+            if (YXRatio != null)
+                YXRatio.PropertyChanged += OnYXRatioChanged;
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            if (YXRatio != null)
+                YXRatio.PropertyChanged -= OnYXRatioChanged;
+        }
+
         private void OnYXRatioChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(EditableSetting<double>.CurrentValidatedValue))
             {
-                CreateSeries();
-                OnPropertyChanged(nameof(Series));
+                UpdateYSeriesVisibility();
+            }
+        }
+
+        private void UpdateYSeriesVisibility()
+        {
+            if (ySeries == null) return;
+            
+            var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
+            var ySeriesExists = Series.Contains(ySeries);
+            
+            if (hasYCurve && !ySeriesExists)
+            {
+                Series.Add(ySeries);
+            }
+            else if (!hasYCurve && ySeriesExists)
+            {
+                Series.Remove(ySeries);
             }
         }
 
