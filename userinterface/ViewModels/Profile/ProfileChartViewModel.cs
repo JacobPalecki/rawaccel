@@ -260,6 +260,7 @@ namespace userinterface.ViewModels.Profile
                 GeometryStroke = null,
                 GeometryFill = null,
                 AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
                 Name = "X Curve Profile",
                 LineSmoothness = 0,
                 XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
@@ -276,6 +277,7 @@ namespace userinterface.ViewModels.Profile
                 GeometryStroke = null,
                 GeometryFill = null,
                 AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
                 Name = "Y Curve Profile",
                 LineSmoothness = 0,
                 XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
@@ -471,6 +473,7 @@ namespace userinterface.ViewModels.Profile
                     TicksPaint = new SolidColorPaint(titleColor) { StrokeThickness = StandardStrokeThickness },
                     SubseparatorsPaint = new SolidColorPaint(separatorColor.WithAlpha(SubSeparatorAlpha)) { StrokeThickness = SubStrokeThickness },
                     AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
                     MinLimit = minLimit ?? 0,
                     MaxLimit = maxLimit
                 }
@@ -497,6 +500,7 @@ namespace userinterface.ViewModels.Profile
                     TicksPaint = new SolidColorPaint(titleColor) { StrokeThickness = StandardStrokeThickness },
                     SubseparatorsPaint = new SolidColorPaint(separatorColor.WithAlpha(SubSeparatorAlpha)) { StrokeThickness = SubStrokeThickness },
                     AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
                     MinLimit = minLimit ?? 0,
                     MaxLimit = maxLimit
                 }
