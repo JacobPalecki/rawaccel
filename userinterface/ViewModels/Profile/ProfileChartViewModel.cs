@@ -35,14 +35,12 @@ namespace userinterface.ViewModels.Profile
 
         // Default chart limits when no data or centering
         private const int DefaultAxisRange = 50;
-
         private const int DefaultYRange = 1;
         private const int DefaultMaxX = 100;
         private const int DefaultMaxY = 2;
 
         // Line and stroke thickness
         private const int MainStrokeThickness = 2;
-
         private const int StandardStrokeThickness = 1;
         private const float SubStrokeThickness = 0.5f;
 
@@ -57,7 +55,7 @@ namespace userinterface.ViewModels.Profile
         private static readonly string AxisSeparatorsBrush = "BorderBrush";
         private static readonly string TooltipBackgroundBrush = "CardBackgroundBrush";
 
-        // Axis labeling and text - will be set by localization service
+        // Axis labeling and text
         private const int AxisNameTextSize = 14;
         private const int AxisTextSize = 12;
 
@@ -68,15 +66,12 @@ namespace userinterface.ViewModels.Profile
         private readonly PreviewChartRenderer previewRenderer;
         private BE.ProfileModel currentProfileModel = null!;
         
-        // Cached paint objects to avoid recreation
         private SolidColorPaint? cachedXStroke;
         private SolidColorPaint? cachedYStroke;
         
-        // Individual series for proper data binding
         private LineSeries<CurvePoint>? xSeries;
         private LineSeries<CurvePoint>? ySeries;
         
-        // Sync object for thread safety - single allocation
         private readonly object syncObject = new object();
 
         public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer)
@@ -133,13 +128,11 @@ namespace userinterface.ViewModels.Profile
             YCurvePreview = profileModel.YCurvePreview;
             YXRatio = profileModel.YXRatio;
 
-            // Initialize series first, then subscribe to events
             if (XCurvePreview?.Points != null && YCurvePreview?.Points != null)
             {
                 InitializeSeries();
             }
             
-            // Subscribe to events
             SubscribeToEvents();
         }
 
@@ -157,25 +150,18 @@ namespace userinterface.ViewModels.Profile
 
             try
             {
-                // Show skeleton loader immediately
                 IsLoadingChart = true;
                 OnPropertyChanged(nameof(IsLoadingChart));
-                
-                // Initialize interactive chart
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        // Small delay to show skeleton loader
                         await Task.Delay(100);
-                        
-                        // Initialize chart components on background thread
                         await Task.Run(() =>
                         {
                             InitializeSeries();
                         });
                         
-                        // UI updates must happen on UI thread
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             try
@@ -185,18 +171,14 @@ namespace userinterface.ViewModels.Profile
                                 TooltipTextPaint = new SolidColorPaint(themeService.GetCachedColor(AxisTitleBrush));
                                 TooltipBackgroundPaint = new SolidColorPaint(themeService.GetCachedColor(TooltipBackgroundBrush).WithAlpha(TooltipBackgroundAlpha));
                                 
-                                // Subscribe to events
                                 this.themeService.ThemeChanged += OnThemeChanged;
                                 this.localizationService.PropertyChanged += OnLocalizationChanged;
-
-                                // Notify UI of changes
                                 OnPropertyChanged(nameof(XAxes));
                                 OnPropertyChanged(nameof(YAxes));
                                 OnPropertyChanged(nameof(TooltipTextPaint));
                                 OnPropertyChanged(nameof(TooltipBackgroundPaint));
                                 OnPropertyChanged(nameof(Series));
                                 
-                                // Transition to interactive mode
                                 TransitionToInteractiveMode();
                                 
                                 IsInitialized = true;
@@ -205,7 +187,6 @@ namespace userinterface.ViewModels.Profile
                             {
                                 System.Diagnostics.Debug.WriteLine($"[CHART INIT] Error in UI thread: {ex.Message}");
                                 
-                                // Hide skeleton loader on error
                                 IsLoadingChart = false;
                                 OnPropertyChanged(nameof(IsLoadingChart));
                             }
@@ -215,7 +196,6 @@ namespace userinterface.ViewModels.Profile
                     {
                         System.Diagnostics.Debug.WriteLine($"[CHART INIT] Error in background initialization: {ex.Message}");
                         
-                        // Hide skeleton loader on error
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             IsLoadingChart = false;
@@ -224,7 +204,6 @@ namespace userinterface.ViewModels.Profile
                     }
                 });
                 
-                // Mark as initialized immediately (background chart loading continues)
                 IsInitialized = true;
             }
             finally
@@ -241,7 +220,6 @@ namespace userinterface.ViewModels.Profile
             if (!IsInteractiveMode && !IsLoadingChart && !hasUserInteracted)
             {
                 hasUserInteracted = true;
-                // Force immediate transition to interactive mode
                 _ = ForceInteractiveMode();
             }
         }
@@ -254,10 +232,9 @@ namespace userinterface.ViewModels.Profile
             IsLoadingChart = true;
             OnPropertyChanged(nameof(IsLoadingChart));
 
-            // Series are already bound to full resolution data
             await Task.Run(() =>
             {
-                // No action needed - LiveCharts automatically uses the full ObservableCollection data
+                // LiveCharts automatically uses the full ObservableCollection data
             });
 
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -269,13 +246,10 @@ namespace userinterface.ViewModels.Profile
 
         private void InitializeSeries()
         {
-            // Initialize cached stroke objects
             if (cachedXStroke == null)
                 cachedXStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = MainStrokeThickness };
             if (cachedYStroke == null)
                 cachedYStroke = new SolidColorPaint(SKColors.OrangeRed) { StrokeThickness = MainStrokeThickness };
-            
-            // Create X series bound directly to the ObservableCollection
             xSeries = new LineSeries<CurvePoint>
             {
                 Values = XCurvePreview.Points,
@@ -292,7 +266,6 @@ namespace userinterface.ViewModels.Profile
                 YToolTipLabelFormatter = (chartPoint) => $"X Output: {chartPoint.Coordinate.PrimaryValue:F2}"
             };
 
-            // Create Y series bound directly to the ObservableCollection
             ySeries = new LineSeries<CurvePoint>
             {
                 Values = YCurvePreview.Points,
@@ -309,17 +282,14 @@ namespace userinterface.ViewModels.Profile
                 YToolTipLabelFormatter = (chartPoint) => $"Y Output: {chartPoint.Coordinate.PrimaryValue:F2}"
             };
 
-            // Clear and add series
             Series.Clear();
             Series.Add(xSeries);
             
-            // Add Y series based on current YX ratio
             UpdateYSeriesVisibility();
         }
 
         private async void TransitionToInteractiveMode()
         {
-            // Hide skeleton loader and show interactive chart at 0 opacity
             IsLoadingChart = false;
             IsInteractiveMode = true;
             ChartOpacity = 0.0;
@@ -328,10 +298,8 @@ namespace userinterface.ViewModels.Profile
             OnPropertyChanged(nameof(IsInteractiveMode));
             OnPropertyChanged(nameof(ChartOpacity));
             
-            // Small delay to ensure chart is rendered
             await Task.Delay(100);
             
-            // Fade in interactive chart
             ChartOpacity = 1.0;
             OnPropertyChanged(nameof(ChartOpacity));
         }
@@ -341,7 +309,6 @@ namespace userinterface.ViewModels.Profile
             if (currentProfileModel == profileModel && IsInitialized)
                 return Task.CompletedTask;
 
-            // Unsubscribe from previous events
             if (currentProfileModel != null)
             {
                 UnsubscribeFromEvents();
@@ -352,10 +319,7 @@ namespace userinterface.ViewModels.Profile
             YCurvePreview = profileModel.YCurvePreview;
             YXRatio = profileModel.YXRatio;
 
-            // Subscribe to events
             SubscribeToEvents();
-
-            // Update series visibility based on YX ratio
             if (xSeries != null && ySeries != null)
             {
                 UpdateYSeriesVisibility();
@@ -427,7 +391,6 @@ namespace userinterface.ViewModels.Profile
             localizationService.PropertyChanged -= OnLocalizationChanged;
             UnsubscribeFromEvents();
             
-            // Dispose cached paint objects
             if (cachedXStroke != null)
             {
                 cachedXStroke.Dispose();
@@ -439,7 +402,6 @@ namespace userinterface.ViewModels.Profile
                 cachedYStroke = null;
             }
             
-            // Clear preview renderer cache for memory cleanup
             previewRenderer.ClearCache();
         }
 
@@ -597,14 +559,12 @@ namespace userinterface.ViewModels.Profile
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
 
-            // Notify tooltip property changes
             OnPropertyChanged(nameof(TooltipTextPaint));
             OnPropertyChanged(nameof(TooltipBackgroundPaint));
         }
 
         private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Recreate axes with current limits but updated localized names
             var currentXMin = XAxes?[0]?.MinLimit;
             var currentXMax = XAxes?[0]?.MaxLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
