@@ -84,7 +84,6 @@ namespace userspace_backend.Model.EditableSettings
         {
             if (string.IsNullOrEmpty(InterfaceValue))
             {
-                UpdateInterfaceValue();
                 return false;
             }
 
