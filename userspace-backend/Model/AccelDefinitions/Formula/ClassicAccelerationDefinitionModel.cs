@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using userspace_backend.Data.Profiles;
 using userspace_backend.Data.Profiles.Accel.Formula;
 using userspace_backend.Model.EditableSettings;
@@ -69,6 +67,15 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
             };
         }
 
+        private void OnExponentChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(EditableSetting<double>.CurrentValidatedValue) && 
+                Math.Abs(Exponent.CurrentValidatedValue - 2.0) < 0.001)
+            {
+                NotificationManager.TriggerNotification("ProfileClassicLinearEquivalent", NotificationType.Info);
+            }
+        }
+
         protected override void InitSpecificSettingsAndCollections(ClassicAccel dataObject)
         {
             Acceleration = new EditableSetting<double>(
@@ -95,6 +102,8 @@ namespace userspace_backend.Model.AccelDefinitions.Formula
                 parser: UserInputParsers.DoubleParser,
                 validator: ModelValueValidators.DefaultDoubleValidator,
                 localizationKey: "AccelClassicCap");
+
+            Exponent.PropertyChanged += OnExponentChanged;
         }
     }
 }

@@ -108,7 +108,8 @@ public partial class App : Application
                 provider.GetRequiredService<BackEnd>(),
                 provider.GetRequiredService<IThemeService>(),
                 provider.GetRequiredService<ISettingsService>(),
-                provider.GetRequiredService<FrameTimerService>()));
+                provider.GetRequiredService<FrameTimerService>(),
+                provider.GetRequiredService<INotificationService>()));
         services.AddSingleton<ToastViewModel>();
 
         // Device ViewModels

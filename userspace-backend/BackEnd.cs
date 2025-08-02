@@ -12,6 +12,34 @@ using DATA = userspace_backend.Data;
 
 namespace userspace_backend
 {
+    public class NotificationEventArgs : EventArgs
+    {
+        public string MessageKey { get; set; } = string.Empty;
+        public NotificationType Type { get; set; }
+    }
+
+    public enum NotificationType
+    {
+        Info,
+        Success,
+        Warning,
+        Error
+    }
+
+    public static class NotificationManager
+    {
+        public static event EventHandler<NotificationEventArgs>? NotificationRequested;
+
+        public static void TriggerNotification(string messageKey, NotificationType type)
+        {
+            NotificationRequested?.Invoke(null, new NotificationEventArgs
+            {
+                MessageKey = messageKey,
+                Type = type
+            });
+        }
+    }
+
     public class BackEnd
     {
         public BackEnd(IBackEndLoader backEndLoader)
@@ -66,7 +94,7 @@ namespace userspace_backend
         {
             try
             {
-                // WriteToDriver();
+                WriteToDriver();
             }
             catch (Exception)
             {
@@ -93,6 +121,7 @@ namespace userspace_backend
             try
             {
                 config.Activate();
+                NotificationManager.TriggerNotification("MainWindowSettingsAppliedSuccess", NotificationType.Success);
             }
             catch (Exception)
             {

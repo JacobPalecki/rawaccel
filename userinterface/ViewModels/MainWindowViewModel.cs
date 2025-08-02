@@ -39,13 +39,15 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
     private readonly BE.BackEnd backEnd;
     private readonly IThemeService themeService;
     private readonly ISettingsService settingsService;
+    private readonly INotificationService notificationService;
     private readonly FrameTimerService frameTimer;
 
-    public MainWindowViewModel(BE.BackEnd backEnd, IThemeService themeService, ISettingsService settingsService, FrameTimerService frameTimer)
+    public MainWindowViewModel(BE.BackEnd backEnd, IThemeService themeService, ISettingsService settingsService, FrameTimerService frameTimer, INotificationService notificationService)
     {
         this.backEnd = backEnd ?? throw new ArgumentNullException(nameof(backEnd));
         this.themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
         this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         this.frameTimer = frameTimer ?? throw new ArgumentNullException(nameof(frameTimer));
 
         devicesPage = App.Services!.GetRequiredService<DevicesPageViewModel>();
@@ -60,6 +62,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         ToggleThemeCommand = new RelayCommand(() => ToggleTheme());
         
         profileListView.SelectedProfileChanged += OnProfileSelected;
+        BE.NotificationManager.NotificationRequested += OnBackEndNotificationRequested;
     }
 
     public DevicesPageViewModel DevicesPage => devicesPage;
@@ -247,6 +250,20 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         {
             SelectPage(NavigationPage.Profiles);
         }
+    }
+
+    private void OnBackEndNotificationRequested(object? sender, BE.NotificationEventArgs e)
+    {
+        var toastType = e.Type switch
+        {
+            BE.NotificationType.Info => ToastType.Info,
+            BE.NotificationType.Success => ToastType.Success,
+            BE.NotificationType.Warning => ToastType.Warning,
+            BE.NotificationType.Error => ToastType.Error,
+            _ => ToastType.Info
+        };
+
+        notificationService.ShowToast(e.MessageKey, toastType);
     }
 
     public new event PropertyChangedEventHandler? PropertyChanged;
