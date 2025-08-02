@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -173,6 +174,28 @@ namespace userspace_backend
         {
             MappingModel mappingToApply = Mappings.GetMappingToSetActive();
             
+            Debug.WriteLine("\n=== Raw Accel: Applying Settings ===");
+            Debug.WriteLine($"Active Mapping: {mappingToApply.Name.ModelValue}");
+            
+            // Log profile to device group mappings
+            foreach (var individualMapping in mappingToApply.IndividualMappings)
+            {
+                var deviceGroup = individualMapping.DeviceGroup;
+                var profile = individualMapping.Profile;
+                var devicesInGroup = Devices.Devices.Where(d => d.DeviceGroup.Equals(deviceGroup) && !d.Ignore.ModelValue).ToList();
+                
+                Debug.WriteLine($"\n  Device Group: {deviceGroup.DisplayText}");
+                Debug.WriteLine($"  Profile: {profile.Name.ModelValue}");
+                Debug.WriteLine($"  Devices in group ({devicesInGroup.Count}):");
+                
+                foreach (var device in devicesInGroup)
+                {
+                    Debug.WriteLine($"    - {device.Name.ModelValue} (ID: {device.HardwareID.ModelValue})");
+                }
+            }
+            
+            Debug.WriteLine("\n=== End of Mapping Info ===");
+            
             // Validate mappings before applying
             if (!ValidateMappingBeforeApplying(mappingToApply))
             {
@@ -183,11 +206,12 @@ namespace userspace_backend
             try
             {
                 config.Activate();
+                Debug.WriteLine("\nSettings applied successfully to driver.");
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log this once logging is added
+                Debug.WriteLine($"\nFailed to apply settings to driver: {ex.Message}");
                 return false;
             }
         }
