@@ -105,7 +105,7 @@ namespace userspace_backend.Model
             return Devices.Remove(device);
         }
 
-        protected void RefreshSystemDevices()
+        public void RefreshSystemDevices()
         {
             SystemDevices.Clear();
             var systemDevicesList = MultiHandleDevice.GetList();

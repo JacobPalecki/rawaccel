@@ -4,10 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:userinterface.ViewModels.Device"
              xmlns:controls="using:userinterface.Controls"
+             xmlns:converters="using:userinterface.Converters"
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="userinterface.Views.Device.DeviceView"
              x:DataType="vm:DeviceViewModel">
+
+	<UserControl.Resources>
+		<converters:DeviceNameConverter x:Key="DeviceNameConverter"/>
+	</UserControl.Resources>
 
 	<UserControl.Styles>
 		<Style Selector="Button.DeleteButton">
@@ -113,10 +118,33 @@
 			<Grid ColumnDefinitions="*,*"
                   HorizontalAlignment="Stretch"
                   Margin="26,8,8,8">
-				<ContentControl Grid.Column="0"
-                                HorizontalAlignment="Stretch"
-                                Content="{Binding HWIDField}"
-                                Margin="0,0,16,0" />
+				<StackPanel Grid.Column="0"
+                            Orientation="Vertical"
+                            Margin="0,0,16,0">
+					<DockPanel>
+						<Button DockPanel.Dock="Right"
+                                Margin="8,0,0,0"
+                                Command="{Binding RefreshDevicesCommand}"
+                                Content="🔄"
+                                ToolTip.Tip="Refresh available devices"
+                                Width="32"
+                                Height="32" />
+						<TextBlock DockPanel.Dock="Left"
+                                   Text="Hardware Device:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+					</DockPanel>
+					<ComboBox ItemsSource="{Binding AvailableDevices}"
+                              SelectedItem="{Binding SelectedDevice}"
+                              HorizontalAlignment="Stretch"
+                              Margin="0,4,0,0">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding Converter={StaticResource DeviceNameConverter}}" />
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</StackPanel>
 
 				<ContentControl Grid.Column="1"
                                 HorizontalAlignment="Left"

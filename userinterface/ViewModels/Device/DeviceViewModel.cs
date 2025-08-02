@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,8 +25,6 @@ namespace userinterface.ViewModels.Device
 
             NameField = new NamedEditableFieldViewModel(DeviceBE.Name);
 
-            HWIDField = new NamedEditableFieldViewModel(DeviceBE.HardwareID);
-
             DPIField = new NamedEditableFieldViewModel(DeviceBE.DPI);
 
             PollRateField = new NamedEditableFieldViewModel(DeviceBE.PollRate);
@@ -34,7 +34,14 @@ namespace userinterface.ViewModels.Device
 
             DeviceGroup = new DeviceGroupSelectorViewModel(DeviceBE, DevicesBE.DeviceGroups);
 
+            AvailableDevices = new ObservableCollection<MultiHandleDevice>();
+            RefreshAvailableDevices();
+            
+            var currentDevice = AvailableDevices.FirstOrDefault(d => d.id == DeviceBE.HardwareID.ModelValue);
+            SelectedDevice = currentDevice;
+
             DeleteCommand = new RelayCommand(async () => await DeleteWithAnimation());
+            RefreshDevicesCommand = new RelayCommand(RefreshAvailableDevices);
         }
 
         internal BE.DeviceModel DeviceBE { get; }
@@ -47,8 +54,6 @@ namespace userinterface.ViewModels.Device
 
         public NamedEditableFieldViewModel NameField { get; set; }
 
-        public NamedEditableFieldViewModel HWIDField { get; set; }
-
         public NamedEditableFieldViewModel DPIField { get; set; }
 
         public NamedEditableFieldViewModel PollRateField { get; set; }
@@ -57,11 +62,43 @@ namespace userinterface.ViewModels.Device
 
         public DeviceGroupSelectorViewModel DeviceGroup { get; set; }
 
+        public ObservableCollection<MultiHandleDevice> AvailableDevices { get; set; }
+
+        private MultiHandleDevice? selectedDevice;
+
+        public MultiHandleDevice? SelectedDevice
+        {
+            get => selectedDevice;
+            set
+            {
+                if (SetProperty(ref selectedDevice, value))
+                {
+                    if (value != null)
+                    {
+                        DeviceBE.HardwareID.InterfaceValue = value.id;
+                        DeviceBE.HardwareID.TryUpdateFromInterface();
+                    }
+                }
+            }
+        }
+
         public ICommand DeleteCommand { get; }
+
+        public ICommand RefreshDevicesCommand { get; }
 
         public bool IsExpanderEnabled => !IgnoreBool.Value;
 
         private bool isDeleting = false;
+
+        private void RefreshAvailableDevices()
+        {
+            DevicesBE.RefreshSystemDevices();
+            AvailableDevices.Clear();
+            foreach (var device in DevicesBE.SystemDevices)
+            {
+                AvailableDevices.Add(device);
+            }
+        }
 
         private void OnIgnoreBoolChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
