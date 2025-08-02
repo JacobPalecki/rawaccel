@@ -128,7 +128,7 @@ namespace userinterface.ViewModels.Profile
 
         private double maxXAxisLimit = 0;
         private double maxYAxisLimit = 0;
-        private bool preventAxisShrinking = true;
+        private bool preventAxisResizing = true;
         private double currentMaxXData = 0;
         private double currentMaxYData = 0;
 
@@ -550,10 +550,25 @@ namespace userinterface.ViewModels.Profile
 
         private void SetDefaultLimits()
         {
-            XAxes[0].MinLimit = 0;
-            XAxes[0].MaxLimit = DefaultMaxX;
-            YAxes[0].MinLimit = 0;
-            YAxes[0].MaxLimit = DefaultMaxY;
+            if (preventAxisResizing)
+            {
+                // Don't allow axis limits to shrink below stored maximums
+                XAxes[0].MinLimit = 0;
+                XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, DefaultMaxX);
+                YAxes[0].MinLimit = 0;
+                YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, DefaultMaxY);
+                
+                // Update stored maximums if they increased
+                maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
+                maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
+            }
+            else
+            {
+                XAxes[0].MinLimit = 0;
+                XAxes[0].MaxLimit = DefaultMaxX;
+                YAxes[0].MinLimit = 0;
+                YAxes[0].MaxLimit = DefaultMaxY;
+            }
         }
 
         private static (double minX, double maxX, double minY, double maxY) CalculateDataBounds(System.Collections.Generic.List<CurvePoint> points)
@@ -569,10 +584,26 @@ namespace userinterface.ViewModels.Profile
         {
             var centerY = (minY + maxY) / 2;
             var centerX = (minX + maxX) / 2;
-            YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
-            YAxes[0].MaxLimit = centerY + DefaultYRange;
-            XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
-            XAxes[0].MaxLimit = centerX + DefaultAxisRange;
+            
+            if (preventAxisResizing)
+            {
+                // Don't allow axis limits to shrink below stored maximums
+                YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
+                YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, centerY + DefaultYRange);
+                XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
+                XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, centerX + DefaultAxisRange);
+                
+                // Update stored maximums if they increased
+                maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
+                maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
+            }
+            else
+            {
+                YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
+                YAxes[0].MaxLimit = centerY + DefaultYRange;
+                XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
+                XAxes[0].MaxLimit = centerX + DefaultAxisRange;
+            }
         }
 
         private void SetPaddedLimits(double minX, double maxX, double minY, double maxY)
@@ -581,44 +612,37 @@ namespace userinterface.ViewModels.Profile
             var yRange = maxY - minY;
             var xPadding = xRange * DataPaddingRatio;
             var yPadding = yRange * DataPaddingRatio;
-            XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
-            XAxes[0].MaxLimit = maxX + xPadding;
-            YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
-            YAxes[0].MaxLimit = maxY + yPadding;
             
-            if (preventAxisShrinking)
+            if (preventAxisResizing)
             {
+                // Don't allow axis limits to shrink below stored maximums
+                XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
+                XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, maxX + xPadding);
+                YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
+                YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, maxY + yPadding);
+                
+                // Update stored maximums if they increased
                 maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
                 maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
-                currentMaxXData = maxX;
-                currentMaxYData = maxY;
+                currentMaxXData = Math.Max(currentMaxXData, maxX);
+                currentMaxYData = Math.Max(currentMaxYData, maxY);
+            }
+            else
+            {
+                XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
+                XAxes[0].MaxLimit = maxX + xPadding;
+                YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
+                YAxes[0].MaxLimit = maxY + yPadding;
             }
         }
 
         private void UpdateAxisLimitsIfNeeded()
         {
-            if (!preventAxisShrinking || XAxes == null || YAxes == null) return;
+            if (!preventAxisResizing || XAxes == null || YAxes == null) return;
             
-            var xAxis = XAxes[0];
-            var yAxis = YAxes[0];
-            
-            // Calculate padded limits based on data
-            var xPadding = currentMaxXData * 0.1;
-            var yPadding = currentMaxYData * 0.1;
-            var newXMax = currentMaxXData + xPadding;
-            var newYMax = currentMaxYData + yPadding;
-            
-            if (newXMax > maxXAxisLimit)
-            {
-                maxXAxisLimit = newXMax;
-                xAxis.MaxLimit = maxXAxisLimit;
-            }
-            
-            if (newYMax > maxYAxisLimit)
-            {
-                maxYAxisLimit = newYMax;
-                yAxis.MaxLimit = maxYAxisLimit;
-            }
+            // When preventAxisResizing is true, don't update axis limits at all
+            // This prevents both shrinking and growing during real-time tracking
+            return;
         }
 
         private void OnThemeChanged(object? sender, EventArgs e)
@@ -651,9 +675,9 @@ namespace userinterface.ViewModels.Profile
             }
 
             var currentXMin = XAxes?[0]?.MinLimit;
-            var currentXMax = preventAxisShrinking ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
+            var currentXMax = preventAxisResizing ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
-            var currentYMax = preventAxisShrinking ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
+            var currentYMax = preventAxisResizing ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
 
@@ -664,9 +688,9 @@ namespace userinterface.ViewModels.Profile
         private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
         {
             var currentXMin = XAxes?[0]?.MinLimit;
-            var currentXMax = preventAxisShrinking ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
+            var currentXMax = preventAxisResizing ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
-            var currentYMax = preventAxisShrinking ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
+            var currentYMax = preventAxisResizing ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
         }
@@ -685,7 +709,8 @@ namespace userinterface.ViewModels.Profile
                     Fill = new SolidColorPaint(accentColor),
                     Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
                     Name = "Current X Speed",
-                    IsVisible = false
+                    IsVisible = false,
+                    DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
                 };
             }
             
@@ -699,7 +724,8 @@ namespace userinterface.ViewModels.Profile
                     Fill = new SolidColorPaint(accentColor),
                     Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
                     Name = "Current Y Speed",
-                    IsVisible = false
+                    IsVisible = false,
+                    DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
                 };
             }
             
@@ -932,19 +958,16 @@ namespace userinterface.ViewModels.Profile
             if (xSpeed > currentMaxXData || ySpeed > currentMaxXData)
             {
                 currentMaxXData = Math.Max(xSpeed, ySpeed);
-                UpdateAxisLimitsIfNeeded();
             }
             
             if (xOutputValue.HasValue && xOutputValue.Value > currentMaxYData)
             {
                 currentMaxYData = xOutputValue.Value;
-                UpdateAxisLimitsIfNeeded();
             }
             
             if (yOutputValue.HasValue && yOutputValue.Value > currentMaxYData)
             {
                 currentMaxYData = yOutputValue.Value;
-                UpdateAxisLimitsIfNeeded();
             }
         }
         

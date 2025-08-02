@@ -103,7 +103,6 @@ namespace userspace_backend
             CurrentInputDeviceHandle = handle;
             CurrentInputDeviceHID = hid;
             CurrentInputDeviceName = name;
-            Debug.WriteLine($"\n=== BackEnd Device Update ===\nDevice: {name}\nHID: {hid}\nHandle: {handle.ToInt64():X}");
         }
 
         public DeviceModel? FindDeviceByHID(string hid)
