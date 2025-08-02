@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace userspace_backend.Services
+namespace userspace_backend.Hardware
 {
     public class MouseMovementEventArgs : EventArgs
     {
@@ -19,7 +19,7 @@ namespace userspace_backend.Services
         public string DeviceName { get; set; } = string.Empty;
     }
 
-    public interface IMouseTrackingService : IDisposable
+    public interface IMouseTracker : IDisposable
     {
         event EventHandler<MouseMovementEventArgs>? MouseMoved;
         event EventHandler? MouseIdle;
@@ -27,12 +27,13 @@ namespace userspace_backend.Services
         void SetWindowHandle(IntPtr hwnd);
         void SetDeviceDPI(int dpi);
         void SetBackEnd(BackEnd backEnd);
+        void SetDeviceInfoProvider(IDeviceInfoProvider deviceInfoProvider);
         void StartTracking();
         void StopTracking();
         void ProcessRawInput(IntPtr lParam);
     }
 
-    public class MouseTrackingService : IMouseTrackingService
+    public class MouseTracker : IMouseTracker
     {
         private readonly Timer throttleTimer;
         private readonly Timer idleTimer;
@@ -96,27 +97,6 @@ namespace userspace_backend.Services
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern uint GetRawInputDeviceInfo(IntPtr hDevice, uint uiCommand, IntPtr pData, ref uint pcbSize);
 
-        [DllImport("cfgmgr32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern uint CM_Get_Device_Interface_PropertyW(string pszDeviceInterface, ref Guid PropertyKey, out uint PropertyType, IntPtr PropertyBuffer, ref uint PropertyBufferSize, uint ulFlags);
-
-        [DllImport("hid.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern bool HidD_GetProductString(IntPtr HidDeviceObject, IntPtr Buffer, uint BufferLength);
-
-        [DllImport("hid.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern bool HidD_GetManufacturerString(IntPtr HidDeviceObject, IntPtr Buffer, uint BufferLength);
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern IntPtr CreateFileW(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hObject);
-
-        private const uint FILE_SHARE_READ = 0x00000001;
-        private const uint OPEN_EXISTING = 3;
-        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
-        private const uint HID_STR_MAX_LEN = 127;
-
-        private static readonly Guid DEVPKEY_Device_InstanceId = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0);
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint GetRawInputDeviceList(IntPtr pRawInputDeviceList, ref uint puiNumDevices, uint cbSize);
@@ -150,12 +130,13 @@ namespace userspace_backend.Services
         private IntPtr lastActiveDeviceHandle = IntPtr.Zero;
         private string lastActiveDeviceName = string.Empty;
         private BackEnd? backEnd;
+        private IDeviceInfoProvider? deviceInfoProvider;
 
         public event EventHandler<MouseMovementEventArgs>? MouseMoved;
         public event EventHandler? MouseIdle;
         public bool IsTracking => isTracking;
 
-        public MouseTrackingService()
+        public MouseTracker()
         {
             throttleTimer = new Timer(OnTimerTick, null, Timeout.Infinite, Timeout.Infinite);
             idleTimer = new Timer(OnIdleTimeout, null, Timeout.Infinite, Timeout.Infinite);
@@ -179,6 +160,11 @@ namespace userspace_backend.Services
         public void SetBackEnd(BackEnd backEnd)
         {
             this.backEnd = backEnd;
+        }
+
+        public void SetDeviceInfoProvider(IDeviceInfoProvider deviceInfoProvider)
+        {
+            this.deviceInfoProvider = deviceInfoProvider;
         }
 
         public void StartTracking()
@@ -401,42 +387,12 @@ namespace userspace_backend.Services
                 return cachedName;
             }
 
-            try
+            // Use centralized device service if available
+            if (deviceInfoProvider != null)
             {
-                // Get device name length
-                uint nameLength = 0;
-                GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, IntPtr.Zero, ref nameLength);
-
-                if (nameLength > 0)
-                {
-                    // Allocate buffer and get device name
-                    IntPtr nameBuffer = Marshal.AllocHGlobal((int)nameLength * 2); // Unicode characters
-                    try
-                    {
-                        if (GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, nameBuffer, ref nameLength) > 0)
-                        {
-                            string devicePath = Marshal.PtrToStringUni(nameBuffer) ?? "Unknown Device";
-                            
-                            // Get exact device name using HID APIs (same as device enumeration)
-                            string deviceName = GetExactDeviceNameFromPath(devicePath);
-                            
-                            // Log device discovery
-                            Debug.WriteLine($"\n=== Device Discovery ===\nFound mouse device: {deviceName}\nDevice path: {devicePath}\nHandle: {deviceHandle.ToInt64():X}");
-                            
-                            // Cache the result
-                            deviceNameCache[deviceHandle] = deviceName;
-                            return deviceName;
-                        }
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(nameBuffer);
-                    }
-                }
-            }
-            catch
-            {
-                // Silently handle any errors in device name resolution
+                string deviceName = deviceInfoProvider.GetDeviceNameFromHandle(deviceHandle);
+                deviceNameCache[deviceHandle] = deviceName;
+                return deviceName;
             }
 
             // Fallback to handle-based identification
@@ -446,101 +402,7 @@ namespace userspace_backend.Services
             return fallbackName;
         }
 
-        private string GetExactDeviceNameFromPath(string devicePath)
-        {
-            if (string.IsNullOrEmpty(devicePath)) return "Unknown Device";
-
-            try
-            {
-                // Open HID device to get exact product and manufacturer strings
-                IntPtr hidDeviceObject = CreateFileW(devicePath, 0, FILE_SHARE_READ, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
-                
-                if (hidDeviceObject != INVALID_HANDLE_VALUE)
-                {
-                    try
-                    {
-                        IntPtr productBuffer = Marshal.AllocHGlobal((int)HID_STR_MAX_LEN * 2); // Unicode
-                        IntPtr manufacturerBuffer = Marshal.AllocHGlobal((int)HID_STR_MAX_LEN * 2);
-                        
-                        try
-                        {
-                            bool hasProduct = HidD_GetProductString(hidDeviceObject, productBuffer, HID_STR_MAX_LEN);
-                            bool hasManufacturer = HidD_GetManufacturerString(hidDeviceObject, manufacturerBuffer, HID_STR_MAX_LEN);
-                            
-                            if (hasProduct)
-                            {
-                                string productName = Marshal.PtrToStringUni(productBuffer) ?? "";
-                                
-                                if (hasManufacturer)
-                                {
-                                    string manufacturerName = Marshal.PtrToStringUni(manufacturerBuffer) ?? "";
-                                    
-                                    // If product already starts with manufacturer, use product only
-                                    if (!string.IsNullOrEmpty(productName) && !string.IsNullOrEmpty(manufacturerName))
-                                    {
-                                        if (productName.StartsWith(manufacturerName, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            return productName;
-                                        }
-                                        else
-                                        {
-                                            return $"{manufacturerName} {productName}";
-                                        }
-                                    }
-                                }
-                                
-                                return !string.IsNullOrEmpty(productName) ? productName : "Mouse Device";
-                            }
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(productBuffer);
-                            Marshal.FreeHGlobal(manufacturerBuffer);
-                        }
-                    }
-                    finally
-                    {
-                        CloseHandle(hidDeviceObject);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"\n=== HID Device Name Error ===\nFailed to get exact name for {devicePath}: {ex.Message}");
-            }
-
-            // Fallback - extract basic info from device path
-            return ExtractBasicNameFromPath(devicePath);
-        }
         
-        private string ExtractBasicNameFromPath(string devicePath)
-        {
-            if (string.IsNullOrEmpty(devicePath)) return "Unknown Device";
-
-            // Device path format: \\?\HID#VID_xxxx&PID_xxxx#...
-            // Extract VID and PID for basic identification as fallback
-            try
-            {
-                if (devicePath.Contains("VID_") && devicePath.Contains("PID_"))
-                {
-                    int vidStart = devicePath.IndexOf("VID_") + 4;
-                    int pidStart = devicePath.IndexOf("PID_") + 4;
-                    
-                    if (vidStart < devicePath.Length - 4 && pidStart < devicePath.Length - 4)
-                    {
-                        string vid = devicePath.Substring(vidStart, 4);
-                        string pid = devicePath.Substring(pidStart, 4);
-                        return $"Mouse (VID:{vid} PID:{pid})";
-                    }
-                }
-            }
-            catch
-            {
-                // Fallback if parsing fails
-            }
-
-            return "Mouse Device";
-        }
 
         private string GetDeviceHID(IntPtr deviceHandle)
         {
@@ -552,69 +414,12 @@ namespace userspace_backend.Services
                 return cachedHID;
             }
 
-            try
+            // Use centralized device service if available
+            if (deviceInfoProvider != null)
             {
-                // Get device interface name first
-                uint nameLength = 0;
-                GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, IntPtr.Zero, ref nameLength);
-
-                if (nameLength > 0)
-                {
-                    IntPtr nameBuffer = Marshal.AllocHGlobal((int)nameLength * 2);
-                    try
-                    {
-                        if (GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, nameBuffer, ref nameLength) > 0)
-                        {
-                            string devicePath = Marshal.PtrToStringUni(nameBuffer) ?? string.Empty;
-                            
-                            if (!string.IsNullOrEmpty(devicePath))
-                            {
-                                // Get device instance ID using the device interface path
-                                uint propSize = 0;
-                                uint propType;
-                                Guid deviceInstanceIdKey = DEVPKEY_Device_InstanceId;
-                                
-                                // First call to get size
-                                uint result = CM_Get_Device_Interface_PropertyW(devicePath, ref deviceInstanceIdKey, out propType, IntPtr.Zero, ref propSize, 0);
-                                
-                                if (result == 0x0000001A && propSize > 0) // CR_BUFFER_SMALL
-                                {
-                                    IntPtr propBuffer = Marshal.AllocHGlobal((int)propSize);
-                                    try
-                                    {
-                                        result = CM_Get_Device_Interface_PropertyW(devicePath, ref deviceInstanceIdKey, out propType, propBuffer, ref propSize, 0);
-                                        
-                                        if (result == 0) // CR_SUCCESS
-                                        {
-                                            string instanceId = Marshal.PtrToStringUni(propBuffer) ?? string.Empty;
-                                            
-                                            // Remove the instance part (after last backslash) to get hardware ID
-                                            int lastBackslash = instanceId.LastIndexOf('\\');
-                                            string hardwareId = lastBackslash > 0 ? instanceId.Substring(0, lastBackslash) : instanceId;
-                                            
-                                            Debug.WriteLine($"\\n=== Device HID Extraction ===\\nDevice Path: {devicePath}\\nInstance ID: {instanceId}\\nHardware ID: {hardwareId}");
-                                            
-                                            deviceHIDCache[deviceHandle] = hardwareId;
-                                            return hardwareId;
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        Marshal.FreeHGlobal(propBuffer);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(nameBuffer);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"\\n=== Device HID Error ===\\nFailed to get HID for handle {deviceHandle.ToInt64():X}: {ex.Message}");
+                string hardwareId = deviceInfoProvider.GetDeviceHardwareIDFromHandle(deviceHandle);
+                deviceHIDCache[deviceHandle] = hardwareId;
+                return hardwareId;
             }
 
             // Fallback - use handle as string

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using userspace_backend.Data.Profiles;
 using userspace_backend.IO;
 using userspace_backend.Model;
+using userspace_backend.Hardware;
 using DATA = userspace_backend.Data;
 
 namespace userspace_backend
@@ -66,10 +67,17 @@ namespace userspace_backend
 
     public class BackEnd
     {
-        public BackEnd(IBackEndLoader backEndLoader)
+        private readonly IDeviceInfoProvider? deviceInfoProvider;
+
+        public BackEnd(IBackEndLoader backEndLoader) : this(backEndLoader, null)
+        {
+        }
+
+        public BackEnd(IBackEndLoader backEndLoader, IDeviceInfoProvider? deviceInfoProvider)
         {
             BackEndLoader = backEndLoader;
-            Devices = new DevicesModel();
+            this.deviceInfoProvider = deviceInfoProvider;
+            Devices = new DevicesModel(deviceInfoProvider);
             Profiles = new ProfilesModel([]);
             Settings = new DATA.Settings();
         }
@@ -116,12 +124,131 @@ namespace userspace_backend
             var matchedDevice = FindDeviceByHID(CurrentInputDeviceHID);
             if (matchedDevice != null)
             {
-                return (matchedDevice.Name.CurrentValidatedValue, matchedDevice.DPI.CurrentValidatedValue, true);
+                // For configured devices, prioritize user-configured name, fall back to product string
+                string deviceName = !string.IsNullOrEmpty(matchedDevice.Name.CurrentValidatedValue) 
+                    ? matchedDevice.Name.CurrentValidatedValue 
+                    : matchedDevice.ProductString.CurrentValidatedValue;
+                
+                if (string.IsNullOrEmpty(deviceName))
+                {
+                    deviceName = "Configured Device";
+                }
+                
+                return (deviceName, matchedDevice.DPI.CurrentValidatedValue, true);
             }
 
-            // Device not in configured devices list - use exact name from MouseTrackingService
-            // The MouseTrackingService already gets the exact device name using HID APIs
-            return (CurrentInputDeviceName, 1000, false);
+            // Device not in configured devices - use stored product string (faster than live resolution)
+            string productString = Devices.GetProductStringFromHID(CurrentInputDeviceHID);
+            if (!string.IsNullOrEmpty(productString))
+            {
+                return (productString, 1000, false);
+            }
+
+            // Final fallback to current device name from real-time detection
+            if (!string.IsNullOrEmpty(CurrentInputDeviceName))
+            {
+                return (CurrentInputDeviceName, 1000, false);
+            }
+
+            return ("Unknown Device", 1000, false);
+        }
+
+        public string ResolveDeviceNameFromHID(string hid)
+        {
+            if (string.IsNullOrEmpty(hid)) return "Unknown Device";
+
+            // Use stored product string from DevicesModel (much faster)
+            string productString = Devices.GetProductStringFromHID(hid);
+            if (!string.IsNullOrEmpty(productString))
+            {
+                return productString;
+            }
+
+            // Fallback to current device name if available
+            if (!string.IsNullOrEmpty(CurrentInputDeviceName))
+            {
+                return CurrentInputDeviceName;
+            }
+
+            // Final fallback to basic extraction
+            return ExtractBasicNameFromHID(hid);
+        }
+
+        public string GetCurrentActiveDeviceName()
+        {
+            var (deviceName, _, _) = GetCurrentDeviceInfo();
+            return deviceName;
+        }
+
+        public (string userConfiguredName, string productString, bool hasProductString) GetCurrentDeviceDisplayInfo()
+        {
+            if (string.IsNullOrEmpty(CurrentInputDeviceHID))
+            {
+                return (string.Empty, string.Empty, false);
+            }
+
+            var matchedDevice = FindDeviceByHID(CurrentInputDeviceHID);
+            if (matchedDevice != null)
+            {
+                string userConfiguredName = matchedDevice.Name.CurrentValidatedValue;
+                string productString = matchedDevice.ProductString.CurrentValidatedValue;
+                
+                return (userConfiguredName, productString, !string.IsNullOrEmpty(productString));
+            }
+
+            // Device not configured - just return product string
+            string detectedProductString = Devices.GetProductStringFromHID(CurrentInputDeviceHID);
+            return (string.Empty, detectedProductString, !string.IsNullOrEmpty(detectedProductString));
+        }
+
+        public IEnumerable<string> GetAvailableDeviceNames()
+        {
+            // Use stored names from system devices (already resolved during RefreshSystemDevices)
+            return Devices.SystemDevices.Select(d => d.name).Where(name => !string.IsNullOrEmpty(name));
+        }
+
+        public (string deviceName, string hardwareId) GetDeviceDisplayInfo(string hid)
+        {
+            if (string.IsNullOrEmpty(hid))
+            {
+                return ("Unknown Device", string.Empty);
+            }
+
+            // Use stored product string for faster lookup
+            string deviceName = Devices.GetProductStringFromHID(hid);
+            if (string.IsNullOrEmpty(deviceName))
+            {
+                deviceName = ResolveDeviceNameFromHID(hid);
+            }
+            
+            return (deviceName, hid);
+        }
+
+        private string ExtractBasicNameFromHID(string hardwareID)
+        {
+            if (string.IsNullOrEmpty(hardwareID)) return "Unknown Device";
+
+            try
+            {
+                if (hardwareID.Contains("VID_") && hardwareID.Contains("PID_"))
+                {
+                    int vidStart = hardwareID.IndexOf("VID_") + 4;
+                    int pidStart = hardwareID.IndexOf("PID_") + 4;
+                    
+                    if (vidStart < hardwareID.Length - 4 && pidStart < hardwareID.Length - 4)
+                    {
+                        string vid = hardwareID.Substring(vidStart, 4);
+                        string pid = hardwareID.Substring(pidStart, 4);
+                        return $"Mouse (VID:{vid} PID:{pid})";
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback if parsing fails
+            }
+
+            return "Mouse Device";
         }
 
         public void Load()

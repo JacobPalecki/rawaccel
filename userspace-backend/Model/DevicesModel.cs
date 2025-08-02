@@ -5,13 +5,21 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using userspace_backend.Data;
 using userspace_backend.Model.EditableSettings;
+using userspace_backend.Hardware;
 
 namespace userspace_backend.Model
 {
     public class DevicesModel
     {
-        public DevicesModel()
+        private readonly IDeviceInfoProvider? deviceInfoProvider;
+
+        public DevicesModel() : this(null)
         {
+        }
+
+        public DevicesModel(IDeviceInfoProvider? deviceInfoProvider)
+        {
+            this.deviceInfoProvider = deviceInfoProvider;
             Devices = new ObservableCollection<DeviceModel>();
             DeviceGroups = new DeviceGroups([]);
             DeviceModelNameValidator = new DeviceModelNameValidator(this);
@@ -112,7 +120,131 @@ namespace userspace_backend.Model
             foreach (var systemDevice in systemDevicesList)
             {
                 SystemDevices.Add(systemDevice);
+                
+                // Also resolve and cache the clean product string for this device
+                if (deviceInfoProvider != null && !string.IsNullOrEmpty(systemDevice.id))
+                {
+                    try
+                    {
+                        string productString = deviceInfoProvider.GetDeviceNameFromHardwareID(systemDevice.id);
+                        // Update any existing configured devices with the resolved product string
+                        UpdateDeviceProductString(systemDevice.id, productString);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to resolve product string for {systemDevice.id}: {ex.Message}");
+                    }
+                }
             }
+        }
+
+        private void UpdateDeviceProductString(string hardwareId, string productString)
+        {
+            if (string.IsNullOrEmpty(hardwareId) || string.IsNullOrEmpty(productString))
+                return;
+
+            var matchingDevice = Devices.FirstOrDefault(d => 
+                string.Equals(d.HardwareID.CurrentValidatedValue, hardwareId, StringComparison.OrdinalIgnoreCase));
+            
+            if (matchingDevice != null)
+            {
+                // Update the product string if it's different
+                if (matchingDevice.ProductString.CurrentValidatedValue != productString)
+                {
+                    matchingDevice.ProductString.InterfaceValue = productString;
+                    matchingDevice.ProductString.TryUpdateFromInterface();
+                }
+            }
+        }
+
+        public string GetExactDeviceNameFromHID(string hardwareId)
+        {
+            // First try to get from stored product string
+            var configuredDevice = Devices.FirstOrDefault(d => 
+                string.Equals(d.HardwareID.CurrentValidatedValue, hardwareId, StringComparison.OrdinalIgnoreCase));
+            
+            if (configuredDevice != null && !string.IsNullOrEmpty(configuredDevice.ProductString.CurrentValidatedValue))
+            {
+                return configuredDevice.ProductString.CurrentValidatedValue;
+            }
+
+            // Fallback to live resolution if device info provider available
+            if (deviceInfoProvider != null)
+            {
+                return deviceInfoProvider.GetDeviceNameFromHardwareID(hardwareId);
+            }
+
+            // Final fallback to basic extraction
+            return ExtractBasicNameFromHID(hardwareId);
+        }
+
+        public string GetProductStringFromHID(string hardwareId)
+        {
+            if (string.IsNullOrEmpty(hardwareId))
+                return string.Empty;
+
+            // Check configured devices first
+            var configuredDevice = Devices.FirstOrDefault(d => 
+                string.Equals(d.HardwareID.CurrentValidatedValue, hardwareId, StringComparison.OrdinalIgnoreCase));
+            
+            if (configuredDevice != null && !string.IsNullOrEmpty(configuredDevice.ProductString.CurrentValidatedValue))
+            {
+                return configuredDevice.ProductString.CurrentValidatedValue;
+            }
+
+            // Check system devices from last refresh
+            var systemDevice = SystemDevices.FirstOrDefault(d => 
+                string.Equals(d.id, hardwareId, StringComparison.OrdinalIgnoreCase));
+            
+            if (systemDevice != null && !string.IsNullOrEmpty(systemDevice.name))
+            {
+                return systemDevice.name;
+            }
+
+            return string.Empty;
+        }
+
+        public string GetExactDeviceNameFromHandle(IntPtr handle)
+        {
+            if (deviceInfoProvider != null)
+            {
+                return deviceInfoProvider.GetDeviceNameFromHandle(handle);
+            }
+
+            // Fallback to handle-based identification
+            return $"Mouse Device ({handle.ToInt64():X})";
+        }
+
+        public DeviceInfo? GetDeviceInfoFromHandle(IntPtr handle)
+        {
+            return deviceInfoProvider?.GetDeviceInfoFromHandle(handle);
+        }
+
+        private string ExtractBasicNameFromHID(string hardwareID)
+        {
+            if (string.IsNullOrEmpty(hardwareID)) return "Unknown Device";
+
+            try
+            {
+                if (hardwareID.Contains("VID_") && hardwareID.Contains("PID_"))
+                {
+                    int vidStart = hardwareID.IndexOf("VID_") + 4;
+                    int pidStart = hardwareID.IndexOf("PID_") + 4;
+                    
+                    if (vidStart < hardwareID.Length - 4 && pidStart < hardwareID.Length - 4)
+                    {
+                        string vid = hardwareID.Substring(vidStart, 4);
+                        string pid = hardwareID.Substring(pidStart, 4);
+                        return $"Mouse (VID:{vid} PID:{pid})";
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback if parsing fails
+            }
+
+            return "Mouse Device";
         }
     }
 

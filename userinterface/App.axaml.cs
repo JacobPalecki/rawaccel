@@ -16,7 +16,7 @@ using userinterface.ViewModels.Controls;
 using userinterface.ViewModels.Settings;
 using userinterface.Views;
 using userspace_backend;
-using userspace_backend.Services;
+using userspace_backend.Hardware;
 using Windows.System;
 using DATA = userspace_backend.Data;
 
@@ -46,14 +46,16 @@ public partial class App : Application
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<FrameTimerService>();
         services.AddSingleton<PreviewChartRenderer>();
-        services.AddSingleton<IMouseTrackingService, MouseTrackingService>();
+        services.AddSingleton<IMouseTracker, MouseTracker>();
 
         // Register backend services
+        services.AddSingleton<IDeviceInfoProvider, DeviceInfoProvider>();
         services.AddSingleton<Bootstrapper>(provider => BootstrapBackEnd());
         services.AddSingleton<BackEnd>(provider =>
         {
             var bootstrapper = provider.GetRequiredService<Bootstrapper>();
-            var backEnd = new BackEnd(bootstrapper);
+            var deviceInfoProvider = provider.GetRequiredService<IDeviceInfoProvider>();
+            var backEnd = new BackEnd(bootstrapper, deviceInfoProvider);
             backEnd.Load();
             return backEnd;
         });
@@ -221,7 +223,7 @@ public partial class App : Application
                 ShowToastNotifications = true,
                 ShowConfirmModals = true,
                 Theme = "Dark",
-                Language = "ja-JP"
+                Language = "en-US"
             },
         };
     }

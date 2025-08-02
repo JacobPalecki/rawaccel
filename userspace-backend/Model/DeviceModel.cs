@@ -24,6 +24,8 @@ namespace userspace_backend.Model
 
         public EditableSetting<string> HardwareID { get; protected set; }
 
+        public EditableSetting<string> ProductString { get; protected set; }
+
         public EditableSetting<int> DPI { get; protected set; }
 
         public EditableSetting<int> PollRate { get; protected set; }
@@ -38,7 +40,7 @@ namespace userspace_backend.Model
 
         protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()
         {
-            return [Name, HardwareID, DPI, PollRate, Ignore, DeviceGroup];
+            return [Name, HardwareID, ProductString, DPI, PollRate, Ignore, DeviceGroup];
         }
 
         protected override IEnumerable<IEditableSettingsCollection> EnumerateEditableSettingsCollections()
@@ -60,6 +62,12 @@ namespace userspace_backend.Model
                 parser: UserInputParsers.StringParser,
                 validator: ModelValueValidators.DefaultStringValidator,
                 localizationKey: "DeviceHardwareID");
+            ProductString = new EditableSetting<string>(
+                displayName: "Product String",
+                initialValue: device.ProductString,
+                parser: UserInputParsers.StringParser,
+                validator: ModelValueValidators.DefaultStringValidator,
+                localizationKey: "DeviceProductString");
             DPI = new EditableSetting<int>(
                displayName: "DPI",
                initialValue: device.DPI,
@@ -86,6 +94,7 @@ namespace userspace_backend.Model
             {
                 Name = this.Name.ModelValue,
                 HWID = this.HardwareID.ModelValue,
+                ProductString = this.ProductString.ModelValue,
                 DPI = this.DPI.ModelValue,
                 PollingRate = this.PollRate.ModelValue,
                 Ignore = this.Ignore.ModelValue,

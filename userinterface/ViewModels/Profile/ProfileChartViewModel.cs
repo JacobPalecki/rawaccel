@@ -19,8 +19,8 @@ using userinterface.Commands;
 using userinterface.Interfaces;
 using userinterface.Services;
 using userspace_backend.Display;
+using userspace_backend.Hardware;
 using userspace_backend.Model.EditableSettings;
-using userspace_backend.Services;
 using userspace_backend;
 using BE = userspace_backend.Model;
 using Data = userspace_backend.Data;
@@ -68,8 +68,9 @@ namespace userinterface.ViewModels.Profile
         private readonly IThemeService themeService;
         private readonly LocalizationService localizationService;
         private readonly PreviewChartRenderer previewRenderer;
-        private readonly IMouseTrackingService mouseTrackingService;
+        private readonly IMouseTracker mouseTracker;
         private readonly BackEnd backEnd;
+        private readonly IDeviceInfoProvider? deviceInfoProvider;
         private BE.ProfileModel currentProfileModel = null!;
         
         private SolidColorPaint? cachedXStroke;
@@ -82,13 +83,14 @@ namespace userinterface.ViewModels.Profile
         
         private readonly object syncObject = new object();
 
-        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTrackingService mouseTrackingService, BackEnd backEnd)
+        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTracker mouseTracker, BackEnd backEnd, IDeviceInfoProvider? deviceInfoProvider = null)
         {
             this.themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             this.localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
             this.previewRenderer = previewRenderer ?? throw new ArgumentNullException(nameof(previewRenderer));
-            this.mouseTrackingService = mouseTrackingService ?? throw new ArgumentNullException(nameof(mouseTrackingService));
+            this.mouseTracker = mouseTracker ?? throw new ArgumentNullException(nameof(mouseTracker));
             this.backEnd = backEnd ?? throw new ArgumentNullException(nameof(backEnd));
+            this.deviceInfoProvider = deviceInfoProvider;
 
             RecreateAxesCommand = new RelayCommand(() => 
             {
@@ -735,13 +737,19 @@ namespace userinterface.ViewModels.Profile
             
             var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
             
-            // Set BackEnd reference and get active device DPI
-            mouseTrackingService.SetBackEnd(backEnd);
+            // Set BackEnd reference and device service for centralized device handling
+            mouseTracker.SetBackEnd(backEnd);
+            
+            // Pass device service if available
+            if (deviceInfoProvider != null)
+            {
+                mouseTracker.SetDeviceInfoProvider(deviceInfoProvider);
+            }
             
             var activeDeviceModel = GetActiveDeviceModel();
             if (activeDeviceModel != null)
             {
-                mouseTrackingService.SetDeviceDPI(activeDeviceModel.DPI.CurrentValidatedValue);
+                mouseTracker.SetDeviceDPI(activeDeviceModel.DPI.CurrentValidatedValue);
             }
             
             if (currentSpeedDotSeries != null)
@@ -753,9 +761,9 @@ namespace userinterface.ViewModels.Profile
                 currentYSpeedDotSeries.IsVisible = hasYCurve;
             }
             
-            mouseTrackingService.MouseMoved += OnMouseMoved;
-            mouseTrackingService.MouseIdle += OnMouseIdle;
-            mouseTrackingService.StartTracking();
+            mouseTracker.MouseMoved += OnMouseMoved;
+            mouseTracker.MouseIdle += OnMouseIdle;
+            mouseTracker.StartTracking();
             
             Debug.WriteLine("\n=== Real-Time Tracking Started ===\nChart will now display current mouse device and track movement.");
             
@@ -775,9 +783,9 @@ namespace userinterface.ViewModels.Profile
             
             IsRealTimeTrackingEnabled = false;
             
-            mouseTrackingService.MouseMoved -= OnMouseMoved;
-            mouseTrackingService.MouseIdle -= OnMouseIdle;
-            mouseTrackingService.StopTracking();
+            mouseTracker.MouseMoved -= OnMouseMoved;
+            mouseTracker.MouseIdle -= OnMouseIdle;
+            mouseTracker.StopTracking();
             
             currentSpeedData.Clear();
             currentYSpeedData.Clear();

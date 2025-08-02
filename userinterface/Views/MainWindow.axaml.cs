@@ -14,7 +14,7 @@ using userinterface.Models;
 using userinterface.Services;
 using userinterface.ViewModels;
 using userinterface.Views.Controls;
-using userspace_backend.Services;
+using userspace_backend.Hardware;
 
 namespace userinterface.Views;
 
@@ -44,7 +44,7 @@ public partial class MainWindow : Window
         {
             if (TryGetPlatformHandle()?.Handle is IntPtr hwnd && hwnd != IntPtr.Zero)
             {
-                MouseTrackingService.SetWindowHandle(hwnd);
+                MouseTracker.SetWindowHandle(hwnd);
                 SetupWindowProcHook(hwnd);
                 System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Window handle set for mouse tracking: {hwnd}");
             }
@@ -94,7 +94,7 @@ public partial class MainWindow : Window
         {
             if (msg == WM_INPUT)
             {
-                MouseTrackingService.ProcessRawInput(lParam);
+                MouseTracker.ProcessRawInput(lParam);
             }
         }
         catch (Exception ex)
@@ -114,8 +114,8 @@ public partial class MainWindow : Window
     private IThemeService ThemeService =>
         App.Services!.GetRequiredService<IThemeService>();
     
-    private IMouseTrackingService MouseTrackingService =>
-        App.Services!.GetRequiredService<IMouseTrackingService>();
+    private IMouseTracker MouseTracker =>
+        App.Services!.GetRequiredService<IMouseTracker>();
 
     private void InitializeControls()
     {

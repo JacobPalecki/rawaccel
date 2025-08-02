@@ -10,6 +10,9 @@ namespace userspace_backend.Data
 
         public string HWID { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public string ProductString { get; set; } = string.Empty;
+
         public int DPI { get; set; }
 
         public int PollingRate { get; set; }
@@ -24,6 +27,7 @@ namespace userspace_backend.Data
             return obj is Device device &&
                    Name == device.Name &&
                    HWID == device.HWID &&
+                   ProductString == device.ProductString &&
                    DPI == device.DPI &&
                    PollingRate == device.PollingRate &&
                    Ignore == device.Ignore &&
@@ -32,7 +36,7 @@ namespace userspace_backend.Data
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Name, HWID, DPI, PollingRate, DeviceGroup);
+            return HashCode.Combine(Name, HWID, ProductString, DPI, PollingRate, DeviceGroup);
         }
     }
 }
