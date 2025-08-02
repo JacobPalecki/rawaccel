@@ -198,7 +198,7 @@
     <value>設定を反映しました！</value>
   </data>
   <data name="DeviceNoLongerAvailable" xml:space="preserve">
-    <value>HID {0} は利用できません</value>
+    <value>デバイス {0} は利用できません</value>
   </data>
   <data name="SettingsLanguageChangedTo" xml:space="preserve">
     <value>言語を{0}に変更しました</value>

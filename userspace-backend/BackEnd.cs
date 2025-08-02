@@ -300,7 +300,8 @@ namespace userspace_backend
                 
                 if (!string.IsNullOrEmpty(storedHWID) && !systemDeviceHWIDs.Contains(storedHWID))
                 {
-                    NotificationManager.QueueNotification("DeviceNoLongerAvailable", NotificationType.Warning, storedHWID);
+                    string deviceName = Devices.GetExactDeviceNameFromHID(storedHWID);
+                    NotificationManager.QueueNotification("DeviceNoLongerAvailable", NotificationType.Warning, deviceName);
                 }
             }
         }
