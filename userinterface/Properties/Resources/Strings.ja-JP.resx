@@ -203,6 +203,15 @@
   <data name="ProfileClassicLinearEquivalent" xml:space="preserve">
     <value>クラシック（指数2）はリニアと同等です</value>
   </data>
+  <data name="NoActiveMappingFoundUsingDefault" xml:space="preserve">
+    <value>アクティブなマッピングが見つかりません。デフォルトのマッピングを使用します</value>
+  </data>
+  <data name="ProfileNotFound" xml:space="preserve">
+    <value>プロファイル '{0}' が見つかりません</value>
+  </data>
+  <data name="DeviceNotConnected" xml:space="preserve">
+    <value>デバイス '{0}' (ID: {1}) はシステムに接続されていません</value>
+  </data>
 
   <!-- Modal Dialog Resources -->
   <data name="ModalOK" xml:space="preserve">
