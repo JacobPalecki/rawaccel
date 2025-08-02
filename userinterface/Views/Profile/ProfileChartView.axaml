@@ -84,7 +84,6 @@
 			<!-- Interactive Chart (shown after loading) -->
 			<lvc:CartesianChart x:Name="Chart"
 			                    Classes="interactive-chart"
-			                    SyncContext="{Binding Sync}"
 			                    Series="{Binding Series}"
 			                    XAxes="{Binding XAxes}"
 			                    YAxes="{Binding YAxes}"

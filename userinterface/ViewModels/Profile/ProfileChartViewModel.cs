@@ -1,7 +1,4 @@
-using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Media.Immutable;
 using LiveChartsCore;
 using System.Diagnostics;
 using LiveChartsCore.SkiaSharpView;
@@ -11,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -63,7 +59,6 @@ namespace userinterface.ViewModels.Profile
         private const int AxisNameTextSize = 14;
         private const int AxisTextSize = 12;
 
-        public static readonly TimeSpan AnimationsTime = new(days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: AnimationMilliseconds);
 
         private readonly IThemeService themeService;
         private readonly LocalizationService localizationService;
@@ -128,11 +123,9 @@ namespace userinterface.ViewModels.Profile
 
         private double maxXAxisLimit = 0;
         private double maxYAxisLimit = 0;
-        private bool preventAxisResizing = true;
         private double currentMaxXData = 0;
         private double currentMaxYData = 0;
 
-        public object Sync => syncObject;
 
         private ICurvePreview XCurvePreview { get; set; } = null!;
 
@@ -210,17 +203,18 @@ namespace userinterface.ViewModels.Profile
                                 
                                 TransitionToInteractiveMode();
                                 
-                                IsInitialized = true;
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
                                 IsLoadingChart = false;
                                 OnPropertyChanged(nameof(IsLoadingChart));
+                                Debug.WriteLine($"Error initializing chart axes: {ex.Message}");
                             }
                         });
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        Debug.WriteLine($"Error during chart initialization: {ex.Message}");
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             IsLoadingChart = false;
@@ -249,24 +243,22 @@ namespace userinterface.ViewModels.Profile
             }
         }
 
-        private async Task ForceInteractiveMode()
+        private Task ForceInteractiveMode()
         {
             if (IsInteractiveMode)
-                return;
+                return Task.CompletedTask;
 
             IsLoadingChart = true;
             OnPropertyChanged(nameof(IsLoadingChart));
 
-            await Task.Run(() =>
-            {
-                // LiveCharts automatically uses the full ObservableCollection data
-            });
-
+            // LiveCharts automatically uses the full ObservableCollection data
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 OnPropertyChanged(nameof(Series));
                 TransitionToInteractiveMode();
             });
+            
+            return Task.CompletedTask;
         }
 
         private void InitializeSeries()
@@ -275,45 +267,35 @@ namespace userinterface.ViewModels.Profile
                 cachedXStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = MainStrokeThickness };
             if (cachedYStroke == null)
                 cachedYStroke = new SolidColorPaint(SKColors.OrangeRed) { StrokeThickness = MainStrokeThickness };
-            xSeries = new LineSeries<CurvePoint>
-            {
-                Values = XCurvePreview.Points,
-                Fill = null,
-                Stroke = cachedXStroke,
-                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
-                GeometrySize = 0,
-                GeometryStroke = null,
-                GeometryFill = null,
-                AnimationsSpeed = TimeSpan.FromMilliseconds(100),
-                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
-                Name = "X Curve Profile",
-                LineSmoothness = 0,
-                XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
-                YToolTipLabelFormatter = (chartPoint) => $"X Output: {chartPoint.Coordinate.PrimaryValue:F2}"
-            };
-
-            ySeries = new LineSeries<CurvePoint>
-            {
-                Values = YCurvePreview.Points,
-                Fill = null,
-                Stroke = cachedYStroke,
-                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
-                GeometrySize = 0,
-                GeometryStroke = null,
-                GeometryFill = null,
-                AnimationsSpeed = TimeSpan.FromMilliseconds(100),
-                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
-                Name = "Y Curve Profile",
-                LineSmoothness = 0,
-                XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
-                YToolTipLabelFormatter = (chartPoint) => $"Y Output: {chartPoint.Coordinate.PrimaryValue:F2}"
-            };
+            
+            xSeries = CreateLineSeries(XCurvePreview.Points, cachedXStroke, "X Curve Profile", "X");
+            ySeries = CreateLineSeries(YCurvePreview.Points, cachedYStroke, "Y Curve Profile", "Y");
 
             Series.Clear();
             Series.Add(xSeries);
             
             InitializeCurrentSpeedDotSeries();
             UpdateYSeriesVisibility();
+        }
+        
+        private LineSeries<CurvePoint> CreateLineSeries(ObservableCollection<CurvePoint> points, SolidColorPaint stroke, string name, string axis)
+        {
+            return new LineSeries<CurvePoint>
+            {
+                Values = points,
+                Fill = null,
+                Stroke = stroke,
+                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                GeometrySize = 0,
+                GeometryStroke = null,
+                GeometryFill = null,
+                AnimationsSpeed = TimeSpan.FromMilliseconds(100),
+                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
+                Name = name,
+                LineSmoothness = 0,
+                XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
+                YToolTipLabelFormatter = (chartPoint) => $"{axis} Output: {chartPoint.Coordinate.PrimaryValue:F2}"
+            };
         }
 
         private async void TransitionToInteractiveMode()
@@ -322,6 +304,7 @@ namespace userinterface.ViewModels.Profile
             IsInteractiveMode = true;
             ChartOpacity = 0.0;
             
+            // Batch property changes
             OnPropertyChanged(nameof(IsLoadingChart));
             OnPropertyChanged(nameof(IsInteractiveMode));
             OnPropertyChanged(nameof(ChartOpacity));
@@ -407,6 +390,7 @@ namespace userinterface.ViewModels.Profile
             XAxes = CreateXAxes(xMinLimit, xMaxLimit);
             YAxes = CreateYAxes(yMinLimit, yMaxLimit);
 
+            // Batch property changes
             OnPropertyChanged(nameof(XAxes));
             OnPropertyChanged(nameof(YAxes));
         }
@@ -492,33 +476,17 @@ namespace userinterface.ViewModels.Profile
         private Axis[] CreateXAxes(double? minLimit = null, double? maxLimit = null)
         {
             var axisName = localizationService?.GetText("ChartAxisMouseSpeed") ?? "Mouse Speed";
-            var titleColor = themeService.GetCachedColor(AxisTitleBrush);
-            var labelColor = themeService.GetCachedColor(AxisLabelsBrush);
-            var separatorColor = themeService.GetCachedColor(AxisSeparatorsBrush);
-
-            return new Axis[]
-            {
-                new Axis()
-                {
-                    Name = axisName,
-                    NameTextSize = AxisNameTextSize,
-                    NamePaint = new SolidColorPaint(titleColor),
-                    LabelsPaint = new SolidColorPaint(labelColor),
-                    TextSize = AxisTextSize,
-                    SeparatorsPaint = new SolidColorPaint(separatorColor) { StrokeThickness = StandardStrokeThickness },
-                    TicksPaint = new SolidColorPaint(titleColor) { StrokeThickness = StandardStrokeThickness },
-                    SubseparatorsPaint = new SolidColorPaint(separatorColor.WithAlpha(SubSeparatorAlpha)) { StrokeThickness = SubStrokeThickness },
-                    AnimationsSpeed = TimeSpan.FromMilliseconds(100),
-                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
-                    MinLimit = minLimit ?? 0,
-                    MaxLimit = maxLimit
-                }
-            };
+            return CreateAxis(axisName, minLimit, maxLimit);
         }
 
         private Axis[] CreateYAxes(double? minLimit = null, double? maxLimit = null)
         {
             var axisName = localizationService?.GetText("ChartAxisOutput") ?? "Output";
+            return CreateAxis(axisName, minLimit, maxLimit);
+        }
+        
+        private Axis[] CreateAxis(string name, double? minLimit, double? maxLimit)
+        {
             var titleColor = themeService.GetCachedColor(AxisTitleBrush);
             var labelColor = themeService.GetCachedColor(AxisLabelsBrush);
             var separatorColor = themeService.GetCachedColor(AxisSeparatorsBrush);
@@ -527,7 +495,7 @@ namespace userinterface.ViewModels.Profile
             {
                 new Axis()
                 {
-                    Name = axisName,
+                    Name = name,
                     NameTextSize = AxisNameTextSize,
                     NamePaint = new SolidColorPaint(titleColor),
                     LabelsPaint = new SolidColorPaint(labelColor),
@@ -536,7 +504,7 @@ namespace userinterface.ViewModels.Profile
                     TicksPaint = new SolidColorPaint(titleColor) { StrokeThickness = StandardStrokeThickness },
                     SubseparatorsPaint = new SolidColorPaint(separatorColor.WithAlpha(SubSeparatorAlpha)) { StrokeThickness = SubStrokeThickness },
                     AnimationsSpeed = TimeSpan.FromMilliseconds(100),
-                EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
+                    EasingFunction = LiveChartsCore.EasingFunctions.EaseOut,
                     MinLimit = minLimit ?? 0,
                     MaxLimit = maxLimit
                 }
@@ -550,25 +518,15 @@ namespace userinterface.ViewModels.Profile
 
         private void SetDefaultLimits()
         {
-            if (preventAxisResizing)
-            {
-                // Don't allow axis limits to shrink below stored maximums
-                XAxes[0].MinLimit = 0;
-                XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, DefaultMaxX);
-                YAxes[0].MinLimit = 0;
-                YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, DefaultMaxY);
-                
-                // Update stored maximums if they increased
-                maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
-                maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
-            }
-            else
-            {
-                XAxes[0].MinLimit = 0;
-                XAxes[0].MaxLimit = DefaultMaxX;
-                YAxes[0].MinLimit = 0;
-                YAxes[0].MaxLimit = DefaultMaxY;
-            }
+            // Don't allow axis limits to shrink below stored maximums
+            XAxes[0].MinLimit = 0;
+            XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, DefaultMaxX);
+            YAxes[0].MinLimit = 0;
+            YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, DefaultMaxY);
+            
+            // Update stored maximums if they increased
+            maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
+            maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
         }
 
         private static (double minX, double maxX, double minY, double maxY) CalculateDataBounds(System.Collections.Generic.List<CurvePoint> points)
@@ -585,25 +543,15 @@ namespace userinterface.ViewModels.Profile
             var centerY = (minY + maxY) / 2;
             var centerX = (minX + maxX) / 2;
             
-            if (preventAxisResizing)
-            {
-                // Don't allow axis limits to shrink below stored maximums
-                YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
-                YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, centerY + DefaultYRange);
-                XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
-                XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, centerX + DefaultAxisRange);
-                
-                // Update stored maximums if they increased
-                maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
-                maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
-            }
-            else
-            {
-                YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
-                YAxes[0].MaxLimit = centerY + DefaultYRange;
-                XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
-                XAxes[0].MaxLimit = centerX + DefaultAxisRange;
-            }
+            // Don't allow axis limits to shrink below stored maximums
+            YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
+            YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, centerY + DefaultYRange);
+            XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
+            XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, centerX + DefaultAxisRange);
+            
+            // Update stored maximums if they increased
+            maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
+            maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
         }
 
         private void SetPaddedLimits(double minX, double maxX, double minY, double maxY)
@@ -613,37 +561,19 @@ namespace userinterface.ViewModels.Profile
             var xPadding = xRange * DataPaddingRatio;
             var yPadding = yRange * DataPaddingRatio;
             
-            if (preventAxisResizing)
-            {
-                // Don't allow axis limits to shrink below stored maximums
-                XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
-                XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, maxX + xPadding);
-                YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
-                YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, maxY + yPadding);
-                
-                // Update stored maximums if they increased
-                maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
-                maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
-                currentMaxXData = Math.Max(currentMaxXData, maxX);
-                currentMaxYData = Math.Max(currentMaxYData, maxY);
-            }
-            else
-            {
-                XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
-                XAxes[0].MaxLimit = maxX + xPadding;
-                YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
-                YAxes[0].MaxLimit = maxY + yPadding;
-            }
+            // Don't allow axis limits to shrink below stored maximums
+            XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
+            XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, maxX + xPadding);
+            YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
+            YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, maxY + yPadding);
+            
+            // Update stored maximums if they increased
+            maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
+            maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
+            currentMaxXData = Math.Max(currentMaxXData, maxX);
+            currentMaxYData = Math.Max(currentMaxYData, maxY);
         }
 
-        private void UpdateAxisLimitsIfNeeded()
-        {
-            if (!preventAxisResizing || XAxes == null || YAxes == null) return;
-            
-            // When preventAxisResizing is true, don't update axis limits at all
-            // This prevents both shrinking and growing during real-time tracking
-            return;
-        }
 
         private void OnThemeChanged(object? sender, EventArgs e)
         {
@@ -675,12 +605,13 @@ namespace userinterface.ViewModels.Profile
             }
 
             var currentXMin = XAxes?[0]?.MinLimit;
-            var currentXMax = preventAxisResizing ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
+            var currentXMax = maxXAxisLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
-            var currentYMax = preventAxisResizing ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
+            var currentYMax = maxYAxisLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
 
+            // Batch property changes for theme updates
             OnPropertyChanged(nameof(TooltipTextPaint));
             OnPropertyChanged(nameof(TooltipBackgroundPaint));
         }
@@ -688,9 +619,9 @@ namespace userinterface.ViewModels.Profile
         private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
         {
             var currentXMin = XAxes?[0]?.MinLimit;
-            var currentXMax = preventAxisResizing ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
+            var currentXMax = maxXAxisLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
-            var currentYMax = preventAxisResizing ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
+            var currentYMax = maxYAxisLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
         }
@@ -701,32 +632,12 @@ namespace userinterface.ViewModels.Profile
             
             if (currentSpeedDotSeries == null)
             {
-                currentSpeedDotSeries = new ScatterSeries<CurvePoint>
-                {
-                    Values = currentSpeedData,
-                    GeometrySize = 8,
-                    Stroke = new SolidColorPaint(accentColor) { StrokeThickness = 2 },
-                    Fill = new SolidColorPaint(accentColor),
-                    Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
-                    Name = "Current X Speed",
-                    IsVisible = false,
-                    DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
-                };
+                currentSpeedDotSeries = CreateSpeedDotSeries(currentSpeedData, "Current X Speed", accentColor);
             }
             
             if (currentYSpeedDotSeries == null)
             {
-                currentYSpeedDotSeries = new ScatterSeries<CurvePoint>
-                {
-                    Values = currentYSpeedData,
-                    GeometrySize = 8,
-                    Stroke = new SolidColorPaint(accentColor) { StrokeThickness = 2 },
-                    Fill = new SolidColorPaint(accentColor),
-                    Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
-                    Name = "Current Y Speed",
-                    IsVisible = false,
-                    DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
-                };
+                currentYSpeedDotSeries = CreateSpeedDotSeries(currentYSpeedData, "Current Y Speed", accentColor);
             }
             
             // Always ensure they're in the series collection after a clear
@@ -738,6 +649,21 @@ namespace userinterface.ViewModels.Profile
             {
                 Series.Add(currentYSpeedDotSeries);
             }
+        }
+        
+        private ScatterSeries<CurvePoint> CreateSpeedDotSeries(ObservableCollection<CurvePoint> data, string name, SKColor color)
+        {
+            return new ScatterSeries<CurvePoint>
+            {
+                Values = data,
+                GeometrySize = 8,
+                Stroke = new SolidColorPaint(color) { StrokeThickness = 2 },
+                Fill = new SolidColorPaint(color),
+                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                Name = name,
+                IsVisible = false,
+                DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
+            };
         }
         
         private void ToggleRealTimeTracking()
@@ -818,6 +744,8 @@ namespace userinterface.ViewModels.Profile
             
             CurrentMouseDevice = "No device detected";
             CurrentDeviceDPI = "Unknown DPI";
+            
+            // Batch property changes
             OnPropertyChanged(nameof(CurrentMouseDevice));
             OnPropertyChanged(nameof(CurrentDeviceDPI));
             
@@ -853,6 +781,8 @@ namespace userinterface.ViewModels.Profile
                     
                     CurrentMouseDevice = displayName;
                     CurrentDeviceDPI = dpiInfo;
+                    
+                    // Batch property changes
                     OnPropertyChanged(nameof(CurrentMouseDevice));
                     OnPropertyChanged(nameof(CurrentDeviceDPI));
                 }
@@ -881,6 +811,7 @@ namespace userinterface.ViewModels.Profile
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error in OnMouseMoved: {ex.Message}");
             }
         }
         
