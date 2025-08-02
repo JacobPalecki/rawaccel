@@ -10,7 +10,7 @@ namespace userspace_backend.Display.Calculations
     {
         // Speed range for acceleration curves (in counts/second)
         public const double SlowestHandSpeed = 0.05;  // Minimum input speed (counts/second)
-        public const double FastestHandSpeed = 200;   // Maximum input speed (counts/second)
+        public const double FastestHandSpeed = 500;   // Maximum input speed (counts/second)
         public const double CurvePointsResolution = 256; // Number of curve points to generate
 
         public static ICollection<double> CalculateCurvePointSpeeds()

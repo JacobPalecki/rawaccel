@@ -40,7 +40,7 @@ namespace userinterface.ViewModels.Profile
         // Default chart limits when no data or centering
         private const int DefaultAxisRange = 50;
         private const int DefaultYRange = 1;
-        private const int DefaultMaxX = 100;
+        private const int DefaultMaxX = 500;
         private const int DefaultMaxY = 2;
 
         // Line and stroke thickness
