@@ -181,6 +181,9 @@
   <data name="ProfileResetZoom" xml:space="preserve">
     <value>Reset Zoom</value>
   </data>
+  <data name="ProfileRealTimeTracking" xml:space="preserve">
+    <value>Toggle Real-time Speed Tracking</value>
+  </data>
 
   <!-- Language Names (Native) -->
   <data name="LanguageEN-US" xml:space="preserve">

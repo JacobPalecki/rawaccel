@@ -74,6 +74,7 @@ namespace userinterface.ViewModels.Profile
         private LineSeries<CurvePoint>? xSeries;
         private LineSeries<CurvePoint>? ySeries;
         private ScatterSeries<CurvePoint>? currentSpeedDotSeries;
+        private ScatterSeries<CurvePoint>? currentYSpeedDotSeries;
         
         private readonly object syncObject = new object();
 
@@ -112,6 +113,7 @@ namespace userinterface.ViewModels.Profile
         public bool IsRealTimeTrackingEnabled { get; private set; } = false;
         
         private readonly ObservableCollection<CurvePoint> currentSpeedData = new ObservableCollection<CurvePoint>();
+        private readonly ObservableCollection<CurvePoint> currentYSpeedData = new ObservableCollection<CurvePoint>();
 
         public object Sync => syncObject;
 
@@ -461,6 +463,12 @@ namespace userinterface.ViewModels.Profile
             {
                 Series.Remove(ySeries);
             }
+            
+            // Update Y speed dot visibility based on curve separation
+            if (currentYSpeedDotSeries != null && IsRealTimeTrackingEnabled)
+            {
+                currentYSpeedDotSeries.IsVisible = hasYCurve;
+            }
         }
 
         // ================================================================================================
@@ -570,6 +578,31 @@ namespace userinterface.ViewModels.Profile
             TooltipTextPaint.Color = themeService.GetCachedColor(AxisTitleBrush);
             TooltipBackgroundPaint.Color = themeService.GetCachedColor(TooltipBackgroundBrush).WithAlpha(TooltipBackgroundAlpha);
 
+            // Update current speed dot colors
+            var accentColor = themeService.GetCachedColor("SecondaryAccentBrush");
+            if (currentSpeedDotSeries != null)
+            {
+                if (currentSpeedDotSeries.Stroke is SolidColorPaint strokePaint)
+                {
+                    strokePaint.Color = accentColor;
+                }
+                if (currentSpeedDotSeries.Fill is SolidColorPaint fillPaint)
+                {
+                    fillPaint.Color = accentColor;
+                }
+            }
+            if (currentYSpeedDotSeries != null)
+            {
+                if (currentYSpeedDotSeries.Stroke is SolidColorPaint yStrokePaint)
+                {
+                    yStrokePaint.Color = accentColor;
+                }
+                if (currentYSpeedDotSeries.Fill is SolidColorPaint yFillPaint)
+                {
+                    yFillPaint.Color = accentColor;
+                }
+            }
+
             var currentXMin = XAxes?[0]?.MinLimit;
             var currentXMax = XAxes?[0]?.MaxLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
@@ -593,24 +626,44 @@ namespace userinterface.ViewModels.Profile
         
         private void InitializeCurrentSpeedDotSeries()
         {
+            var accentColor = themeService.GetCachedColor("SecondaryAccentBrush");
+            
             if (currentSpeedDotSeries == null)
             {
                 currentSpeedDotSeries = new ScatterSeries<CurvePoint>
                 {
                     Values = currentSpeedData,
-                    GeometrySize = 25, // Much bigger
-                    Stroke = new SolidColorPaint(SKColors.Lime) { StrokeThickness = 4 }, // Bright green outline
-                    Fill = new SolidColorPaint(SKColors.Yellow), // Bright yellow fill
+                    GeometrySize = 8,
+                    Stroke = new SolidColorPaint(accentColor) { StrokeThickness = 2 },
+                    Fill = new SolidColorPaint(accentColor),
                     Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
-                    Name = "Current Speed",
+                    Name = "Current X Speed",
                     IsVisible = false
                 };
             }
             
-            // Always ensure it's in the series collection after a clear
+            if (currentYSpeedDotSeries == null)
+            {
+                currentYSpeedDotSeries = new ScatterSeries<CurvePoint>
+                {
+                    Values = currentYSpeedData,
+                    GeometrySize = 8,
+                    Stroke = new SolidColorPaint(accentColor) { StrokeThickness = 2 },
+                    Fill = new SolidColorPaint(accentColor),
+                    Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                    Name = "Current Y Speed",
+                    IsVisible = false
+                };
+            }
+            
+            // Always ensure they're in the series collection after a clear
             if (!Series.Contains(currentSpeedDotSeries))
             {
                 Series.Add(currentSpeedDotSeries);
+            }
+            if (!Series.Contains(currentYSpeedDotSeries))
+            {
+                Series.Add(currentYSpeedDotSeries);
             }
         }
         
@@ -632,19 +685,24 @@ namespace userinterface.ViewModels.Profile
             
             IsRealTimeTrackingEnabled = true;
             
+            currentSpeedData.Clear();
+            currentYSpeedData.Clear();
+            
+            var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
+            
             if (currentSpeedDotSeries != null)
             {
                 currentSpeedDotSeries.IsVisible = true;
-                currentSpeedData.Clear();
-                
-                System.Diagnostics.Debug.WriteLine("[CHART] Current speed tracking enabled");
-                System.Diagnostics.Debug.WriteLine($"[CHART] Speed data count: {currentSpeedData.Count}");
-                System.Diagnostics.Debug.WriteLine($"[CHART] Series count: {Series.Count}");
-                System.Diagnostics.Debug.WriteLine($"[CHART] Current speed series visible: {currentSpeedDotSeries.IsVisible}");
+            }
+            if (currentYSpeedDotSeries != null)
+            {
+                currentYSpeedDotSeries.IsVisible = hasYCurve;
             }
             
             mouseTrackingService.MouseMoved += OnMouseMoved;
             mouseTrackingService.StartTracking();
+            
+            System.Diagnostics.Debug.WriteLine($"[CHART] Current speed tracking enabled (Y curve: {hasYCurve})");
             
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
         }
@@ -659,10 +717,15 @@ namespace userinterface.ViewModels.Profile
             mouseTrackingService.StopTracking();
             
             currentSpeedData.Clear();
+            currentYSpeedData.Clear();
             
             if (currentSpeedDotSeries != null)
             {
                 currentSpeedDotSeries.IsVisible = false;
+            }
+            if (currentYSpeedDotSeries != null)
+            {
+                currentYSpeedDotSeries.IsVisible = false;
             }
             
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
@@ -674,12 +737,30 @@ namespace userinterface.ViewModels.Profile
             
             try
             {
-                var outputValue = InterpolateOutputFromSpeed(e.MouseSpeed);
-                if (outputValue.HasValue)
+                var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
+                
+                if (hasYCurve)
                 {
+                    // Calculate separate X and Y speeds
+                    var xSpeed = Math.Abs(e.X) / 16.0 * 1000.0; // Convert to per second
+                    var ySpeed = Math.Abs(e.Y) / 16.0 * 1000.0; // Convert to per second
+                    
+                    var xOutputValue = InterpolateOutputFromSpeed(xSpeed, XCurvePreview);
+                    var yOutputValue = InterpolateOutputFromSpeed(ySpeed, YCurvePreview);
+                    
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        UpdateCurrentSpeedDot(e.MouseSpeed, outputValue.Value);
+                        UpdateCurrentSpeedDots(xSpeed, xOutputValue, ySpeed, yOutputValue, hasYCurve);
+                    });
+                }
+                else
+                {
+                    // Combined mode - use combined speed
+                    var outputValue = InterpolateOutputFromSpeed(e.MouseSpeed, XCurvePreview);
+                    
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        UpdateCurrentSpeedDots(e.MouseSpeed, outputValue, 0, null, hasYCurve);
                     });
                 }
             }
@@ -689,12 +770,12 @@ namespace userinterface.ViewModels.Profile
             }
         }
         
-        private double? InterpolateOutputFromSpeed(double mouseSpeed)
+        private double? InterpolateOutputFromSpeed(double mouseSpeed, ICurvePreview curvePreview)
         {
-            if (XCurvePreview?.Points == null || XCurvePreview.Points.Count == 0)
+            if (curvePreview?.Points == null || curvePreview.Points.Count == 0)
                 return null;
                 
-            var points = XCurvePreview.Points.ToList();
+            var points = curvePreview.Points.ToList();
             
             // Find the closest points for interpolation
             var lowerPoint = points.LastOrDefault(p => p.MouseSpeed <= mouseSpeed);
@@ -717,12 +798,33 @@ namespace userinterface.ViewModels.Profile
             return lowerPoint.Output + ratio * (upperPoint.Output - lowerPoint.Output);
         }
 
-        public void UpdateCurrentSpeedDot(double mouseSpeed, double outputValue)
+        private void UpdateCurrentSpeedDots(double xSpeed, double? xOutputValue, double ySpeed, double? yOutputValue, bool hasYCurve)
         {
             if (!IsRealTimeTrackingEnabled) return;
             
+            // Update X speed dot (always visible when tracking)
             currentSpeedData.Clear();
-            currentSpeedData.Add(new CurvePoint { MouseSpeed = mouseSpeed, Output = outputValue });
+            if (xOutputValue.HasValue && xSpeed > 0)
+            {
+                currentSpeedData.Add(new CurvePoint { MouseSpeed = xSpeed, Output = xOutputValue.Value });
+            }
+            
+            // Update Y speed dot (only visible when separate curves)
+            currentYSpeedData.Clear();
+            if (hasYCurve && yOutputValue.HasValue && ySpeed > 0)
+            {
+                currentYSpeedData.Add(new CurvePoint { MouseSpeed = ySpeed, Output = yOutputValue.Value });
+            }
+            
+            // Update dot visibility based on curve separation
+            if (currentSpeedDotSeries != null)
+            {
+                currentSpeedDotSeries.IsVisible = IsRealTimeTrackingEnabled;
+            }
+            if (currentYSpeedDotSeries != null)
+            {
+                currentYSpeedDotSeries.IsVisible = IsRealTimeTrackingEnabled && hasYCurve;
+            }
         }
     }
 }

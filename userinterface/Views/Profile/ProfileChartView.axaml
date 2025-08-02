@@ -115,8 +115,8 @@
 				<Button Classes="chart-control"
 				        Classes.active="{Binding IsRealTimeTrackingEnabled}"
 				        Command="{Binding ToggleRealTimeTrackingCommand}"
-				        ToolTip.Tip="Toggle Real-time Speed Tracking">
-					<PathIcon Data="{StaticResource location_regular}"/>
+				        ToolTip.Tip="{ext:Localized ProfileRealTimeTracking}">
+					<PathIcon Data="{StaticResource top_speed_regular}"/>
 				</Button>
 			</StackPanel>
 		</Grid>

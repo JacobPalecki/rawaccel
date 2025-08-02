@@ -181,6 +181,9 @@
   <data name="ProfileResetZoom" xml:space="preserve">
     <value>拡大リセット</value>
   </data>
+  <data name="ProfileRealTimeTracking" xml:space="preserve">
+    <value>リアルタイム速度追跡切り替え</value>
+  </data>
 
   <!-- Language Names (Native) -->
   <data name="LanguageEN-US" xml:space="preserve">
