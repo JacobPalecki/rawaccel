@@ -2,9 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using userinterface.Converters;
 using userinterface.Extensions;
@@ -12,6 +14,7 @@ using userinterface.Models;
 using userinterface.Services;
 using userinterface.ViewModels;
 using userinterface.Views.Controls;
+using userspace_backend.Services;
 
 namespace userinterface.Views;
 
@@ -30,6 +33,76 @@ public partial class MainWindow : Window
         
         // Subscribe to theme changes
         ThemeService.ThemeChanged += OnThemeChanged;
+        
+        // Set up mouse tracking when window is loaded
+        this.Opened += OnWindowOpened;
+    }
+    
+    private void OnWindowOpened(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (TryGetPlatformHandle()?.Handle is IntPtr hwnd && hwnd != IntPtr.Zero)
+            {
+                MouseTrackingService.SetWindowHandle(hwnd);
+                SetupWindowProcHook(hwnd);
+                System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Window handle set for mouse tracking: {hwnd}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[MAIN WINDOW] Failed to get window handle");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Error setting up mouse tracking: {ex.Message}");
+        }
+    }
+
+    private const int WM_INPUT = 0x00FF;
+    private IntPtr originalWndProc = IntPtr.Zero;
+    
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+    
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    
+    private const int GWL_WNDPROC = -4;
+    
+    private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+    private WndProcDelegate? wndProcDelegate;
+    
+    private void SetupWindowProcHook(IntPtr hwnd)
+    {
+        try
+        {
+            wndProcDelegate = new WndProcDelegate(WindowProc);
+            IntPtr newWndProc = Marshal.GetFunctionPointerForDelegate(wndProcDelegate);
+            originalWndProc = SetWindowLongPtr(hwnd, GWL_WNDPROC, newWndProc);
+            System.Diagnostics.Debug.WriteLine("[MAIN WINDOW] Window procedure hook installed");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Error setting up window proc hook: {ex.Message}");
+        }
+    }
+    
+    private IntPtr WindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    {
+        try
+        {
+            if (msg == WM_INPUT)
+            {
+                MouseTrackingService.ProcessRawInput(lParam);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Error in window proc: {ex.Message}");
+        }
+        
+        return CallWindowProc(originalWndProc, hWnd, msg, wParam, lParam);
     }
 
     private INotificationService NotificationService =>
@@ -40,6 +113,9 @@ public partial class MainWindow : Window
     
     private IThemeService ThemeService =>
         App.Services!.GetRequiredService<IThemeService>();
+    
+    private IMouseTrackingService MouseTrackingService =>
+        App.Services!.GetRequiredService<IMouseTrackingService>();
 
     private void InitializeControls()
     {

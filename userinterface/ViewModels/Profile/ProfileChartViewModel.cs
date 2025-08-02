@@ -19,6 +19,7 @@ using userinterface.Interfaces;
 using userinterface.Services;
 using userspace_backend.Display;
 using userspace_backend.Model.EditableSettings;
+using userspace_backend.Services;
 using BE = userspace_backend.Model;
 
 namespace userinterface.ViewModels.Profile
@@ -64,6 +65,7 @@ namespace userinterface.ViewModels.Profile
         private readonly IThemeService themeService;
         private readonly LocalizationService localizationService;
         private readonly PreviewChartRenderer previewRenderer;
+        private readonly IMouseTrackingService mouseTrackingService;
         private BE.ProfileModel currentProfileModel = null!;
         
         private SolidColorPaint? cachedXStroke;
@@ -71,14 +73,16 @@ namespace userinterface.ViewModels.Profile
         
         private LineSeries<CurvePoint>? xSeries;
         private LineSeries<CurvePoint>? ySeries;
+        private ScatterSeries<CurvePoint>? currentSpeedDotSeries;
         
         private readonly object syncObject = new object();
 
-        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer)
+        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTrackingService mouseTrackingService)
         {
             this.themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             this.localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
             this.previewRenderer = previewRenderer ?? throw new ArgumentNullException(nameof(previewRenderer));
+            this.mouseTrackingService = mouseTrackingService ?? throw new ArgumentNullException(nameof(mouseTrackingService));
 
             RecreateAxesCommand = new RelayCommand(() => 
             {
@@ -90,6 +94,7 @@ namespace userinterface.ViewModels.Profile
                 EnsureInteractiveChartLoaded();
                 FitToData();
             });
+            ToggleRealTimeTrackingCommand = new RelayCommand(ToggleRealTimeTracking);
         }
 
         public bool IsInitialized { get; private set; }
@@ -103,6 +108,10 @@ namespace userinterface.ViewModels.Profile
         public double ChartOpacity { get; private set; } = 0.0;
         
         private bool hasUserInteracted = false;
+        
+        public bool IsRealTimeTrackingEnabled { get; private set; } = false;
+        
+        private readonly ObservableCollection<CurvePoint> currentSpeedData = new ObservableCollection<CurvePoint>();
 
         public object Sync => syncObject;
 
@@ -287,6 +296,7 @@ namespace userinterface.ViewModels.Profile
             Series.Clear();
             Series.Add(xSeries);
             
+            InitializeCurrentSpeedDotSeries();
             UpdateYSeriesVisibility();
         }
 
@@ -343,6 +353,8 @@ namespace userinterface.ViewModels.Profile
         public ICommand RecreateAxesCommand { get; }
 
         public ICommand FitToDataCommand { get; }
+        
+        public ICommand ToggleRealTimeTrackingCommand { get; }
 
         // ================================================================================================
         // PUBLIC METHODS
@@ -389,6 +401,8 @@ namespace userinterface.ViewModels.Profile
 
         public void Dispose()
         {
+            StopRealTimeTracking();
+            
             themeService.ThemeChanged -= OnThemeChanged;
             localizationService.PropertyChanged -= OnLocalizationChanged;
             UnsubscribeFromEvents();
@@ -575,6 +589,140 @@ namespace userinterface.ViewModels.Profile
             var currentYMax = YAxes?[0]?.MaxLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
+        }
+        
+        private void InitializeCurrentSpeedDotSeries()
+        {
+            if (currentSpeedDotSeries == null)
+            {
+                currentSpeedDotSeries = new ScatterSeries<CurvePoint>
+                {
+                    Values = currentSpeedData,
+                    GeometrySize = 25, // Much bigger
+                    Stroke = new SolidColorPaint(SKColors.Lime) { StrokeThickness = 4 }, // Bright green outline
+                    Fill = new SolidColorPaint(SKColors.Yellow), // Bright yellow fill
+                    Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                    Name = "Current Speed",
+                    IsVisible = false
+                };
+            }
+            
+            // Always ensure it's in the series collection after a clear
+            if (!Series.Contains(currentSpeedDotSeries))
+            {
+                Series.Add(currentSpeedDotSeries);
+            }
+        }
+        
+        private void ToggleRealTimeTracking()
+        {
+            if (IsRealTimeTrackingEnabled)
+            {
+                StopRealTimeTracking();
+            }
+            else
+            {
+                StartRealTimeTracking();
+            }
+        }
+        
+        private void StartRealTimeTracking()
+        {
+            if (IsRealTimeTrackingEnabled) return;
+            
+            IsRealTimeTrackingEnabled = true;
+            
+            if (currentSpeedDotSeries != null)
+            {
+                currentSpeedDotSeries.IsVisible = true;
+                currentSpeedData.Clear();
+                
+                System.Diagnostics.Debug.WriteLine("[CHART] Current speed tracking enabled");
+                System.Diagnostics.Debug.WriteLine($"[CHART] Speed data count: {currentSpeedData.Count}");
+                System.Diagnostics.Debug.WriteLine($"[CHART] Series count: {Series.Count}");
+                System.Diagnostics.Debug.WriteLine($"[CHART] Current speed series visible: {currentSpeedDotSeries.IsVisible}");
+            }
+            
+            mouseTrackingService.MouseMoved += OnMouseMoved;
+            mouseTrackingService.StartTracking();
+            
+            OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
+        }
+        
+        private void StopRealTimeTracking()
+        {
+            if (!IsRealTimeTrackingEnabled) return;
+            
+            IsRealTimeTrackingEnabled = false;
+            
+            mouseTrackingService.MouseMoved -= OnMouseMoved;
+            mouseTrackingService.StopTracking();
+            
+            currentSpeedData.Clear();
+            
+            if (currentSpeedDotSeries != null)
+            {
+                currentSpeedDotSeries.IsVisible = false;
+            }
+            
+            OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
+        }
+        
+        private void OnMouseMoved(object? sender, MouseMovementEventArgs e)
+        {
+            if (!IsRealTimeTrackingEnabled) return;
+            
+            try
+            {
+                var outputValue = InterpolateOutputFromSpeed(e.MouseSpeed);
+                if (outputValue.HasValue)
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        UpdateCurrentSpeedDot(e.MouseSpeed, outputValue.Value);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CHART] Error processing mouse movement: {ex.Message}");
+            }
+        }
+        
+        private double? InterpolateOutputFromSpeed(double mouseSpeed)
+        {
+            if (XCurvePreview?.Points == null || XCurvePreview.Points.Count == 0)
+                return null;
+                
+            var points = XCurvePreview.Points.ToList();
+            
+            // Find the closest points for interpolation
+            var lowerPoint = points.LastOrDefault(p => p.MouseSpeed <= mouseSpeed);
+            var upperPoint = points.FirstOrDefault(p => p.MouseSpeed >= mouseSpeed);
+            
+            if (lowerPoint == null && upperPoint == null)
+                return null;
+                
+            if (lowerPoint == null)
+                return upperPoint!.Output;
+                
+            if (upperPoint == null)
+                return lowerPoint.Output;
+                
+            if (Math.Abs(lowerPoint.MouseSpeed - upperPoint.MouseSpeed) < 0.001)
+                return lowerPoint.Output;
+                
+            // Linear interpolation
+            double ratio = (mouseSpeed - lowerPoint.MouseSpeed) / (upperPoint.MouseSpeed - lowerPoint.MouseSpeed);
+            return lowerPoint.Output + ratio * (upperPoint.Output - lowerPoint.Output);
+        }
+
+        public void UpdateCurrentSpeedDot(double mouseSpeed, double outputValue)
+        {
+            if (!IsRealTimeTrackingEnabled) return;
+            
+            currentSpeedData.Clear();
+            currentSpeedData.Add(new CurvePoint { MouseSpeed = mouseSpeed, Output = outputValue });
         }
     }
 }

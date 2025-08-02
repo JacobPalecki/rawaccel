@@ -28,6 +28,10 @@
 			<Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
 			<Setter Property="Opacity" Value="1"/>
 		</Style>
+		<Style Selector="Button.chart-control.active">
+			<Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+			<Setter Property="Opacity" Value="1"/>
+		</Style>
 		
 		<!-- Animations for smooth transitions -->
 		<Style Selector="lvc|CartesianChart.interactive-chart">
@@ -107,6 +111,12 @@
 				        Command="{Binding FitToDataCommand}"
 				        ToolTip.Tip="{ext:Localized ProfileFitToData}">
 					<PathIcon Data="{StaticResource full_screen_zoom_regular}"/>
+				</Button>
+				<Button Classes="chart-control"
+				        Classes.active="{Binding IsRealTimeTrackingEnabled}"
+				        Command="{Binding ToggleRealTimeTrackingCommand}"
+				        ToolTip.Tip="Toggle Real-time Speed Tracking">
+					<PathIcon Data="{StaticResource location_regular}"/>
 				</Button>
 			</StackPanel>
 		</Grid>

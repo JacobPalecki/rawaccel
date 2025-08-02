@@ -16,6 +16,7 @@ using userinterface.ViewModels.Controls;
 using userinterface.ViewModels.Settings;
 using userinterface.Views;
 using userspace_backend;
+using userspace_backend.Services;
 using Windows.System;
 using DATA = userspace_backend.Data;
 
@@ -45,6 +46,7 @@ public partial class App : Application
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<FrameTimerService>();
         services.AddSingleton<PreviewChartRenderer>();
+        services.AddSingleton<IMouseTrackingService, MouseTrackingService>();
 
         // Register backend services
         services.AddSingleton<Bootstrapper>(provider => BootstrapBackEnd());
