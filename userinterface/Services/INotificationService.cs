@@ -22,6 +22,11 @@ namespace userinterface.Services
         void ShowInfoToast(string messageKey, int durationMs = 4000);
         void ShowInfoToast(string messageKey, int durationMs = 4000, params object[] formatArgs);
 
+        void QueueToast(string messageKey, ToastType type, int durationMs = 5000);
+        void QueueToast(string messageKey, ToastType type, int durationMs = 5000, params object[] formatArgs);
+
+        void ClearQueue();
+
         event EventHandler<ToastNotificationEventArgs> ToastRequested;
 
         event EventHandler ToastDismissed;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using userinterface.Models;
 
@@ -7,6 +8,8 @@ namespace userinterface.Services
     public class NotificationService : INotificationService
     {
         private Timer? timer;
+        private readonly Queue<ToastNotificationEventArgs> toastQueue;
+        private bool isDisplayingToast;
         private readonly LocalizationService localizationService;
         private readonly ISettingsService settingsService;
 
@@ -14,6 +17,8 @@ namespace userinterface.Services
         {
             this.localizationService = localizationService;
             this.settingsService = settingsService;
+            this.toastQueue = new Queue<ToastNotificationEventArgs>();
+            this.isDisplayingToast = false;
         }
 
         public event EventHandler<ToastNotificationEventArgs>? ToastRequested;
@@ -33,6 +38,7 @@ namespace userinterface.Services
             }
 
             timer?.Dispose();
+            toastQueue.Clear();
 
             var localizedMessage = localizationService.GetText(messageKey);
             if (formatArgs.Length > 0)
@@ -40,20 +46,23 @@ namespace userinterface.Services
                 localizedMessage = string.Format(localizedMessage, formatArgs);
             }
 
-            ToastRequested?.Invoke(this, new ToastNotificationEventArgs
+            var toastArgs = new ToastNotificationEventArgs
             {
                 Message = localizedMessage,
                 Type = type,
                 Duration = TimeSpan.FromMilliseconds(durationMs)
-            });
+            };
 
-            timer = new Timer(state => HideToast(), null, durationMs, Timeout.Infinite);
+            DisplayToast(toastArgs);
         }
 
         public void HideToast()
         {
             timer?.Dispose();
+            isDisplayingToast = false;
             ToastDismissed?.Invoke(this, EventArgs.Empty);
+            
+            ProcessQueue();
         }
 
         public void ShowSuccessToast(string messageKey, int durationMs = 5000)
@@ -94,6 +103,64 @@ namespace userinterface.Services
         public void ShowInfoToast(string messageKey, int durationMs = 4000, params object[] formatArgs)
         {
             ShowToast(messageKey, ToastType.Info, durationMs, formatArgs);
+        }
+
+        public void QueueToast(string messageKey, ToastType type, int durationMs = 5000)
+        {
+            QueueToast(messageKey, type, durationMs, new object[0]);
+        }
+
+        public void QueueToast(string messageKey, ToastType type, int durationMs = 5000, params object[] formatArgs)
+        {
+            if (!settingsService.ShowToastNotifications)
+            {
+                return;
+            }
+
+            var localizedMessage = localizationService.GetText(messageKey);
+            if (formatArgs.Length > 0)
+            {
+                localizedMessage = string.Format(localizedMessage, formatArgs);
+            }
+
+            var toastArgs = new ToastNotificationEventArgs
+            {
+                Message = localizedMessage,
+                Type = type,
+                Duration = TimeSpan.FromMilliseconds(durationMs)
+            };
+
+            if (isDisplayingToast)
+            {
+                toastQueue.Enqueue(toastArgs);
+            }
+            else
+            {
+                DisplayToast(toastArgs);
+            }
+        }
+
+        public void ClearQueue()
+        {
+            toastQueue.Clear();
+        }
+
+        private void DisplayToast(ToastNotificationEventArgs toastArgs)
+        {
+            isDisplayingToast = true;
+            
+            ToastRequested?.Invoke(this, toastArgs);
+
+            timer = new Timer(state => HideToast(), null, (int)toastArgs.Duration.TotalMilliseconds, Timeout.Infinite);
+        }
+
+        private void ProcessQueue()
+        {
+            if (toastQueue.Count > 0)
+            {
+                var nextToast = toastQueue.Dequeue();
+                DisplayToast(nextToast);
+            }
         }
 
         public void Dispose()
