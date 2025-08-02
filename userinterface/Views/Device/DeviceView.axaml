@@ -5,6 +5,7 @@
              xmlns:vm="using:userinterface.ViewModels.Device"
              xmlns:controls="using:userinterface.Controls"
              xmlns:converters="using:userinterface.Converters"
+             xmlns:ext="using:userinterface.Extensions"
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="userinterface.Views.Device.DeviceView"
@@ -118,33 +119,40 @@
 			<Grid ColumnDefinitions="*,*"
                   HorizontalAlignment="Stretch"
                   Margin="26,8,8,8">
-				<StackPanel Grid.Column="0"
-                            Orientation="Vertical"
-                            Margin="0,0,16,0">
-					<DockPanel>
-						<Button DockPanel.Dock="Right"
-                                Margin="8,0,0,0"
-                                Command="{Binding RefreshDevicesCommand}"
-                                Content="🔄"
-                                ToolTip.Tip="Refresh available devices"
-                                Width="32"
-                                Height="32" />
-						<TextBlock DockPanel.Dock="Left"
-                                   Text="Hardware Device:"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0" />
-					</DockPanel>
+				<DockPanel Grid.Column="0"
+                           Margin="0,0,16,0">
+					<TextBlock DockPanel.Dock="Left"
+                               Text="{ext:Localized DeviceHardwareDeviceLabel}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+					<Button DockPanel.Dock="Right"
+                            Margin="8,0,0,0"
+                            Command="{Binding RefreshDevicesCommand}"
+                            ToolTip.Tip="Refresh available devices"
+                            Width="32"
+                            Height="32"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource SystemAccentColor}"
+                            CornerRadius="4"
+                            Cursor="Hand">
+						<PathIcon Data="{StaticResource arrow_sync_circle_regular}" 
+                                  Width="16" 
+                                  Height="16"
+                                  Foreground="{DynamicResource SystemAccentColor}" />
+					</Button>
 					<ComboBox ItemsSource="{Binding AvailableDevices}"
                               SelectedItem="{Binding SelectedDevice}"
                               HorizontalAlignment="Stretch"
-                              Margin="0,4,0,0">
+                              VerticalAlignment="Center"
+                              Margin="0,0,8,0">
 						<ComboBox.ItemTemplate>
 							<DataTemplate>
 								<TextBlock Text="{Binding Converter={StaticResource DeviceNameConverter}}" />
 							</DataTemplate>
 						</ComboBox.ItemTemplate>
 					</ComboBox>
-				</StackPanel>
+				</DockPanel>
 
 				<ContentControl Grid.Column="1"
                                 HorizontalAlignment="Left"

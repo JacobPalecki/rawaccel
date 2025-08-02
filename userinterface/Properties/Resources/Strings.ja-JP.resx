@@ -443,6 +443,9 @@
   <data name="DeviceHardwareID" xml:space="preserve">
     <value>ハードウェアID</value>
   </data>
+  <data name="DeviceHardwareDeviceLabel" xml:space="preserve">
+    <value>ハードウェア機器:</value>
+  </data>
   <data name="DeviceGroupName" xml:space="preserve">
     <value>デバイスグループ</value>
   </data>

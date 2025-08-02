@@ -446,6 +446,9 @@
   <data name="DeviceHardwareID" xml:space="preserve">
     <value>Hardware ID</value>
   </data>
+  <data name="DeviceHardwareDeviceLabel" xml:space="preserve">
+    <value>Hardware Device:</value>
+  </data>
   <data name="DeviceGroupName" xml:space="preserve">
     <value>Device Group</value>
   </data>
