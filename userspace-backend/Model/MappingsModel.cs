@@ -46,7 +46,7 @@ namespace userspace_backend.Model
 
         public MappingModel GetMappingToSetActive()
         {
-            return Mappings.FirstOrDefault(m => m.SetActive);
+            return GetActiveMapping() ?? Mappings.FirstOrDefault();
         }
 
         public MappingModel? GetActiveMapping()
