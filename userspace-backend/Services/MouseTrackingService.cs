@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +13,10 @@ namespace userspace_backend.Services
         public double X { get; set; }
         public double Y { get; set; }
         public double OutputSpeed { get; set; }
+        public double XSpeed { get; set; }
+        public double YSpeed { get; set; }
+        public IntPtr DeviceHandle { get; set; }
+        public string DeviceName { get; set; } = string.Empty;
     }
 
     public interface IMouseTrackingService : IDisposable
@@ -19,6 +25,8 @@ namespace userspace_backend.Services
         event EventHandler? MouseIdle;
         bool IsTracking { get; }
         void SetWindowHandle(IntPtr hwnd);
+        void SetDeviceDPI(int dpi);
+        void SetBackEnd(BackEnd backEnd);
         void StartTracking();
         void StopTracking();
         void ProcessRawInput(IntPtr lParam);
@@ -40,6 +48,7 @@ namespace userspace_backend.Services
         private const int RIM_TYPEMOUSE = 0;
         private const uint RIDEV_INPUTSINK = 0x00000100;
         private const uint RIDEV_REMOVE = 0x00000001;
+        private const uint RIDI_DEVICENAME = 0x20000007;
 
         [StructLayout(LayoutKind.Sequential)]
         private struct RAWINPUTDEVICE
@@ -84,6 +93,41 @@ namespace userspace_backend.Services
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
 
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern uint GetRawInputDeviceInfo(IntPtr hDevice, uint uiCommand, IntPtr pData, ref uint pcbSize);
+
+        [DllImport("cfgmgr32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern uint CM_Get_Device_Interface_PropertyW(string pszDeviceInterface, ref Guid PropertyKey, out uint PropertyType, IntPtr PropertyBuffer, ref uint PropertyBufferSize, uint ulFlags);
+
+        [DllImport("hid.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool HidD_GetProductString(IntPtr HidDeviceObject, IntPtr Buffer, uint BufferLength);
+
+        [DllImport("hid.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool HidD_GetManufacturerString(IntPtr HidDeviceObject, IntPtr Buffer, uint BufferLength);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern IntPtr CreateFileW(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        private const uint FILE_SHARE_READ = 0x00000001;
+        private const uint OPEN_EXISTING = 3;
+        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+        private const uint HID_STR_MAX_LEN = 127;
+
+        private static readonly Guid DEVPKEY_Device_InstanceId = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetRawInputDeviceList(IntPtr pRawInputDeviceList, ref uint puiNumDevices, uint cbSize);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RAWINPUTDEVICELIST
+        {
+            public IntPtr hDevice;
+            public uint dwType;
+        }
+
         [DllImport("kernel32.dll")]
         private static extern uint GetTickCount();
 
@@ -99,6 +143,13 @@ namespace userspace_backend.Services
         private double lastX = 0;
         private double lastY = 0;
         private bool useHighPrecisionTiming = false;
+        private int deviceDPI = 1000; // Default to normalized DPI
+        private const double DriverNormalizedDPI = 1000.0;
+        private readonly Dictionary<IntPtr, string> deviceNameCache = new Dictionary<IntPtr, string>();
+        private readonly Dictionary<IntPtr, string> deviceHIDCache = new Dictionary<IntPtr, string>();
+        private IntPtr lastActiveDeviceHandle = IntPtr.Zero;
+        private string lastActiveDeviceName = string.Empty;
+        private BackEnd? backEnd;
 
         public event EventHandler<MouseMovementEventArgs>? MouseMoved;
         public event EventHandler? MouseIdle;
@@ -118,6 +169,16 @@ namespace userspace_backend.Services
         public void SetWindowHandle(IntPtr hwnd)
         {
             hwndSource = hwnd;
+        }
+
+        public void SetDeviceDPI(int dpi)
+        {
+            deviceDPI = dpi > 0 ? dpi : 1000; // Fallback to normalized DPI if invalid
+        }
+
+        public void SetBackEnd(BackEnd backEnd)
+        {
+            this.backEnd = backEnd;
         }
 
         public void StartTracking()
@@ -140,11 +201,13 @@ namespace userspace_backend.Services
                 {
                     isTracking = true;
                     throttleTimer.Change(16, 16); // ~60 FPS
+                    Debug.WriteLine("\n=== Mouse Tracking Started ===\nListening for mouse input from all devices...");
+                    LogAvailableMouseDevices();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Silently fail
+                Debug.WriteLine($"\n=== Mouse Tracking Error ===\nFailed to start tracking: {ex.Message}");
             }
         }
 
@@ -168,10 +231,16 @@ namespace userspace_backend.Services
                 throttleTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 lastEventArgs = null;
+                
+                Debug.WriteLine("\n=== Mouse Tracking Stopped ===\nNo longer listening for mouse input.");
+                
+                // Reset device tracking
+                lastActiveDeviceHandle = IntPtr.Zero;
+                lastActiveDeviceName = string.Empty;
             }
-            catch
+            catch (Exception ex)
             {
-                // Silently fail
+                Debug.WriteLine($"\n=== Mouse Tracking Error ===\nFailed to stop tracking: {ex.Message}");
             }
         }
 
@@ -194,7 +263,7 @@ namespace userspace_backend.Services
                             var rawInput = Marshal.PtrToStructure<RAWINPUT>(buffer);
                             if (rawInput.header.dwType == RIM_TYPEMOUSE)
                             {
-                                ProcessMouseMovement(rawInput.mouse.lLastX, rawInput.mouse.lLastY);
+                                ProcessMouseMovement(rawInput.mouse.lLastX, rawInput.mouse.lLastY, rawInput.header.hDevice);
                             }
                         }
                     }
@@ -210,25 +279,42 @@ namespace userspace_backend.Services
             }
         }
 
-        private void ProcessMouseMovement(int deltaX, int deltaY)
+        private void ProcessMouseMovement(int deltaX, int deltaY, IntPtr deviceHandle)
         {
             if (deltaX == 0 && deltaY == 0) return;
 
+            // Log device changes and update BackEnd
+            LogDeviceChange(deviceHandle);
+            UpdateBackEndDeviceInfo(deviceHandle);
+
+            // Get time delta in milliseconds
             double timeMs = GetHighPrecisionTimeMs();
             if (timeMs <= 0) return;
 
+            // Calculate combined speed (counts/second, normalized to 1000 DPI)
             double speed = CalculateSpeed(deltaX, deltaY, timeMs);
             if (speed <= 0 || double.IsNaN(speed) || double.IsInfinity(speed)) return;
+
+            // Calculate individual axis speeds
+            // deltaX/deltaY: mouse counts, timeMs: milliseconds  
+            // Normalize to 1000 DPI equivalent: (counts/second) * (1000 / deviceDPI)
+            double dpiNormalizationFactor = DriverNormalizedDPI / deviceDPI;
+            double xSpeed = Math.Abs(deltaX) / timeMs * 1000.0 * dpiNormalizationFactor;
+            double ySpeed = Math.Abs(deltaY) / timeMs * 1000.0 * dpiNormalizationFactor;
 
             lastX = deltaX;
             lastY = deltaY;
 
             var eventArgs = new MouseMovementEventArgs
             {
-                MouseSpeed = speed,
-                X = deltaX,
-                Y = deltaY,
-                OutputSpeed = speed
+                MouseSpeed = speed,        // normalized counts/second (1000 DPI equivalent)
+                X = deltaX,                // raw counts
+                Y = deltaY,                // raw counts
+                OutputSpeed = speed,       // normalized counts/second (1000 DPI equivalent)
+                XSpeed = xSpeed,           // normalized counts/second (1000 DPI equivalent)
+                YSpeed = ySpeed,           // normalized counts/second (1000 DPI equivalent)
+                DeviceHandle = deviceHandle,
+                DeviceName = GetDeviceName(deviceHandle)
             };
 
             lastEventArgs = eventArgs;
@@ -249,13 +335,18 @@ namespace userspace_backend.Services
                         return 0;
                     }
 
+                    // Calculate delta in performance counter ticks
                     long deltaCounter = currentCounter - lastPerformanceCounter;
                     lastPerformanceCounter = currentCounter;
                     
+                    // Convert ticks to milliseconds
+                    // deltaCounter: ticks, performanceFrequency: ticks/second
+                    // Result: milliseconds (multiply by 1000 to convert seconds to ms)
                     return (double)deltaCounter * 1000.0 / performanceFrequency;
                 }
             }
             
+            // Fallback: GetTickCount returns milliseconds directly
             uint currentTick = GetTickCount();
             if (lastTickCount == 0)
             {
@@ -263,18 +354,26 @@ namespace userspace_backend.Services
                 return 0;
             }
             
+            // Time delta in milliseconds
             double timeMs = currentTick - lastTickCount;
             lastTickCount = currentTick;
             return timeMs;
         }
 
 
-        private static double CalculateSpeed(double x, double y, double timeMs)
+        private double CalculateSpeed(double x, double y, double timeMs)
         {
             if (timeMs <= 0) return 0;
             
+            // Calculate Euclidean distance in counts
             double distance = Math.Sqrt(x * x + y * y);
-            return distance / timeMs * 1000.0;
+            
+            // Convert to speed and normalize to 1000 DPI equivalent
+            // distance: counts, timeMs: milliseconds
+            // Result: normalized counts/second 
+            double rawSpeed = distance / timeMs * 1000.0;
+            double dpiNormalizationFactor = DriverNormalizedDPI / deviceDPI;
+            return rawSpeed * dpiNormalizationFactor;
         }
 
         private void OnTimerTick(object? state)
@@ -290,6 +389,313 @@ namespace userspace_backend.Services
         private void OnIdleTimeout(object? state)
         {
             MouseIdle?.Invoke(this, EventArgs.Empty);
+        }
+
+        private string GetDeviceName(IntPtr deviceHandle)
+        {
+            if (deviceHandle == IntPtr.Zero) return "Unknown Device";
+
+            // Check cache first
+            if (deviceNameCache.TryGetValue(deviceHandle, out string? cachedName))
+            {
+                return cachedName;
+            }
+
+            try
+            {
+                // Get device name length
+                uint nameLength = 0;
+                GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, IntPtr.Zero, ref nameLength);
+
+                if (nameLength > 0)
+                {
+                    // Allocate buffer and get device name
+                    IntPtr nameBuffer = Marshal.AllocHGlobal((int)nameLength * 2); // Unicode characters
+                    try
+                    {
+                        if (GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, nameBuffer, ref nameLength) > 0)
+                        {
+                            string devicePath = Marshal.PtrToStringUni(nameBuffer) ?? "Unknown Device";
+                            
+                            // Get exact device name using HID APIs (same as device enumeration)
+                            string deviceName = GetExactDeviceNameFromPath(devicePath);
+                            
+                            // Log device discovery
+                            Debug.WriteLine($"\n=== Device Discovery ===\nFound mouse device: {deviceName}\nDevice path: {devicePath}\nHandle: {deviceHandle.ToInt64():X}");
+                            
+                            // Cache the result
+                            deviceNameCache[deviceHandle] = deviceName;
+                            return deviceName;
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(nameBuffer);
+                    }
+                }
+            }
+            catch
+            {
+                // Silently handle any errors in device name resolution
+            }
+
+            // Fallback to handle-based identification
+            string fallbackName = $"Mouse Device ({deviceHandle.ToInt64():X})";
+            Debug.WriteLine($"\n=== Device Discovery (Fallback) ===\nUsing fallback name: {fallbackName}\nHandle: {deviceHandle.ToInt64():X}");
+            deviceNameCache[deviceHandle] = fallbackName;
+            return fallbackName;
+        }
+
+        private string GetExactDeviceNameFromPath(string devicePath)
+        {
+            if (string.IsNullOrEmpty(devicePath)) return "Unknown Device";
+
+            try
+            {
+                // Open HID device to get exact product and manufacturer strings
+                IntPtr hidDeviceObject = CreateFileW(devicePath, 0, FILE_SHARE_READ, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
+                
+                if (hidDeviceObject != INVALID_HANDLE_VALUE)
+                {
+                    try
+                    {
+                        IntPtr productBuffer = Marshal.AllocHGlobal((int)HID_STR_MAX_LEN * 2); // Unicode
+                        IntPtr manufacturerBuffer = Marshal.AllocHGlobal((int)HID_STR_MAX_LEN * 2);
+                        
+                        try
+                        {
+                            bool hasProduct = HidD_GetProductString(hidDeviceObject, productBuffer, HID_STR_MAX_LEN);
+                            bool hasManufacturer = HidD_GetManufacturerString(hidDeviceObject, manufacturerBuffer, HID_STR_MAX_LEN);
+                            
+                            if (hasProduct)
+                            {
+                                string productName = Marshal.PtrToStringUni(productBuffer) ?? "";
+                                
+                                if (hasManufacturer)
+                                {
+                                    string manufacturerName = Marshal.PtrToStringUni(manufacturerBuffer) ?? "";
+                                    
+                                    // If product already starts with manufacturer, use product only
+                                    if (!string.IsNullOrEmpty(productName) && !string.IsNullOrEmpty(manufacturerName))
+                                    {
+                                        if (productName.StartsWith(manufacturerName, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            return productName;
+                                        }
+                                        else
+                                        {
+                                            return $"{manufacturerName} {productName}";
+                                        }
+                                    }
+                                }
+                                
+                                return !string.IsNullOrEmpty(productName) ? productName : "Mouse Device";
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(productBuffer);
+                            Marshal.FreeHGlobal(manufacturerBuffer);
+                        }
+                    }
+                    finally
+                    {
+                        CloseHandle(hidDeviceObject);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"\n=== HID Device Name Error ===\nFailed to get exact name for {devicePath}: {ex.Message}");
+            }
+
+            // Fallback - extract basic info from device path
+            return ExtractBasicNameFromPath(devicePath);
+        }
+        
+        private string ExtractBasicNameFromPath(string devicePath)
+        {
+            if (string.IsNullOrEmpty(devicePath)) return "Unknown Device";
+
+            // Device path format: \\?\HID#VID_xxxx&PID_xxxx#...
+            // Extract VID and PID for basic identification as fallback
+            try
+            {
+                if (devicePath.Contains("VID_") && devicePath.Contains("PID_"))
+                {
+                    int vidStart = devicePath.IndexOf("VID_") + 4;
+                    int pidStart = devicePath.IndexOf("PID_") + 4;
+                    
+                    if (vidStart < devicePath.Length - 4 && pidStart < devicePath.Length - 4)
+                    {
+                        string vid = devicePath.Substring(vidStart, 4);
+                        string pid = devicePath.Substring(pidStart, 4);
+                        return $"Mouse (VID:{vid} PID:{pid})";
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback if parsing fails
+            }
+
+            return "Mouse Device";
+        }
+
+        private string GetDeviceHID(IntPtr deviceHandle)
+        {
+            if (deviceHandle == IntPtr.Zero) return string.Empty;
+
+            // Check cache first
+            if (deviceHIDCache.TryGetValue(deviceHandle, out string? cachedHID))
+            {
+                return cachedHID;
+            }
+
+            try
+            {
+                // Get device interface name first
+                uint nameLength = 0;
+                GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, IntPtr.Zero, ref nameLength);
+
+                if (nameLength > 0)
+                {
+                    IntPtr nameBuffer = Marshal.AllocHGlobal((int)nameLength * 2);
+                    try
+                    {
+                        if (GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, nameBuffer, ref nameLength) > 0)
+                        {
+                            string devicePath = Marshal.PtrToStringUni(nameBuffer) ?? string.Empty;
+                            
+                            if (!string.IsNullOrEmpty(devicePath))
+                            {
+                                // Get device instance ID using the device interface path
+                                uint propSize = 0;
+                                uint propType;
+                                Guid deviceInstanceIdKey = DEVPKEY_Device_InstanceId;
+                                
+                                // First call to get size
+                                uint result = CM_Get_Device_Interface_PropertyW(devicePath, ref deviceInstanceIdKey, out propType, IntPtr.Zero, ref propSize, 0);
+                                
+                                if (result == 0x0000001A && propSize > 0) // CR_BUFFER_SMALL
+                                {
+                                    IntPtr propBuffer = Marshal.AllocHGlobal((int)propSize);
+                                    try
+                                    {
+                                        result = CM_Get_Device_Interface_PropertyW(devicePath, ref deviceInstanceIdKey, out propType, propBuffer, ref propSize, 0);
+                                        
+                                        if (result == 0) // CR_SUCCESS
+                                        {
+                                            string instanceId = Marshal.PtrToStringUni(propBuffer) ?? string.Empty;
+                                            
+                                            // Remove the instance part (after last backslash) to get hardware ID
+                                            int lastBackslash = instanceId.LastIndexOf('\\');
+                                            string hardwareId = lastBackslash > 0 ? instanceId.Substring(0, lastBackslash) : instanceId;
+                                            
+                                            Debug.WriteLine($"\\n=== Device HID Extraction ===\\nDevice Path: {devicePath}\\nInstance ID: {instanceId}\\nHardware ID: {hardwareId}");
+                                            
+                                            deviceHIDCache[deviceHandle] = hardwareId;
+                                            return hardwareId;
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        Marshal.FreeHGlobal(propBuffer);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(nameBuffer);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"\\n=== Device HID Error ===\\nFailed to get HID for handle {deviceHandle.ToInt64():X}: {ex.Message}");
+            }
+
+            // Fallback - use handle as string
+            string fallbackHID = $"HANDLE_{deviceHandle.ToInt64():X}";
+            deviceHIDCache[deviceHandle] = fallbackHID;
+            return fallbackHID;
+        }
+
+        private void UpdateBackEndDeviceInfo(IntPtr deviceHandle)
+        {
+            if (backEnd == null) return;
+
+            string deviceName = GetDeviceName(deviceHandle);
+            string deviceHID = GetDeviceHID(deviceHandle);
+            
+            backEnd.UpdateCurrentInputDevice(deviceHandle, deviceHID, deviceName);
+        }
+
+        private void LogDeviceChange(IntPtr deviceHandle)
+        {
+            if (deviceHandle != lastActiveDeviceHandle)
+            {
+                string deviceName = GetDeviceName(deviceHandle);
+                
+                if (lastActiveDeviceHandle == IntPtr.Zero)
+                {
+                    Debug.WriteLine($"\n=== Mouse Device Detection ===\nInitial device detected: {deviceName} (Handle: {deviceHandle.ToInt64():X})");
+                }
+                else
+                {
+                    Debug.WriteLine($"\n=== Mouse Device Change ===\nFrom: {lastActiveDeviceName} (Handle: {lastActiveDeviceHandle.ToInt64():X})\nTo: {deviceName} (Handle: {deviceHandle.ToInt64():X})");
+                }
+                
+                lastActiveDeviceHandle = deviceHandle;
+                lastActiveDeviceName = deviceName;
+            }
+        }
+
+        private void LogAvailableMouseDevices()
+        {
+            try
+            {
+                uint deviceCount = 0;
+                
+                // First call to get the number of devices
+                if (GetRawInputDeviceList(IntPtr.Zero, ref deviceCount, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICELIST))) == 0 && deviceCount > 0)
+                {
+                    // Allocate memory for device list
+                    IntPtr deviceListPtr = Marshal.AllocHGlobal((int)(deviceCount * Marshal.SizeOf(typeof(RAWINPUTDEVICELIST))));
+                    
+                    try
+                    {
+                        // Second call to get the actual device list
+                        if (GetRawInputDeviceList(deviceListPtr, ref deviceCount, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICELIST))) != uint.MaxValue)
+                        {
+                            Debug.WriteLine($"\n=== Available Mouse Devices ({deviceCount} total devices) ===");
+                            
+                            for (int i = 0; i < deviceCount; i++)
+                            {
+                                IntPtr currentDevicePtr = IntPtr.Add(deviceListPtr, i * Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
+                                RAWINPUTDEVICELIST device = Marshal.PtrToStructure<RAWINPUTDEVICELIST>(currentDevicePtr);
+                                
+                                // Only log mouse devices (type 0 = mouse)
+                                if (device.dwType == 0)
+                                {
+                                    string deviceName = GetDeviceName(device.hDevice);
+                                    Debug.WriteLine($"Mouse {i + 1}: {deviceName} (Handle: {device.hDevice.ToInt64():X})");
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(deviceListPtr);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"\n=== Device Enumeration Error ===\nFailed to enumerate devices: {ex.Message}");
+            }
         }
 
         public void Dispose()

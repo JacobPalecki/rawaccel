@@ -34,8 +34,14 @@ namespace userspace_backend.Display
 
             foreach (CurvePoint point in Points)
             {
+                // Apply acceleration to input speed (counts/second)
                 var output = accel.Accelerate(point.MouseSpeed, 0, 1, 1);
+                
+                // Calculate output speed magnitude (counts/second)
                 var outputSpeed = Math.Sqrt(Math.Pow(output.Item1, 2) + Math.Pow(output.Item2, 2));
+                
+                // Store as acceleration multiplier (dimensionless ratio)
+                // Output = 1.0 means no acceleration, >1.0 means speed up, <1.0 means slow down
                 point.Output = outputSpeed / point.MouseSpeed;
             }
         }
@@ -51,6 +57,7 @@ namespace userspace_backend.Display
 
         protected void InitPoints()
         {
+            // Generate logarithmically distributed input speeds (counts/second)
             ICollection<double> speeds = CurveCalculationHelpers.CalculateCurvePointSpeeds();
             
             foreach (double speed in speeds)
@@ -63,10 +70,10 @@ namespace userspace_backend.Display
     public partial class CurvePoint : ObservableObject
     {
         [ObservableProperty]
-        public double mouseSpeed;
+        public double mouseSpeed; // Input speed in counts/second
 
         [ObservableProperty]
-        public double output;
+        public double output; // Acceleration multiplier (dimensionless ratio: output_speed / input_speed)
     }
 
 }

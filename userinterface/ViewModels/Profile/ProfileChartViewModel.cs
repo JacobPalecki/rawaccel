@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Media.Immutable;
 using LiveChartsCore;
+using System.Diagnostics;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
@@ -20,7 +21,9 @@ using userinterface.Services;
 using userspace_backend.Display;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend.Services;
+using userspace_backend;
 using BE = userspace_backend.Model;
+using Data = userspace_backend.Data;
 
 namespace userinterface.ViewModels.Profile
 {
@@ -66,6 +69,7 @@ namespace userinterface.ViewModels.Profile
         private readonly LocalizationService localizationService;
         private readonly PreviewChartRenderer previewRenderer;
         private readonly IMouseTrackingService mouseTrackingService;
+        private readonly BackEnd backEnd;
         private BE.ProfileModel currentProfileModel = null!;
         
         private SolidColorPaint? cachedXStroke;
@@ -78,12 +82,13 @@ namespace userinterface.ViewModels.Profile
         
         private readonly object syncObject = new object();
 
-        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTrackingService mouseTrackingService)
+        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTrackingService mouseTrackingService, BackEnd backEnd)
         {
             this.themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             this.localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
             this.previewRenderer = previewRenderer ?? throw new ArgumentNullException(nameof(previewRenderer));
             this.mouseTrackingService = mouseTrackingService ?? throw new ArgumentNullException(nameof(mouseTrackingService));
+            this.backEnd = backEnd ?? throw new ArgumentNullException(nameof(backEnd));
 
             RecreateAxesCommand = new RelayCommand(() => 
             {
@@ -111,6 +116,10 @@ namespace userinterface.ViewModels.Profile
         private bool hasUserInteracted = false;
         
         public bool IsRealTimeTrackingEnabled { get; private set; } = false;
+        
+        public string CurrentMouseDevice { get; private set; } = "No device detected";
+        
+        public string CurrentDeviceDPI { get; private set; } = "Unknown DPI";
         
         private readonly ObservableCollection<CurvePoint> currentSpeedData = new ObservableCollection<CurvePoint>();
         private readonly ObservableCollection<CurvePoint> currentYSpeedData = new ObservableCollection<CurvePoint>();
@@ -726,6 +735,15 @@ namespace userinterface.ViewModels.Profile
             
             var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
             
+            // Set BackEnd reference and get active device DPI
+            mouseTrackingService.SetBackEnd(backEnd);
+            
+            var activeDeviceModel = GetActiveDeviceModel();
+            if (activeDeviceModel != null)
+            {
+                mouseTrackingService.SetDeviceDPI(activeDeviceModel.DPI.CurrentValidatedValue);
+            }
+            
             if (currentSpeedDotSeries != null)
             {
                 currentSpeedDotSeries.IsVisible = true;
@@ -739,8 +757,16 @@ namespace userinterface.ViewModels.Profile
             mouseTrackingService.MouseIdle += OnMouseIdle;
             mouseTrackingService.StartTracking();
             
+            Debug.WriteLine("\n=== Real-Time Tracking Started ===\nChart will now display current mouse device and track movement.");
             
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
+        }
+
+        private BE.DeviceModel? GetActiveDeviceModel()
+        {
+            // For now, get the first device or return null to use default DPI
+            // TODO: Implement proper active device detection based on current mapping
+            return backEnd.Devices.Devices.FirstOrDefault();
         }
         
         private void StopRealTimeTracking()
@@ -755,6 +781,13 @@ namespace userinterface.ViewModels.Profile
             
             currentSpeedData.Clear();
             currentYSpeedData.Clear();
+            
+            CurrentMouseDevice = "No device detected";
+            CurrentDeviceDPI = "Unknown DPI";
+            OnPropertyChanged(nameof(CurrentMouseDevice));
+            OnPropertyChanged(nameof(CurrentDeviceDPI));
+            
+            Debug.WriteLine("\n=== Real-Time Tracking Stopped ===\nChart no longer tracking mouse devices.");
             
             if (currentSpeedDotSeries != null)
             {
@@ -774,25 +807,36 @@ namespace userinterface.ViewModels.Profile
             
             try
             {
+                // Update current device info using BackEnd cross-reference
+                var (deviceName, sourceDPI, isKnownDevice) = backEnd.GetCurrentDeviceInfo();
+                
+                string displayName = isKnownDevice ? deviceName : e.DeviceName;
+                string dpiInfo = $"{sourceDPI} DPI";
+                
+                if (CurrentMouseDevice != displayName || CurrentDeviceDPI != dpiInfo)
+                {
+                    Debug.WriteLine($"\n=== UI Device Change ===\nDevice: {displayName}\nDPI: {sourceDPI}\nKnown Device: {isKnownDevice}\nHandle: {e.DeviceHandle.ToInt64():X}");
+                    
+                    CurrentMouseDevice = displayName;
+                    CurrentDeviceDPI = dpiInfo;
+                    OnPropertyChanged(nameof(CurrentMouseDevice));
+                    OnPropertyChanged(nameof(CurrentDeviceDPI));
+                }
+                
                 var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
                 
                 if (hasYCurve)
                 {
-                    // Calculate separate X and Y speeds
-                    var xSpeed = Math.Abs(e.X) / 16.0 * 1000.0; // Convert to per second
-                    var ySpeed = Math.Abs(e.Y) / 16.0 * 1000.0; // Convert to per second
-                    
-                    var xOutputValue = InterpolateOutputFromSpeed(xSpeed, XCurvePreview);
-                    var yOutputValue = InterpolateOutputFromSpeed(ySpeed, YCurvePreview);
+                    var xOutputValue = InterpolateOutputFromSpeed(e.XSpeed, XCurvePreview);
+                    var yOutputValue = InterpolateOutputFromSpeed(e.YSpeed, YCurvePreview);
                     
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        UpdateCurrentSpeedDots(xSpeed, xOutputValue, ySpeed, yOutputValue, hasYCurve);
+                        UpdateCurrentSpeedDots(e.XSpeed, xOutputValue, e.YSpeed, yOutputValue, hasYCurve);
                     });
                 }
                 else
                 {
-                    // Combined mode - use combined speed
                     var outputValue = InterpolateOutputFromSpeed(e.MouseSpeed, XCurvePreview);
                     
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>

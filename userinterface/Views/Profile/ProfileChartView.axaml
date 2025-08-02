@@ -97,6 +97,42 @@
 			                    Opacity="{Binding ChartOpacity}"
 			                    ZoomMode="None"/>
 			
+			<!-- Current Mouse Device Display -->
+			<StackPanel Orientation="Horizontal"
+			            HorizontalAlignment="Left"
+			            VerticalAlignment="Top"
+			            Margin="16,16,16,2"
+			            IsVisible="{Binding IsRealTimeTrackingEnabled}">
+				<Border Background="{DynamicResource HoverBackgroundBrush}"
+				        BorderBrush="{DynamicResource BorderBrush}"
+				        BorderThickness="1"
+				        CornerRadius="4"
+				        Padding="8,4">
+					<StackPanel Orientation="Horizontal">
+						<!-- Green dot indicator -->
+						<Ellipse Width="8" Height="8"
+						         Fill="#FF00C853"
+						         VerticalAlignment="Center"
+						         Margin="0,0,6,0"/>
+						<!-- Device name -->
+						<TextBlock Text="{Binding CurrentMouseDevice}"
+						           Foreground="{DynamicResource PrimaryTextBrush}"
+						           FontSize="12"
+						           FontWeight="Medium"
+						           VerticalAlignment="Center"/>
+						<!-- DPI info -->
+						<TextBlock Text=" - "
+						           Foreground="{DynamicResource SecondaryTextBrush}"
+						           FontSize="12"
+						           VerticalAlignment="Center"/>
+						<TextBlock Text="{Binding CurrentDeviceDPI}"
+						           Foreground="{DynamicResource SecondaryTextBrush}"
+						           FontSize="12"
+						           VerticalAlignment="Center"/>
+					</StackPanel>
+				</Border>
+			</StackPanel>
+			
 			<!-- Chart Controls -->
 			<StackPanel Orientation="Horizontal"
 			            HorizontalAlignment="Right"

@@ -82,7 +82,47 @@ namespace userspace_backend
 
         public DATA.Settings Settings { get; set; }
 
+        public IntPtr CurrentInputDeviceHandle { get; private set; } = IntPtr.Zero;
+
+        public string CurrentInputDeviceHID { get; private set; } = string.Empty;
+
+        public string CurrentInputDeviceName { get; private set; } = string.Empty;
+
         protected IBackEndLoader BackEndLoader { get; set; }
+
+        public void UpdateCurrentInputDevice(IntPtr handle, string hid, string name)
+        {
+            CurrentInputDeviceHandle = handle;
+            CurrentInputDeviceHID = hid;
+            CurrentInputDeviceName = name;
+            Debug.WriteLine($"\n=== BackEnd Device Update ===\nDevice: {name}\nHID: {hid}\nHandle: {handle.ToInt64():X}");
+        }
+
+        public DeviceModel? FindDeviceByHID(string hid)
+        {
+            if (string.IsNullOrEmpty(hid)) return null;
+            
+            return Devices.Devices.FirstOrDefault(device => 
+                string.Equals(device.HardwareID.CurrentValidatedValue, hid, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public (string deviceName, int sourceDPI, bool isKnownDevice) GetCurrentDeviceInfo()
+        {
+            if (string.IsNullOrEmpty(CurrentInputDeviceHID))
+            {
+                return ("No device detected", 1000, false);
+            }
+
+            var matchedDevice = FindDeviceByHID(CurrentInputDeviceHID);
+            if (matchedDevice != null)
+            {
+                return (matchedDevice.Name.CurrentValidatedValue, matchedDevice.DPI.CurrentValidatedValue, true);
+            }
+
+            // Device not in configured devices list - use exact name from MouseTrackingService
+            // The MouseTrackingService already gets the exact device name using HID APIs
+            return (CurrentInputDeviceName, 1000, false);
+        }
 
         public void Load()
         {
