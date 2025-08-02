@@ -206,6 +206,12 @@
   <data name="ProfileClassicLinearEquivalent" xml:space="preserve">
     <value>Classic with a power of 2 is equal to linear</value>
   </data>
+  <data name="ProfileNotFound" xml:space="preserve">
+    <value>Profile '{0}' not found</value>
+  </data>
+  <data name="DeviceNotConnected" xml:space="preserve">
+    <value>Device '{0}' (ID: {1}) is not connected to the system</value>
+  </data>
 
   <!-- Modal Dialog Resources -->
   <data name="ModalOK" xml:space="preserve">

@@ -137,18 +137,21 @@ namespace userspace_backend
             }
         }
 
-        public void Apply()
+        public bool Apply()
         {
             try
             {
-                WriteToDriver();
+                bool success = WriteToDriver();
+                if (success)
+                {
+                    WriteSettingsToDisk();
+                }
+                return success;
             }
             catch (Exception)
             {
-                return;
+                return false;
             }
-
-            WriteSettingsToDisk();
         }
 
         public void ApplySettingsOnly()
@@ -166,17 +169,26 @@ namespace userspace_backend
             BackEndLoader.WriteSettings(Settings);
         }
 
-        protected void WriteToDriver()
+        protected bool WriteToDriver()
         {
             MappingModel mappingToApply = Mappings.GetMappingToSetActive();
+            
+            // Validate mappings before applying
+            if (!ValidateMappingBeforeApplying(mappingToApply))
+            {
+                return false;
+            }
+            
             DriverConfig config = MapToDriverConfig(mappingToApply);
             try
             {
                 config.Activate();
+                return true;
             }
             catch (Exception)
             {
                 // Log this once logging is added
+                return false;
             }
         }
 
@@ -228,6 +240,43 @@ namespace userspace_backend
                     minimumTime = 0.1,
                 }
             };
+        }
+
+        protected bool ValidateMappingBeforeApplying(MappingModel mapping)
+        {
+            bool hasErrors = false;
+            var systemDevices = MultiHandleDevice.GetList();
+            var systemDeviceIds = systemDevices.Select(d => d.id.ToUpperInvariant()).ToHashSet();
+
+            foreach (var individualMapping in mapping.IndividualMappings)
+            {
+                // Check if the profile exists
+                if (!Profiles.TryGetProfile(individualMapping.Profile.Name.ModelValue, out _))
+                {
+                    NotificationManager.QueueNotification("ProfileNotFound", NotificationType.Error, individualMapping.Profile.Name.ModelValue);
+                    hasErrors = true;
+                    continue;
+                }
+
+                // Get all devices in this device group
+                var devicesInGroup = Devices.Devices.Where(d => d.DeviceGroup.Equals(individualMapping.DeviceGroup));
+                
+                foreach (var device in devicesInGroup)
+                {
+                    // Skip ignored devices
+                    if (device.Ignore.ModelValue) continue;
+                    
+                    // Check if the device hardware ID exists in the system
+                    string deviceHwId = device.HardwareID.ModelValue.ToUpperInvariant();
+                    if (!string.IsNullOrEmpty(deviceHwId) && !systemDeviceIds.Contains(deviceHwId))
+                    {
+                        NotificationManager.QueueNotification("DeviceNotConnected", NotificationType.Error, device.Name.ModelValue, deviceHwId);
+                        hasErrors = true;
+                    }
+                }
+            }
+
+            return !hasErrors;
         }
     }
 }

@@ -90,9 +90,10 @@ public partial class MainWindow : Window
                 LoadingProgressBar.IsVisible = true;
             }
 
+            bool applySuccess = false;
             if (viewModel.ApplyCommand.CanExecute(null))
             {
-                viewModel.ApplyCommand.Execute(null);
+                applySuccess = viewModel.Apply();
             }
 
             await Task.Delay(1000);
@@ -102,7 +103,10 @@ public partial class MainWindow : Window
                 LoadingProgressBar.IsVisible = false;
             }
 
-            NotificationService.ShowSuccessToast("MainWindowSettingsAppliedSuccess");
+            if (applySuccess)
+            {
+                NotificationService.ShowSuccessToast("MainWindowSettingsAppliedSuccess");
+            }
 
             if (ApplyButtonControl != null)
             {
