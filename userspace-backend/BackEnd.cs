@@ -16,6 +16,7 @@ namespace userspace_backend
     {
         public string MessageKey { get; set; } = string.Empty;
         public NotificationType Type { get; set; }
+        public object[] FormatArgs { get; set; } = new object[0];
     }
 
     public enum NotificationType
@@ -29,13 +30,35 @@ namespace userspace_backend
     public static class NotificationManager
     {
         public static event EventHandler<NotificationEventArgs>? NotificationRequested;
+        public static event EventHandler<NotificationEventArgs>? QueuedNotificationRequested;
 
         public static void TriggerNotification(string messageKey, NotificationType type)
+        {
+            TriggerNotification(messageKey, type, new object[0]);
+        }
+
+        public static void TriggerNotification(string messageKey, NotificationType type, params object[] formatArgs)
         {
             NotificationRequested?.Invoke(null, new NotificationEventArgs
             {
                 MessageKey = messageKey,
-                Type = type
+                Type = type,
+                FormatArgs = formatArgs
+            });
+        }
+
+        public static void QueueNotification(string messageKey, NotificationType type)
+        {
+            QueueNotification(messageKey, type, new object[0]);
+        }
+
+        public static void QueueNotification(string messageKey, NotificationType type, params object[] formatArgs)
+        {
+            QueuedNotificationRequested?.Invoke(null, new NotificationEventArgs
+            {
+                MessageKey = messageKey,
+                Type = type,
+                FormatArgs = formatArgs
             });
         }
     }
@@ -87,6 +110,30 @@ namespace userspace_backend
             foreach (var profile in profileData)
             {
                 Profiles.TryAddProfile(profile);
+            }
+        }
+
+        public void ValidateDevicesAfterUIReady()
+        {
+            ValidateDevicesAvailability();
+        }
+
+        protected void ValidateDevicesAvailability()
+        {
+            Devices.RefreshSystemDevices();
+            
+            var systemDeviceHWIDs = Devices.SystemDevices
+                .Select(d => d.id)
+                .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var storedDevice in Devices.DevicesEnumerable)
+            {
+                var storedHWID = storedDevice.HardwareID.ModelValue;
+                
+                if (!string.IsNullOrEmpty(storedHWID) && !systemDeviceHWIDs.Contains(storedHWID))
+                {
+                    NotificationManager.QueueNotification("DeviceNoLongerAvailable", NotificationType.Warning, storedHWID);
+                }
             }
         }
 

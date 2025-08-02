@@ -63,6 +63,10 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         
         profileListView.SelectedProfileChanged += OnProfileSelected;
         BE.NotificationManager.NotificationRequested += OnBackEndNotificationRequested;
+        BE.NotificationManager.QueuedNotificationRequested += OnBackEndQueuedNotificationRequested;
+        
+        // Now that UI is ready and event handlers are subscribed, validate devices
+        backEnd.ValidateDevicesAfterUIReady();
     }
 
     public DevicesPageViewModel DevicesPage => devicesPage;
@@ -263,7 +267,35 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
             _ => ToastType.Info
         };
 
-        notificationService.ShowToast(e.MessageKey, toastType);
+        if (e.FormatArgs.Length > 0)
+        {
+            notificationService.ShowToast(e.MessageKey, toastType, 5000, e.FormatArgs);
+        }
+        else
+        {
+            notificationService.ShowToast(e.MessageKey, toastType);
+        }
+    }
+
+    private void OnBackEndQueuedNotificationRequested(object? sender, BE.NotificationEventArgs e)
+    {
+        var toastType = e.Type switch
+        {
+            BE.NotificationType.Info => ToastType.Info,
+            BE.NotificationType.Success => ToastType.Success,
+            BE.NotificationType.Warning => ToastType.Warning,
+            BE.NotificationType.Error => ToastType.Error,
+            _ => ToastType.Info
+        };
+
+        if (e.FormatArgs.Length > 0)
+        {
+            notificationService.QueueToast(e.MessageKey, toastType, 5000, e.FormatArgs);
+        }
+        else
+        {
+            notificationService.QueueToast(e.MessageKey, toastType);
+        }
     }
 
     public new event PropertyChangedEventHandler? PropertyChanged;

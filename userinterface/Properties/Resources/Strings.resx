@@ -194,6 +194,9 @@
   <data name="MainWindowSettingsAppliedSuccess" xml:space="preserve">
     <value>Settings applied successfully!</value>
   </data>
+  <data name="DeviceNoLongerAvailable" xml:space="preserve">
+    <value>HID {0} is no longer available</value>
+  </data>
   <data name="NoActiveMappingFoundUsingDefault" xml:space="preserve">
     <value>No active mapping found, using default mapping</value>
   </data>
