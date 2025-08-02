@@ -104,6 +104,11 @@ namespace userspace_backend
             WriteSettingsToDisk();
         }
 
+        public void ApplySettingsOnly()
+        {
+            WriteSettingsToDisk();
+        }
+
         protected void WriteSettingsToDisk()
         {
             BackEndLoader.WriteSettingsToDisk(
@@ -121,7 +126,6 @@ namespace userspace_backend
             try
             {
                 config.Activate();
-                NotificationManager.TriggerNotification("MainWindowSettingsAppliedSuccess", NotificationType.Success);
             }
             catch (Exception)
             {
