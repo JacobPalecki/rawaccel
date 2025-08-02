@@ -100,21 +100,6 @@ namespace userspace_backend.Services
         private double lastY = 0;
         private bool useHighPrecisionTiming = false;
 
-        // Signal processing for smoothing and outlier detection
-        private readonly double[] speedHistory = new double[5]; // Rolling window for smoothing
-        private int speedHistoryIndex = 0;
-        private bool speedHistoryFull = false;
-        private double lastValidSpeed = 0;
-        private const double OutlierThreshold = 5.0; // Max 5x speed increase
-        private const double SmoothingFactor = 0.3; // Exponential smoothing factor
-
-        // Performance optimizations
-        private readonly object eventArgsPool = new object();
-        private MouseMovementEventArgs? pooledEventArgs;
-        private double predictedSpeed = 0;
-        private long sampleCount = 0;
-        private double averageTimeDelta = 16.67; // Initial estimate for 60Hz
-
         public event EventHandler<MouseMovementEventArgs>? MouseMoved;
         public event EventHandler? MouseIdle;
         public bool IsTracking => isTracking;
@@ -124,33 +109,22 @@ namespace userspace_backend.Services
             throttleTimer = new Timer(OnTimerTick, null, Timeout.Infinite, Timeout.Infinite);
             idleTimer = new Timer(OnIdleTimeout, null, Timeout.Infinite, Timeout.Infinite);
             
-            // Initialize high-precision timing
             if (QueryPerformanceFrequency(out performanceFrequency))
             {
                 useHighPrecisionTiming = true;
-                System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] High-precision timing enabled (freq: {performanceFrequency} Hz)");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Falling back to GetTickCount timing");
             }
         }
 
         public void SetWindowHandle(IntPtr hwnd)
         {
             hwndSource = hwnd;
-            System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] Window handle set: {hwnd}");
         }
 
         public void StartTracking()
         {
             if (isTracking) return;
 
-            if (hwndSource == IntPtr.Zero)
-            {
-                System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Cannot start tracking: No window handle set");
-                return;
-            }
+            if (hwndSource == IntPtr.Zero) return;
 
             try
             {
@@ -166,17 +140,11 @@ namespace userspace_backend.Services
                 {
                     isTracking = true;
                     throttleTimer.Change(16, 16); // ~60 FPS
-                    System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Started tracking");
-                }
-                else
-                {
-                    var error = Marshal.GetLastWin32Error();
-                    System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] Failed to register raw input devices. Error: {error}");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] Error starting tracking: {ex.Message}");
+                // Silently fail
             }
         }
 
@@ -200,15 +168,10 @@ namespace userspace_backend.Services
                 throttleTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 lastEventArgs = null;
-                
-                // Reset performance metrics
-                ResetPerformanceMetrics();
-                
-                System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Stopped tracking");
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] Error stopping tracking: {ex.Message}");
+                // Silently fail
             }
         }
 
@@ -241,9 +204,9 @@ namespace userspace_backend.Services
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] Error processing raw input: {ex.Message}");
+                // Silently fail during raw input processing
             }
         }
 
@@ -265,96 +228,14 @@ namespace userspace_backend.Services
                 MouseSpeed = speed,
                 X = deltaX,
                 Y = deltaY,
-                OutputSpeed = speed // Will be calculated later with curve interpolation
+                OutputSpeed = speed
             };
 
             lastEventArgs = eventArgs;
             
-            // Reset idle timer on movement
             idleTimer.Change(IdleTimeoutMs, Timeout.Infinite);
         }
 
-        private double ProcessSpeedSignal(double rawSpeed)
-        {
-            // Outlier detection - reject impossible speed spikes
-            if (lastValidSpeed > 0 && rawSpeed > lastValidSpeed * OutlierThreshold)
-            {
-                // Use exponentially smoothed value instead of the outlier
-                return lastValidSpeed * (1 + SmoothingFactor);
-            }
-
-            // Add to rolling history
-            speedHistory[speedHistoryIndex] = rawSpeed;
-            speedHistoryIndex = (speedHistoryIndex + 1) % speedHistory.Length;
-            if (!speedHistoryFull && speedHistoryIndex == 0)
-                speedHistoryFull = true;
-
-            // Calculate smoothed speed using moving average
-            double smoothedSpeed = CalculateMovingAverage();
-            
-            // Apply exponential smoothing for responsiveness
-            double finalSpeed = lastValidSpeed == 0 ? smoothedSpeed : 
-                lastValidSpeed * (1 - SmoothingFactor) + smoothedSpeed * SmoothingFactor;
-
-            lastValidSpeed = finalSpeed;
-            return finalSpeed;
-        }
-
-        private double CalculateMovingAverage()
-        {
-            double sum = 0;
-            int count = speedHistoryFull ? speedHistory.Length : speedHistoryIndex;
-            
-            if (count == 0) return 0;
-
-            for (int i = 0; i < count; i++)
-            {
-                sum += speedHistory[i];
-            }
-
-            return sum / count;
-        }
-
-        private MouseMovementEventArgs GetPooledEventArgs()
-        {
-            lock (eventArgsPool)
-            {
-                if (pooledEventArgs == null)
-                {
-                    pooledEventArgs = new MouseMovementEventArgs();
-                }
-                return pooledEventArgs;
-            }
-        }
-
-        private void UpdatePerformanceMetrics(double timeMs, double speed)
-        {
-            sampleCount++;
-            
-            // Update running average of time delta for polling rate estimation
-            if (sampleCount > 1)
-            {
-                averageTimeDelta = (averageTimeDelta * 0.95) + (timeMs * 0.05);
-            }
-            
-            // Simple prediction for next speed (linear extrapolation)
-            if (lastValidSpeed > 0)
-            {
-                double speedDelta = speed - lastValidSpeed;
-                predictedSpeed = speed + speedDelta * 0.5; // Predict half a delta ahead
-            }
-            else
-            {
-                predictedSpeed = speed;
-            }
-            
-            // Log performance metrics periodically
-            if (sampleCount % 1000 == 0)
-            {
-                double estimatedPollingRate = 1000.0 / averageTimeDelta;
-                System.Diagnostics.Debug.WriteLine($"[MOUSE TRACKING] Avg delta: {averageTimeDelta:F2}ms, Est. polling: {estimatedPollingRate:F0}Hz");
-            }
-        }
 
         private double GetHighPrecisionTimeMs()
         {
@@ -371,12 +252,10 @@ namespace userspace_backend.Services
                     long deltaCounter = currentCounter - lastPerformanceCounter;
                     lastPerformanceCounter = currentCounter;
                     
-                    // Convert to milliseconds with high precision
                     return (double)deltaCounter * 1000.0 / performanceFrequency;
                 }
             }
             
-            // Fallback to GetTickCount
             uint currentTick = GetTickCount();
             if (lastTickCount == 0)
             {
@@ -389,37 +268,13 @@ namespace userspace_backend.Services
             return timeMs;
         }
 
-        private static double CalculateOptimizedSpeed(double x, double y, double timeMs)
-        {
-            if (timeMs <= 0) return 0;
-            
-            double magnitude = OptimizedMagnitude(x, y);
-            return magnitude / timeMs * 1000.0; // Convert to per second
-        }
-
-        private static double OptimizedMagnitude(double x, double y)
-        {
-            // Fast path optimizations from original grapher
-            if (x == 0)
-            {
-                return Math.Abs(y);
-            }
-
-            if (y == 0)
-            {
-                return Math.Abs(x);
-            }
-
-            // For non-axis-aligned movement, use standard distance formula
-            return Math.Sqrt(x * x + y * y);
-        }
 
         private static double CalculateSpeed(double x, double y, double timeMs)
         {
             if (timeMs <= 0) return 0;
             
             double distance = Math.Sqrt(x * x + y * y);
-            return distance / timeMs * 1000.0; // Convert to per second
+            return distance / timeMs * 1000.0;
         }
 
         private void OnTimerTick(object? state)
@@ -435,7 +290,6 @@ namespace userspace_backend.Services
         private void OnIdleTimeout(object? state)
         {
             MouseIdle?.Invoke(this, EventArgs.Empty);
-            System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Mouse idle detected");
         }
 
         public void Dispose()
@@ -448,17 +302,5 @@ namespace userspace_backend.Services
             idleTimer?.Dispose();
         }
 
-        private void ResetPerformanceMetrics()
-        {
-            lastValidSpeed = 0;
-            predictedSpeed = 0;
-            sampleCount = 0;
-            averageTimeDelta = 16.67;
-            speedHistoryIndex = 0;
-            speedHistoryFull = false;
-            lastPerformanceCounter = 0;
-            lastTickCount = 0;
-            Array.Clear(speedHistory, 0, speedHistory.Length);
-        }
     }
 }

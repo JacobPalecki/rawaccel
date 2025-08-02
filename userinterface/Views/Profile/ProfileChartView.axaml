@@ -94,7 +94,8 @@
 			                    TooltipTextSize="12"
 			                    AutoUpdateEnabled="True"
 			                    IsVisible="{Binding IsInteractiveMode}"
-			                    Opacity="{Binding ChartOpacity}"/>
+			                    Opacity="{Binding ChartOpacity}"
+			                    ZoomMode="None"/>
 			
 			<!-- Chart Controls -->
 			<StackPanel Orientation="Horizontal"

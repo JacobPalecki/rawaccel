@@ -115,6 +115,12 @@ namespace userinterface.ViewModels.Profile
         private readonly ObservableCollection<CurvePoint> currentSpeedData = new ObservableCollection<CurvePoint>();
         private readonly ObservableCollection<CurvePoint> currentYSpeedData = new ObservableCollection<CurvePoint>();
 
+        private double maxXAxisLimit = 0;
+        private double maxYAxisLimit = 0;
+        private bool preventAxisShrinking = true;
+        private double currentMaxXData = 0;
+        private double currentMaxYData = 0;
+
         public object Sync => syncObject;
 
         private ICurvePreview XCurvePreview { get; set; } = null!;
@@ -184,6 +190,7 @@ namespace userinterface.ViewModels.Profile
                                 
                                 this.themeService.ThemeChanged += OnThemeChanged;
                                 this.localizationService.PropertyChanged += OnLocalizationChanged;
+                                
                                 OnPropertyChanged(nameof(XAxes));
                                 OnPropertyChanged(nameof(YAxes));
                                 OnPropertyChanged(nameof(TooltipTextPaint));
@@ -194,19 +201,15 @@ namespace userinterface.ViewModels.Profile
                                 
                                 IsInitialized = true;
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
-                                System.Diagnostics.Debug.WriteLine($"[CHART INIT] Error in UI thread: {ex.Message}");
-                                
                                 IsLoadingChart = false;
                                 OnPropertyChanged(nameof(IsLoadingChart));
                             }
                         });
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[CHART INIT] Error in background initialization: {ex.Message}");
-                        
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             IsLoadingChart = false;
@@ -571,6 +574,40 @@ namespace userinterface.ViewModels.Profile
             XAxes[0].MaxLimit = maxX + xPadding;
             YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
             YAxes[0].MaxLimit = maxY + yPadding;
+            
+            if (preventAxisShrinking)
+            {
+                maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
+                maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
+                currentMaxXData = maxX;
+                currentMaxYData = maxY;
+            }
+        }
+
+        private void UpdateAxisLimitsIfNeeded()
+        {
+            if (!preventAxisShrinking || XAxes == null || YAxes == null) return;
+            
+            var xAxis = XAxes[0];
+            var yAxis = YAxes[0];
+            
+            // Calculate padded limits based on data
+            var xPadding = currentMaxXData * 0.1;
+            var yPadding = currentMaxYData * 0.1;
+            var newXMax = currentMaxXData + xPadding;
+            var newYMax = currentMaxYData + yPadding;
+            
+            if (newXMax > maxXAxisLimit)
+            {
+                maxXAxisLimit = newXMax;
+                xAxis.MaxLimit = maxXAxisLimit;
+            }
+            
+            if (newYMax > maxYAxisLimit)
+            {
+                maxYAxisLimit = newYMax;
+                yAxis.MaxLimit = maxYAxisLimit;
+            }
         }
 
         private void OnThemeChanged(object? sender, EventArgs e)
@@ -578,7 +615,6 @@ namespace userinterface.ViewModels.Profile
             TooltipTextPaint.Color = themeService.GetCachedColor(AxisTitleBrush);
             TooltipBackgroundPaint.Color = themeService.GetCachedColor(TooltipBackgroundBrush).WithAlpha(TooltipBackgroundAlpha);
 
-            // Update current speed dot colors
             var accentColor = themeService.GetCachedColor("SecondaryAccentBrush");
             if (currentSpeedDotSeries != null)
             {
@@ -604,9 +640,9 @@ namespace userinterface.ViewModels.Profile
             }
 
             var currentXMin = XAxes?[0]?.MinLimit;
-            var currentXMax = XAxes?[0]?.MaxLimit;
+            var currentXMax = preventAxisShrinking ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
-            var currentYMax = YAxes?[0]?.MaxLimit;
+            var currentYMax = preventAxisShrinking ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
 
@@ -617,9 +653,9 @@ namespace userinterface.ViewModels.Profile
         private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
         {
             var currentXMin = XAxes?[0]?.MinLimit;
-            var currentXMax = XAxes?[0]?.MaxLimit;
+            var currentXMax = preventAxisShrinking ? maxXAxisLimit : XAxes?[0]?.MaxLimit;
             var currentYMin = YAxes?[0]?.MinLimit;
-            var currentYMax = YAxes?[0]?.MaxLimit;
+            var currentYMax = preventAxisShrinking ? maxYAxisLimit : YAxes?[0]?.MaxLimit;
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
         }
@@ -703,7 +739,6 @@ namespace userinterface.ViewModels.Profile
             mouseTrackingService.MouseIdle += OnMouseIdle;
             mouseTrackingService.StartTracking();
             
-            System.Diagnostics.Debug.WriteLine($"[CHART] Current speed tracking enabled (Y curve: {hasYCurve})");
             
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
         }
@@ -768,7 +803,6 @@ namespace userinterface.ViewModels.Profile
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[CHART] Error processing mouse movement: {ex.Message}");
             }
         }
         
@@ -841,6 +875,25 @@ namespace userinterface.ViewModels.Profile
             {
                 currentYSpeedDotSeries.IsVisible = IsRealTimeTrackingEnabled && hasYCurve;
             }
+            
+            // Track maximum data values for axis expansion
+            if (xSpeed > currentMaxXData || ySpeed > currentMaxXData)
+            {
+                currentMaxXData = Math.Max(xSpeed, ySpeed);
+                UpdateAxisLimitsIfNeeded();
+            }
+            
+            if (xOutputValue.HasValue && xOutputValue.Value > currentMaxYData)
+            {
+                currentMaxYData = xOutputValue.Value;
+                UpdateAxisLimitsIfNeeded();
+            }
+            
+            if (yOutputValue.HasValue && yOutputValue.Value > currentMaxYData)
+            {
+                currentMaxYData = yOutputValue.Value;
+                UpdateAxisLimitsIfNeeded();
+            }
         }
         
         private void OnMouseIdle(object? sender, EventArgs e)
@@ -849,11 +902,8 @@ namespace userinterface.ViewModels.Profile
             
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                // Animate dots out when mouse becomes idle
                 currentSpeedData.Clear();
                 currentYSpeedData.Clear();
-                
-                System.Diagnostics.Debug.WriteLine("[CHART] Mouse idle - dots hidden");
             });
         }
     }
