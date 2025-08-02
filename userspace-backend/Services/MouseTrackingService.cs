@@ -16,6 +16,7 @@ namespace userspace_backend.Services
     public interface IMouseTrackingService : IDisposable
     {
         event EventHandler<MouseMovementEventArgs>? MouseMoved;
+        event EventHandler? MouseIdle;
         bool IsTracking { get; }
         void SetWindowHandle(IntPtr hwnd);
         void StartTracking();
@@ -26,10 +27,12 @@ namespace userspace_backend.Services
     public class MouseTrackingService : IMouseTrackingService
     {
         private readonly Timer throttleTimer;
+        private readonly Timer idleTimer;
         private volatile MouseMovementEventArgs? lastEventArgs;
         private volatile bool isTracking = false;
         private IntPtr hwndSource = IntPtr.Zero;
         private bool disposed = false;
+        private const int IdleTimeoutMs = 1000; // 1 second of no movement = idle
 
         // Raw Input structures and constants
         private const int WM_INPUT = 0x00FF;
@@ -89,11 +92,13 @@ namespace userspace_backend.Services
         private double lastY = 0;
 
         public event EventHandler<MouseMovementEventArgs>? MouseMoved;
+        public event EventHandler? MouseIdle;
         public bool IsTracking => isTracking;
 
         public MouseTrackingService()
         {
             throttleTimer = new Timer(OnTimerTick, null, Timeout.Infinite, Timeout.Infinite);
+            idleTimer = new Timer(OnIdleTimeout, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         public void SetWindowHandle(IntPtr hwnd)
@@ -158,6 +163,7 @@ namespace userspace_backend.Services
                 
                 isTracking = false;
                 throttleTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 lastEventArgs = null;
                 
                 System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Stopped tracking");
@@ -228,6 +234,9 @@ namespace userspace_backend.Services
             };
 
             lastEventArgs = eventArgs;
+            
+            // Reset idle timer on movement
+            idleTimer.Change(IdleTimeoutMs, Timeout.Infinite);
         }
 
         private static double CalculateSpeed(double x, double y, double timeMs)
@@ -247,6 +256,12 @@ namespace userspace_backend.Services
                 lastEventArgs = null;
             }
         }
+        
+        private void OnIdleTimeout(object? state)
+        {
+            MouseIdle?.Invoke(this, EventArgs.Empty);
+            System.Diagnostics.Debug.WriteLine("[MOUSE TRACKING] Mouse idle detected");
+        }
 
         public void Dispose()
         {
@@ -255,6 +270,7 @@ namespace userspace_backend.Services
 
             StopTracking();
             throttleTimer?.Dispose();
+            idleTimer?.Dispose();
         }
     }
 }

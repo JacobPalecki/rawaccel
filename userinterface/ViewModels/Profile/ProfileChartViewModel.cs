@@ -700,6 +700,7 @@ namespace userinterface.ViewModels.Profile
             }
             
             mouseTrackingService.MouseMoved += OnMouseMoved;
+            mouseTrackingService.MouseIdle += OnMouseIdle;
             mouseTrackingService.StartTracking();
             
             System.Diagnostics.Debug.WriteLine($"[CHART] Current speed tracking enabled (Y curve: {hasYCurve})");
@@ -714,6 +715,7 @@ namespace userinterface.ViewModels.Profile
             IsRealTimeTrackingEnabled = false;
             
             mouseTrackingService.MouseMoved -= OnMouseMoved;
+            mouseTrackingService.MouseIdle -= OnMouseIdle;
             mouseTrackingService.StopTracking();
             
             currentSpeedData.Clear();
@@ -802,18 +804,32 @@ namespace userinterface.ViewModels.Profile
         {
             if (!IsRealTimeTrackingEnabled) return;
             
-            // Update X speed dot (always visible when tracking)
-            currentSpeedData.Clear();
+            // Update X speed dot position (keep it persistent, just update position)
             if (xOutputValue.HasValue && xSpeed > 0)
             {
-                currentSpeedData.Add(new CurvePoint { MouseSpeed = xSpeed, Output = xOutputValue.Value });
+                if (currentSpeedData.Count == 0)
+                {
+                    currentSpeedData.Add(new CurvePoint { MouseSpeed = xSpeed, Output = xOutputValue.Value });
+                }
+                else
+                {
+                    currentSpeedData[0].MouseSpeed = xSpeed;
+                    currentSpeedData[0].Output = xOutputValue.Value;
+                }
             }
             
-            // Update Y speed dot (only visible when separate curves)
-            currentYSpeedData.Clear();
+            // Update Y speed dot position (only when separate curves)
             if (hasYCurve && yOutputValue.HasValue && ySpeed > 0)
             {
-                currentYSpeedData.Add(new CurvePoint { MouseSpeed = ySpeed, Output = yOutputValue.Value });
+                if (currentYSpeedData.Count == 0)
+                {
+                    currentYSpeedData.Add(new CurvePoint { MouseSpeed = ySpeed, Output = yOutputValue.Value });
+                }
+                else
+                {
+                    currentYSpeedData[0].MouseSpeed = ySpeed;
+                    currentYSpeedData[0].Output = yOutputValue.Value;
+                }
             }
             
             // Update dot visibility based on curve separation
@@ -825,6 +841,20 @@ namespace userinterface.ViewModels.Profile
             {
                 currentYSpeedDotSeries.IsVisible = IsRealTimeTrackingEnabled && hasYCurve;
             }
+        }
+        
+        private void OnMouseIdle(object? sender, EventArgs e)
+        {
+            if (!IsRealTimeTrackingEnabled) return;
+            
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                // Animate dots out when mouse becomes idle
+                currentSpeedData.Clear();
+                currentYSpeedData.Clear();
+                
+                System.Diagnostics.Debug.WriteLine("[CHART] Mouse idle - dots hidden");
+            });
         }
     }
 }
