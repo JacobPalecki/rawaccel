@@ -25,7 +25,7 @@ namespace userinterface.Views.Controls
         private volatile bool areAnimationsActive;
 
         private const double ToastHeight = 80.0;
-        private const double ToastSpacing = 10.0;
+        private const double ToastSpacing = -10;
         private const int AnimationDurationMs = 400;
         private const int EntryStaggerMs = 50;
         private const int ExitStaggerMs = 30;
