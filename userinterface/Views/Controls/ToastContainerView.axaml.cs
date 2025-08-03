@@ -203,8 +203,28 @@ namespace userinterface.Views.Controls
 
             try
             {
-                // Set exit transform with slide-left and slide-down - transitions will handle the animation
-                toast.RenderTransform = TransformOperations.Parse($"translate({-SlideLeftDistance}px, {BasePosition}px)");
+                // Calculate the current Y position based on the toast's position in the collection
+                var currentY = 0.0;
+                if (DataContext is ToastContainerViewModel viewModel)
+                {
+                    var toastIndex = -1;
+                    for (int i = 0; i < viewModel.ToastItems.Count; i++)
+                    {
+                        if (viewModel.ToastItems[i].Id == toastId)
+                        {
+                            toastIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    if (toastIndex >= 0)
+                    {
+                        currentY = CalculatePositionForIndex(toastIndex);
+                    }
+                }
+
+                // Set exit transform with slide-left only, preserving current Y position
+                toast.RenderTransform = TransformOperations.Parse($"translate({-SlideLeftDistance}px, {currentY}px)");
                 toast.Opacity = 0.0;
 
                 // Wait for animation to complete (using shorter exit duration)

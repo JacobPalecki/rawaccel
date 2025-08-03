@@ -176,7 +176,7 @@
                             Classes="ToastProgressBar"
                             Value="{Binding Progress}"
                             Maximum="100"
-                            IsVisible="{Binding IsVisible}" />
+                            IsVisible="{Binding ShowProgressBar}" />
 			</Grid>
 		</Border>
 	</Grid>

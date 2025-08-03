@@ -16,6 +16,7 @@ namespace userinterface.ViewModels.Controls
     {
         private readonly INotificationService notificationService;
         private bool isVisible;
+        private bool showProgressBar = true;
         private string message = string.Empty;
         private ToastType type;
         private double progress = 100;
@@ -43,6 +44,16 @@ namespace userinterface.ViewModels.Controls
             set
             {
                 isVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowProgressBar
+        {
+            get => showProgressBar;
+            set
+            {
+                showProgressBar = value;
                 OnPropertyChanged();
             }
         }
@@ -133,6 +144,7 @@ namespace userinterface.ViewModels.Controls
                                 if (IsVisible)
                                 {
                                     IsVisible = false;
+                                    // Keep ShowProgressBar true during exit animation
                                     ToastExpired?.Invoke(this, Id);
                                 }
                             });
@@ -156,6 +168,7 @@ namespace userinterface.ViewModels.Controls
             Message = message;
             Type = type;
             IsVisible = true;
+            ShowProgressBar = true;
             Progress = 100;
 
             _ = StartProgressAnimation(duration);
