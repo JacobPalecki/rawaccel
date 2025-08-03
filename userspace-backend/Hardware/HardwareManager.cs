@@ -143,11 +143,6 @@ namespace userspace_backend.Hardware
             return deviceName;
         }
 
-        public void EnsureActiveDeviceSet()
-        {
-            var device = ActiveDevice;
-        }
-
         public (string userConfiguredName, string productString, bool hasProductString) GetCurrentDeviceDisplayInfo()
         {
             if (string.IsNullOrEmpty(CurrentInputDeviceHID))

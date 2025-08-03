@@ -151,7 +151,14 @@ namespace userspace_backend
         public void ValidateDevicesAfterUIReady()
         {
             ValidateDevicesAvailability();
-            Hardware.EnsureActiveDeviceSet();
+            
+            // Access ActiveDevice to ensure it's set (getter will create temporary if needed)
+            var activeDevice = Hardware.ActiveDevice;
+            if (activeDevice != null && !Devices.Devices.Contains(activeDevice))
+            {
+                // Active device is not in the configured devices list (it's a temporary device)
+                NotificationManager.QueueNotification("UnconfiguredDeviceDetected", NotificationType.Info, activeDevice.Name.CurrentValidatedValue);
+            }
         }
 
         protected void ValidateDevicesAvailability()
