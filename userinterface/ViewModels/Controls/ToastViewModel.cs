@@ -144,7 +144,6 @@ namespace userinterface.ViewModels.Controls
                                 if (IsVisible)
                                 {
                                     IsVisible = false;
-                                    // Keep ShowProgressBar true during exit animation
                                     ToastExpired?.Invoke(this, Id);
                                 }
                             });
@@ -174,17 +173,24 @@ namespace userinterface.ViewModels.Controls
             _ = StartProgressAnimation(duration);
         }
 
+        public void Close()
+        {
+            animationCancellation?.Cancel();
+            Progress = 0;
+            if (IsVisible)
+            {
+                IsVisible = false;
+                ToastExpired?.Invoke(this, Id);
+            }
+        }
+
         public void ForceClose()
         {
             animationCancellation?.Cancel();
             IsVisible = false;
+            ShowProgressBar = false;
             Progress = 0;
             ToastExpired?.Invoke(this, Id);
-        }
-
-        private void Close()
-        {
-            ForceClose();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -28,7 +28,6 @@ namespace userinterface.ViewModels.Controls
             ToastItems = new ObservableCollection<ToastViewModel>();
             
             this.notificationService.ToastRequested += OnToastRequested;
-            this.notificationService.ToastDismissed += OnToastDismissed;
         }
 
         public ObservableCollection<ToastViewModel> ToastItems { get; }
@@ -45,36 +44,24 @@ namespace userinterface.ViewModels.Controls
                 var toastViewModel = new ToastViewModel(notificationService, Guid.NewGuid());
                 toastViewModel.SetToastData(e.Message, e.Type, e.Duration);
                 
-                // Add to queue instead of directly to display
                 toastQueue.Enqueue(toastViewModel);
-                
-                // Process queue to show toast if space available
                 ProcessQueue();
             });
         }
 
-        private void OnToastDismissed(object? sender, EventArgs e)
-        {
-        }
 
         private void ProcessQueue()
         {
-            // Prevent recursive calls and race conditions
             if (isProcessingQueue) return;
             
             isProcessingQueue = true;
             
             try
             {
-                // Process queue while we have space and pending toasts
                 while (ToastItems.Count < MaxToasts && toastQueue.Count > 0)
                 {
                     var toastViewModel = toastQueue.Dequeue();
-                    
-                    // Set up event handler for expiration
                     toastViewModel.ToastExpired += OnIndividualToastExpired;
-                    
-                    // Insert new toast at the beginning (bottom of visual stack)
                     ToastItems.Insert(0, toastViewModel);
                 }
             }
@@ -91,33 +78,32 @@ namespace userinterface.ViewModels.Controls
                 var toastToRemove = ToastItems.FirstOrDefault(t => t.Id == toastId);
                 if (toastToRemove != null && containerView != null)
                 {
-                    // Find the toast view and trigger exit animation
-                    var itemsControl = containerView.FindControl<ItemsControl>("ToastItemsControl");
-                    if (itemsControl?.Presenter?.Panel != null)
+                    var toastView = FindToastView(toastId);
+                    if (toastView != null)
                     {
-                        // Find the ToastView for this toast
-                        foreach (var child in itemsControl.Presenter.Panel.Children)
-                        {
-                            if (child is ContentPresenter contentPresenter && 
-                                contentPresenter.Child is ToastView toastView &&
-                                toastView.DataContext is ToastViewModel vm && 
-                                vm.Id == toastId)
-                            {
-                                // Trigger exit animation
-                                await containerView.AnimateToastExit(toastView);
-                                break;
-                            }
-                        }
+                        await containerView.AnimateToastExit(toastView);
                     }
                     
                     toastToRemove.ToastExpired -= OnIndividualToastExpired;
                     ToastItems.Remove(toastToRemove);
                     toastToRemove.Dispose();
                     
-                    // Process queue to show next pending toast
                     ProcessQueue();
                 }
             });
+        }
+
+        private ToastView? FindToastView(Guid toastId)
+        {
+            if (containerView == null) return null;
+            
+            var itemsControl = containerView.FindControl<ItemsControl>("ToastItemsControl");
+            if (itemsControl?.Presenter?.Panel == null) return null;
+
+            return itemsControl.Presenter.Panel.Children
+                .OfType<ContentPresenter>()
+                .Select(cp => cp.Child as ToastView)
+                .FirstOrDefault(tv => tv?.DataContext is ToastViewModel vm && vm.Id == toastId);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -132,10 +118,8 @@ namespace userinterface.ViewModels.Controls
             if (notificationService != null)
             {
                 notificationService.ToastRequested -= OnToastRequested;
-                notificationService.ToastDismissed -= OnToastDismissed;
             }
 
-            // Clean up displayed toasts
             foreach (var toast in ToastItems)
             {
                 toast.ToastExpired -= OnIndividualToastExpired;
@@ -143,7 +127,6 @@ namespace userinterface.ViewModels.Controls
             }
             ToastItems.Clear();
             
-            // Clean up queued toasts
             while (toastQueue.Count > 0)
             {
                 var queuedToast = toastQueue.Dequeue();

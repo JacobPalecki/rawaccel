@@ -29,7 +29,6 @@ namespace userinterface.Views.Controls
         private const int AnimationDurationMs = 400;
         private const int ExitAnimationDurationMs = 180;
         private const int EntryStaggerMs = 50;
-        private const int ExitStaggerMs = 30;
         private const double BasePosition = 120.0;
         private const double SlideLeftDistance = 120.0;
 
@@ -48,7 +47,6 @@ namespace userinterface.Views.Controls
                 {
                     await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
-                        // Focus on the new toast (index 0) when added
                         var focusIndex = args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add ? 0 : -1;
                         await AnimateAllToastsToPositions(focusIndex);
                     });
@@ -114,20 +112,9 @@ namespace userinterface.Views.Controls
 
             var toastId = toastViewModel.Id;
 
-            lock (animationLock)
-            {
-                if (activeAnimations.TryGetValue(toastId, out var existingCts))
-                {
-                    existingCts.Cancel();
-                    existingCts.Dispose();
-                    activeAnimations.Remove(toastId);
-                }
-            }
-
             var targetY = CalculatePositionForIndex(position);
             var targetTransform = $"translate(0px, {targetY}px)";
             
-            // Check if already at target position
             var currentTransformString = toast.RenderTransform?.ToString();
             if (currentTransformString == targetTransform)
             {
@@ -135,15 +122,10 @@ namespace userinterface.Views.Controls
                 return;
             }
 
-            var cts = new CancellationTokenSource();
-            lock (animationLock)
-            {
-                activeAnimations[toastId] = cts;
-            }
+            var cts = SetupAnimation(toastId);
 
             try
             {
-                // Check if this is an entry animation (coming from below screen)
                 var isEntry = string.IsNullOrEmpty(currentTransformString) || 
                              currentTransformString.Contains($"translate(0px, {BasePosition}px)");
                 if (isEntry)
@@ -153,11 +135,9 @@ namespace userinterface.Views.Controls
 
                 toast.ZIndex = position;
 
-                // Set transform and opacity - transitions will handle the animation
                 toast.RenderTransform = TransformOperations.Parse(targetTransform);
                 toast.Opacity = 1.0;
 
-                // Wait for animation to complete (based on transition duration)
                 await Task.Delay(AnimationDurationMs, cts.Token);
             }
             catch (OperationCanceledException)
@@ -170,11 +150,7 @@ namespace userinterface.Views.Controls
             }
             finally
             {
-                lock (animationLock)
-                {
-                    activeAnimations.Remove(toastId);
-                }
-                cts?.Dispose();
+                CleanupAnimation(toastId, cts);
             }
         }
 
@@ -184,38 +160,16 @@ namespace userinterface.Views.Controls
                 return;
 
             var toastId = toastViewModel.Id;
-
-            lock (animationLock)
-            {
-                if (activeAnimations.TryGetValue(toastId, out var existingCts))
-                {
-                    existingCts.Cancel();
-                    existingCts.Dispose();
-                    activeAnimations.Remove(toastId);
-                }
-            }
-
-            var cts = new CancellationTokenSource();
-            lock (animationLock)
-            {
-                activeAnimations[toastId] = cts;
-            }
+            var cts = SetupAnimation(toastId);
 
             try
             {
-                // Calculate the current Y position based on the toast's position in the collection
                 var currentY = 0.0;
                 if (DataContext is ToastContainerViewModel viewModel)
                 {
-                    var toastIndex = -1;
-                    for (int i = 0; i < viewModel.ToastItems.Count; i++)
-                    {
-                        if (viewModel.ToastItems[i].Id == toastId)
-                        {
-                            toastIndex = i;
-                            break;
-                        }
-                    }
+                    var toastIndex = viewModel.ToastItems
+                        .Select((toast, index) => new { toast, index })
+                        .FirstOrDefault(x => x.toast.Id == toastId)?.index ?? -1;
                     
                     if (toastIndex >= 0)
                     {
@@ -223,11 +177,9 @@ namespace userinterface.Views.Controls
                     }
                 }
 
-                // Set exit transform with slide-left only, preserving current Y position
                 toast.RenderTransform = TransformOperations.Parse($"translate({-SlideLeftDistance}px, {currentY}px)");
                 toast.Opacity = 0.0;
 
-                // Wait for animation to complete (using shorter exit duration)
                 await Task.Delay(ExitAnimationDurationMs, cts.Token);
             }
             catch (OperationCanceledException)
@@ -240,11 +192,7 @@ namespace userinterface.Views.Controls
             }
             finally
             {
-                lock (animationLock)
-                {
-                    activeAnimations.Remove(toastId);
-                }
-                cts?.Dispose();
+                CleanupAnimation(toastId, cts);
             }
         }
 
@@ -288,6 +236,32 @@ namespace userinterface.Views.Controls
                     return areAnimationsActive;
                 }
             }
+        }
+
+        private CancellationTokenSource SetupAnimation(Guid toastId)
+        {
+            lock (animationLock)
+            {
+                if (activeAnimations.TryGetValue(toastId, out var existingCts))
+                {
+                    existingCts.Cancel();
+                    existingCts.Dispose();
+                    activeAnimations.Remove(toastId);
+                }
+
+                var cts = new CancellationTokenSource();
+                activeAnimations[toastId] = cts;
+                return cts;
+            }
+        }
+
+        private void CleanupAnimation(Guid toastId, CancellationTokenSource? cts)
+        {
+            lock (animationLock)
+            {
+                activeAnimations.Remove(toastId);
+            }
+            cts?.Dispose();
         }
     }
 }
