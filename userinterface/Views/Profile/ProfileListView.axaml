@@ -34,8 +34,7 @@
 				<Transitions>
 					<BrushTransition Property="Background" Duration="0:0:0.2"/>
 					<BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
-					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="QuadraticEaseOut"/>
-					<ThicknessTransition Property="Margin" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="CubicEaseOut"/>
 				</Transitions>
 			</Setter>
 		</Style>
@@ -102,8 +101,7 @@
 				<Transitions>
 					<BrushTransition Property="Background" Duration="0:0:0.2"/>
 					<BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
-					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="QuadraticEaseOut"/>
-					<ThicknessTransition Property="Margin" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="CubicEaseOut"/>
 				</Transitions>
 			</Setter>
 		</Style>

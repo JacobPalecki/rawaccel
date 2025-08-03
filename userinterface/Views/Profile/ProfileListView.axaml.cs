@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Transformation;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -309,7 +310,8 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             Height = ProfileHeight,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(8, 0, 8, ProfileSpacing), // Start at collapsed position (Y=0)
+            Margin = new Thickness(8, 0, 8, ProfileSpacing),
+            RenderTransform = TransformOperations.Parse("translate(0px, 0px)"), // Start at collapsed position
             Child = addProfileTextBlock
         };
 
@@ -362,7 +364,8 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             Height = ProfileHeight,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(8, 0, 8, ProfileSpacing), // Start at collapsed position (Y=0)
+            Margin = new Thickness(8, 0, 8, ProfileSpacing),
+            RenderTransform = TransformOperations.Parse("translate(0px, 0px)"), // Start at collapsed position
             Child = grid,
             Opacity = 1.0,
             ZIndex = targetIndex
@@ -454,6 +457,25 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         return itemIndex == 0 ? 0 : (itemIndex * (ProfileHeight + ProfileSpacing)) + FirstIndexOffset;
     }
 
+    private static double ExtractYFromTransform(TransformOperations? transform)
+    {
+        if (transform == null) return 0;
+        
+        // Parse the transform string to extract Y position
+        // TransformOperations typically stores as "translate(0px, YYpx)"
+        var transformString = transform.ToString();
+        if (string.IsNullOrEmpty(transformString)) return 0;
+        
+        // Look for translate pattern
+        var match = System.Text.RegularExpressions.Regex.Match(transformString, @"translate\([^,]+,\s*([+-]?\d*\.?\d+)px\)");
+        if (match.Success && double.TryParse(match.Groups[1].Value, out var y))
+        {
+            return y;
+        }
+        
+        return 0;
+    }
+
     private void UpdateAllZIndexes()
     {
         var itemCount = allItems.Count;
@@ -485,16 +507,16 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
     }
 
 
-    private async Task AnimateElementToMarginPosition(int elementIndex, int position, int staggerIndex = 0)
+    private async Task AnimateElementToTransformPosition(int elementIndex, int position, int staggerIndex = 0)
     {
         if (elementIndex >= allItems.Count) return;
 
         var element = allItems[elementIndex];
         var targetY = CalculatePositionForIndex(position);
-        var targetMargin = new Thickness(8, targetY, 8, ProfileSpacing);
         
-        // Get current margin to ensure we're changing from a different state
-        var currentY = element.Margin.Top;
+        // Get current transform Y position
+        var currentTransform = element.RenderTransform as TransformOperations;
+        var currentY = ExtractYFromTransform(currentTransform);
         
         // Skip animation if already at target position
         if (Math.Abs(currentY - targetY) < 0.1)
@@ -511,7 +533,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             await Task.Delay(staggerIndex * StaggerDelayMs);
         }
 
-        element.Margin = targetMargin;
+        element.RenderTransform = TransformOperations.Parse($"translate(0px, {targetY}px)");
         element.ZIndex = position;
     }
 
@@ -532,7 +554,8 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             var targetY = CalculatePositionForIndex(targetPosition);
             
             // Check if already at target position
-            var currentY = allItems[i].Margin.Top;
+            var currentTransform = allItems[i].RenderTransform as TransformOperations;
+            var currentY = ExtractYFromTransform(currentTransform);
             if (Math.Abs(currentY - targetY) < 0.1)
             {
                 allItems[i].ZIndex = targetPosition;
@@ -551,7 +574,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
                 staggerIndex = Math.Min(i, 3);
             }
 
-            animationTasks.Add(AnimateElementToMarginPosition(i, targetPosition, staggerIndex));
+            animationTasks.Add(AnimateElementToTransformPosition(i, targetPosition, staggerIndex));
         }
 
         if (animationTasks.Count > 0)
@@ -657,7 +680,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         {
             if (i >= allItems.Count) break;
             
-            animationTasks.Add(CollapseElementToMarginPosition(i, i * CollapseStaggerDelayMs));
+            animationTasks.Add(CollapseElementToTransformPosition(i, i * CollapseStaggerDelayMs));
         }
 
         try
@@ -673,7 +696,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         }
     }
 
-    private async Task CollapseElementToMarginPosition(int elementIndex, int delayMs = 0)
+    private async Task CollapseElementToTransformPosition(int elementIndex, int delayMs = 0)
     {
         if (elementIndex >= allItems.Count) return;
 
@@ -687,7 +710,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             await Task.Delay(delayMs);
         }
 
-        element.Margin = new Thickness(8, 0, 8, ProfileSpacing);
+        element.RenderTransform = TransformOperations.Parse("translate(0px, 0px)");
     }
 
     public bool AreAnimationsActive => areAnimationsActive;
