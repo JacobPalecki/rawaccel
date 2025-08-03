@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Threading;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace userinterface.ViewModels.Controls
     {
         private readonly INotificationService notificationService;
         private ToastContainerView? containerView;
+        private readonly Queue<ToastViewModel> toastQueue = new();
+        private bool isProcessingQueue = false;
         private const int MaxToasts = 3;
 
         public ToastContainerViewModel(INotificationService notificationService)
@@ -40,25 +43,45 @@ namespace userinterface.ViewModels.Controls
             Dispatcher.UIThread.Post(() =>
             {
                 var toastViewModel = new ToastViewModel(notificationService, Guid.NewGuid());
-                toastViewModel.ToastExpired += OnIndividualToastExpired;
-                
                 toastViewModel.SetToastData(e.Message, e.Type, e.Duration);
                 
-                // Insert new toast at the beginning (bottom of visual stack)
-                ToastItems.Insert(0, toastViewModel);
+                // Add to queue instead of directly to display
+                toastQueue.Enqueue(toastViewModel);
                 
-                if (ToastItems.Count > MaxToasts)
-                {
-                    // Remove the oldest toast (now at the end)
-                    var oldestToast = ToastItems.Last();
-                    oldestToast.ForceClose();
-                    ToastItems.RemoveAt(ToastItems.Count - 1);
-                }
+                // Process queue to show toast if space available
+                ProcessQueue();
             });
         }
 
         private void OnToastDismissed(object? sender, EventArgs e)
         {
+        }
+
+        private void ProcessQueue()
+        {
+            // Prevent recursive calls and race conditions
+            if (isProcessingQueue) return;
+            
+            isProcessingQueue = true;
+            
+            try
+            {
+                // Process queue while we have space and pending toasts
+                while (ToastItems.Count < MaxToasts && toastQueue.Count > 0)
+                {
+                    var toastViewModel = toastQueue.Dequeue();
+                    
+                    // Set up event handler for expiration
+                    toastViewModel.ToastExpired += OnIndividualToastExpired;
+                    
+                    // Insert new toast at the beginning (bottom of visual stack)
+                    ToastItems.Insert(0, toastViewModel);
+                }
+            }
+            finally
+            {
+                isProcessingQueue = false;
+            }
         }
 
         private void OnIndividualToastExpired(object? sender, Guid toastId)
@@ -90,6 +113,9 @@ namespace userinterface.ViewModels.Controls
                     toastToRemove.ToastExpired -= OnIndividualToastExpired;
                     ToastItems.Remove(toastToRemove);
                     toastToRemove.Dispose();
+                    
+                    // Process queue to show next pending toast
+                    ProcessQueue();
                 }
             });
         }
@@ -109,13 +135,20 @@ namespace userinterface.ViewModels.Controls
                 notificationService.ToastDismissed -= OnToastDismissed;
             }
 
+            // Clean up displayed toasts
             foreach (var toast in ToastItems)
             {
                 toast.ToastExpired -= OnIndividualToastExpired;
                 toast.Dispose();
             }
-            
             ToastItems.Clear();
+            
+            // Clean up queued toasts
+            while (toastQueue.Count > 0)
+            {
+                var queuedToast = toastQueue.Dequeue();
+                queuedToast.Dispose();
+            }
         }
     }
 }
