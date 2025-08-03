@@ -153,6 +153,16 @@ namespace userspace_backend.Hardware
             return deviceName;
         }
 
+        public void EnsureActiveDeviceSet()
+        {
+            // Force the ActiveDevice getter to run, which will create a temporary device if needed
+            var device = ActiveDevice;
+            if (device != null)
+            {
+                Debug.WriteLine($"\n=== Active Device Ensured ===\nDevice: {device.Name.CurrentValidatedValue}\nHID: {device.HardwareID.CurrentValidatedValue}");
+            }
+        }
+
         public (string userConfiguredName, string productString, bool hasProductString) GetCurrentDeviceDisplayInfo()
         {
             if (string.IsNullOrEmpty(CurrentInputDeviceHID))
