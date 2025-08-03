@@ -549,4 +549,18 @@
   <data name="AccelFormulaJump" xml:space="preserve">
     <value>Jump</value>
   </data>
+
+  <!-- Unconfigured Device Dialog Resources -->
+  <data name="UnconfiguredDeviceTitle" xml:space="preserve">
+    <value>New Device Detected</value>
+  </data>
+  <data name="UnconfiguredDeviceMessage" xml:space="preserve">
+    <value>A new mouse device '{0}' has been detected. Would you like to create a device configuration for it?</value>
+  </data>
+  <data name="UnconfiguredDeviceCreateButton" xml:space="preserve">
+    <value>Create Device</value>
+  </data>
+  <data name="UnconfiguredDeviceCancelButton" xml:space="preserve">
+    <value>Not Now</value>
+  </data>
 </root>

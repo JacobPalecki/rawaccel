@@ -24,10 +24,15 @@ namespace userspace_backend.Hardware
             {
                 if (activeDevice == null && !string.IsNullOrEmpty(CurrentInputDeviceHID))
                 {
+                    System.Diagnostics.Debug.WriteLine($"\n=== HARDWARE MANAGER ===\nTrying to get ActiveDevice for HID: {CurrentInputDeviceHID}");
                     activeDevice = FindDeviceByHID(CurrentInputDeviceHID);
+                    System.Diagnostics.Debug.WriteLine($"Found configured device: {activeDevice != null}");
+                    
                     if (activeDevice == null)
                     {
+                        System.Diagnostics.Debug.WriteLine("Creating temporary device model");
                         activeDevice = CreateTemporaryDeviceModel();
+                        System.Diagnostics.Debug.WriteLine($"Temporary device created: {activeDevice?.Name.CurrentValidatedValue}");
                     }
                 }
                 return activeDevice;

@@ -20,6 +20,12 @@ namespace userspace_backend
         public NotificationType Type { get; set; }
         public object[] FormatArgs { get; set; } = new object[0];
     }
+    
+    public class ModalEventArgs : EventArgs
+    {
+        public string ModalType { get; set; } = string.Empty;
+        public object[] Parameters { get; set; } = new object[0];
+    }
 
     public enum NotificationType
     {
@@ -33,6 +39,7 @@ namespace userspace_backend
     {
         public static event EventHandler<NotificationEventArgs>? NotificationRequested;
         public static event EventHandler<NotificationEventArgs>? QueuedNotificationRequested;
+        public static event EventHandler<ModalEventArgs>? QueuedModalRequested;
 
         public static void TriggerNotification(string messageKey, NotificationType type)
         {
@@ -63,6 +70,17 @@ namespace userspace_backend
                 FormatArgs = formatArgs
             });
         }
+        
+        public static void QueueModal(string modalType, params object[] parameters)
+        {
+            Debug.WriteLine($"\n=== MODAL QUEUE ===\nQueueing modal: {modalType}\nParameters: {string.Join(", ", parameters)}");
+            QueuedModalRequested?.Invoke(null, new ModalEventArgs
+            {
+                ModalType = modalType,
+                Parameters = parameters
+            });
+            Debug.WriteLine($"Modal queued. Event subscribers: {QueuedModalRequested?.GetInvocationList().Length ?? 0}");
+        }
     }
 
     public class BackEnd
@@ -92,6 +110,8 @@ namespace userspace_backend
         public DATA.Settings Settings { get; set; }
 
         public HardwareManager Hardware { get; set; }
+
+        public DeviceModel? UnconfiguredActiveDevice { get; set; }
 
         protected IBackEndLoader BackEndLoader { get; set; }
 
@@ -150,14 +170,27 @@ namespace userspace_backend
 
         public void ValidateDevicesAfterUIReady()
         {
+            Debug.WriteLine("\n=== VALIDATE DEVICES AFTER UI READY ===");
             ValidateDevicesAvailability();
             
-            // Access ActiveDevice to ensure it's set (getter will create temporary if needed)
             var activeDevice = Hardware.ActiveDevice;
-            if (activeDevice != null && !Devices.Devices.Contains(activeDevice))
+            Debug.WriteLine($"Active device: {(activeDevice != null ? activeDevice.Name.CurrentValidatedValue : "null")}");
+            
+            if (activeDevice != null)
             {
-                // Active device is not in the configured devices list (it's a temporary device)
-                NotificationManager.QueueNotification("UnconfiguredDeviceDetected", NotificationType.Info, activeDevice.Name.CurrentValidatedValue);
+                bool isConfigured = Devices.Devices.Contains(activeDevice);
+                Debug.WriteLine($"Device is configured: {isConfigured}");
+                
+                if (!isConfigured)
+                {
+                    UnconfiguredActiveDevice = activeDevice;
+                    Debug.WriteLine($"Setting UnconfiguredActiveDevice and queuing modal for: {activeDevice.Name.CurrentValidatedValue}");
+                    NotificationManager.QueueModal("UnconfiguredDevice", activeDevice.Name.CurrentValidatedValue);
+                }
+            }
+            else
+            {
+                Debug.WriteLine("No active device found");
             }
         }
 
@@ -326,7 +359,6 @@ namespace userspace_backend
 
             foreach (var individualMapping in mapping.IndividualMappings)
             {
-                // Check if the profile exists
                 if (!Profiles.TryGetProfile(individualMapping.Profile.Name.ModelValue, out _))
                 {
                     NotificationManager.QueueNotification("ProfileNotFound", NotificationType.Error, individualMapping.Profile.Name.ModelValue);
@@ -334,12 +366,10 @@ namespace userspace_backend
                     continue;
                 }
 
-                // Get all devices in this device group
                 var devicesInGroup = Devices.Devices.Where(d => d.DeviceGroup.Equals(individualMapping.DeviceGroup));
                 
                 foreach (var device in devicesInGroup)
                 {
-                    // Skip ignored devices
                     if (device.Ignore.ModelValue) continue;
                     
                     // Check if the device hardware ID exists in the system

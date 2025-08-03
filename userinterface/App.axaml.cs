@@ -93,9 +93,6 @@ public partial class App : Application
             // Preload libraries that cause first-page stutter
             _ = PreloadLibrariesAsync();
 
-            // Show alpha build warning modal
-            _ = ShowAlphaBuildWarningAsync();
-
 #if DEBUG
             desktop.MainWindow.AttachDevTools();
 #endif
@@ -228,15 +225,6 @@ public partial class App : Application
         };
     }
 
-    private async Task ShowAlphaBuildWarningAsync()
-    {
-        var modalService = Services?.GetService<IModalService>();
-        if (modalService != null)
-        {
-            var warningView = new Views.Controls.AlphaBuildWarningView();
-            await modalService.ShowDialogAsync<bool>(warningView);
-        }
-    }
 
     public static void OpenBugReportUrl()
     {

@@ -13,5 +13,7 @@ namespace userinterface.Services
         Task<T?> ShowDialogAsync<T>(UserControl dialogContent, string titleKey = "");
 
         void CloseCurrentModal();
+        
+        void CloseCurrentModalWithResult<T>(T result);
     }
 }

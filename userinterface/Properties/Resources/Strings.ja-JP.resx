@@ -549,4 +549,18 @@
   <data name="AccelFormulaJump" xml:space="preserve">
     <value>段階式</value>
   </data>
+
+  <!-- Unconfigured Device Dialog Resources -->
+  <data name="UnconfiguredDeviceTitle" xml:space="preserve">
+    <value>新しいデバイスを検出</value>
+  </data>
+  <data name="UnconfiguredDeviceMessage" xml:space="preserve">
+    <value>新しいマウスデバイス '{0}' が検出されました。このデバイスの設定を作成しますか？</value>
+  </data>
+  <data name="UnconfiguredDeviceCreateButton" xml:space="preserve">
+    <value>デバイスを作成</value>
+  </data>
+  <data name="UnconfiguredDeviceCancelButton" xml:space="preserve">
+    <value>後で</value>
+  </data>
 </root>

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -35,6 +36,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
     private readonly SettingsPageViewModel settingsPage;
     private readonly ProfileListViewModel profileListView;
     private readonly ToastViewModel toastViewModel;
+    private readonly IModalService modalService;
 
     private readonly BE.BackEnd backEnd;
     private readonly IThemeService themeService;
@@ -56,6 +58,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         settingsPage = App.Services!.GetRequiredService<SettingsPageViewModel>();
         profileListView = App.Services!.GetRequiredService<ProfileListViewModel>();
         toastViewModel = App.Services!.GetRequiredService<ToastViewModel>();
+        modalService = App.Services!.GetRequiredService<IModalService>();
 
         ApplyCommand = new RelayCommand(() => Apply());
         NavigateCommand = new RelayCommand<NavigationPage>(page => SelectPage(page));
@@ -64,6 +67,8 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         profileListView.SelectedProfileChanged += OnProfileSelected;
         BE.NotificationManager.NotificationRequested += OnBackEndNotificationRequested;
         BE.NotificationManager.QueuedNotificationRequested += OnBackEndQueuedNotificationRequested;
+        
+        System.Diagnostics.Debug.WriteLine("\n=== MAIN WINDOW VIEW MODEL INIT ===\nEvent handlers subscribed, calling ValidateDevicesAfterUIReady");
         
         // Now that UI is ready and event handlers are subscribed, validate devices
         backEnd.ValidateDevicesAfterUIReady();
