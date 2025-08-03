@@ -27,9 +27,11 @@ namespace userinterface.Views.Controls
         private const double ToastHeight = 80.0;
         private const double ToastSpacing = -10;
         private const int AnimationDurationMs = 400;
+        private const int ExitAnimationDurationMs = 180;
         private const int EntryStaggerMs = 50;
         private const int ExitStaggerMs = 30;
         private const double BasePosition = 120.0;
+        private const double SlideLeftDistance = 120.0;
 
         public ToastContainerView()
         {
@@ -41,6 +43,7 @@ namespace userinterface.Views.Controls
         {
             if (DataContext is ToastContainerViewModel viewModel)
             {
+                viewModel.SetContainerView(this);
                 viewModel.ToastItems.CollectionChanged += async (s, args) =>
                 {
                     await Dispatcher.UIThread.InvokeAsync(async () =>
@@ -200,12 +203,12 @@ namespace userinterface.Views.Controls
 
             try
             {
-                // Set exit transform and opacity - transitions will handle the animation
-                toast.RenderTransform = TransformOperations.Parse($"translate(0px, {BasePosition}px)");
+                // Set exit transform with slide-left and slide-down - transitions will handle the animation
+                toast.RenderTransform = TransformOperations.Parse($"translate({-SlideLeftDistance}px, {BasePosition}px)");
                 toast.Opacity = 0.0;
 
-                // Wait for animation to complete (based on transition duration)
-                await Task.Delay(AnimationDurationMs, cts.Token);
+                // Wait for animation to complete (using shorter exit duration)
+                await Task.Delay(ExitAnimationDurationMs, cts.Token);
             }
             catch (OperationCanceledException)
             {

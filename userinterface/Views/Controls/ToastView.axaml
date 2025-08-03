@@ -121,8 +121,16 @@
 
 	<UserControl.Transitions>
 		<Transitions>
-			<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" />
-			<DoubleTransition Property="Opacity" Duration="0:0:0.4" />
+			<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4">
+				<TransformOperationsTransition.Easing>
+					<CubicEaseOut/>
+				</TransformOperationsTransition.Easing>
+			</TransformOperationsTransition>
+			<DoubleTransition Property="Opacity" Duration="0:0:0.4">
+				<DoubleTransition.Easing>
+					<CubicEaseOut/>
+				</DoubleTransition.Easing>
+			</DoubleTransition>
 		</Transitions>
 	</UserControl.Transitions>
 

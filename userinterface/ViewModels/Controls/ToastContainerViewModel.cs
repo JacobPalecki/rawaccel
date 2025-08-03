@@ -1,17 +1,22 @@
+using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Threading;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using userinterface.Models;
 using userinterface.Services;
+using userinterface.Views.Controls;
 
 namespace userinterface.ViewModels.Controls
 {
     public class ToastContainerViewModel : INotifyPropertyChanged, IDisposable
     {
         private readonly INotificationService notificationService;
+        private ToastContainerView? containerView;
         private const int MaxToasts = 3;
 
         public ToastContainerViewModel(INotificationService notificationService)
@@ -24,6 +29,11 @@ namespace userinterface.ViewModels.Controls
         }
 
         public ObservableCollection<ToastViewModel> ToastItems { get; }
+
+        public void SetContainerView(ToastContainerView view)
+        {
+            containerView = view;
+        }
 
         private void OnToastRequested(object? sender, ToastNotificationEventArgs e)
         {
@@ -53,11 +63,30 @@ namespace userinterface.ViewModels.Controls
 
         private void OnIndividualToastExpired(object? sender, Guid toastId)
         {
-            Dispatcher.UIThread.Post(() =>
+            Dispatcher.UIThread.Post(async () =>
             {
                 var toastToRemove = ToastItems.FirstOrDefault(t => t.Id == toastId);
-                if (toastToRemove != null)
+                if (toastToRemove != null && containerView != null)
                 {
+                    // Find the toast view and trigger exit animation
+                    var itemsControl = containerView.FindControl<ItemsControl>("ToastItemsControl");
+                    if (itemsControl?.Presenter?.Panel != null)
+                    {
+                        // Find the ToastView for this toast
+                        foreach (var child in itemsControl.Presenter.Panel.Children)
+                        {
+                            if (child is ContentPresenter contentPresenter && 
+                                contentPresenter.Child is ToastView toastView &&
+                                toastView.DataContext is ToastViewModel vm && 
+                                vm.Id == toastId)
+                            {
+                                // Trigger exit animation
+                                await containerView.AnimateToastExit(toastView);
+                                break;
+                            }
+                        }
+                    }
+                    
                     toastToRemove.ToastExpired -= OnIndividualToastExpired;
                     ToastItems.Remove(toastToRemove);
                     toastToRemove.Dispose();
