@@ -3,37 +3,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:userinterface.ViewModels.Controls"
              xmlns:controls="using:userinterface.Views.Controls"
-             x:DataType="vm:ToastContainerViewModel">
+             x:DataType="vm:ToastContainerViewModel"
+             ClipToBounds="False">
 
 	<UserControl.Styles>
-		<!-- Toast Container Panel Style -->
-		<Style Selector="StackPanel.ToastStack">
-			<Setter Property="VerticalAlignment" Value="Bottom"/>
-			<Setter Property="HorizontalAlignment" Value="Center"/>
-			<Setter Property="Margin" Value="20"/>
-			<Setter Property="Spacing" Value="10"/>
-		</Style>
-
 		<!-- Individual Toast Item Style -->
 		<Style Selector="controls|ToastView.StackedToast">
 			<Setter Property="Margin" Value="0"/>
+			<Setter Property="VerticalAlignment" Value="Bottom"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
 		</Style>
 	</UserControl.Styles>
 
-	<Grid>
-		<StackPanel Classes="ToastStack">
-			<ItemsControl ItemsSource="{Binding ToastItems}">
-				<ItemsControl.ItemTemplate>
-					<DataTemplate>
-						<controls:ToastView Classes="StackedToast" DataContext="{Binding}" />
-					</DataTemplate>
-				</ItemsControl.ItemTemplate>
-				<ItemsControl.ItemsPanel>
-					<ItemsPanelTemplate>
-						<StackPanel Spacing="10" />
-					</ItemsPanelTemplate>
-				</ItemsControl.ItemsPanel>
-			</ItemsControl>
-		</StackPanel>
+	<Grid ClipToBounds="False">
+		<ItemsControl x:Name="ToastItemsControl" 
+		              ItemsSource="{Binding ToastItems}"
+		              VerticalAlignment="Bottom"
+		              HorizontalAlignment="Center"
+		              Margin="20"
+		              ClipToBounds="False"
+		              MinHeight="300">
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<controls:ToastView Classes="StackedToast" DataContext="{Binding}" />
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<Grid />
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+		</ItemsControl>
 	</Grid>
 </UserControl>

@@ -21,9 +21,6 @@
 			<Setter Property="MinWidth" Value="300"/>
 			<Setter Property="HorizontalAlignment" Value="Stretch"/>
 			<Setter Property="BoxShadow" Value="{DynamicResource ToastShadow}"/>
-			<!-- Initial state: hidden below -->
-			<Setter Property="RenderTransform" Value="translateY(100px)"/>
-			<Setter Property="Opacity" Value="0"/>
 			<Setter Property="Transitions">
 				<Transitions>
 					<BrushTransition Property="BorderBrush" Duration="0:0:0.2">
@@ -31,45 +28,10 @@
 							<SineEaseOut/>
 						</BrushTransition.Easing>
 					</BrushTransition>
-					<DoubleTransition Property="Opacity" Duration="0:0:0.4">
-						<DoubleTransition.Easing>
-							<QuadraticEaseOut/>
-						</DoubleTransition.Easing>
-					</DoubleTransition>
-					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.5">
-						<TransformOperationsTransition.Easing>
-							<QuadraticEaseOut/>
-						</TransformOperationsTransition.Easing>
-					</TransformOperationsTransition>
 				</Transitions>
 			</Setter>
 		</Style>
 
-		<!-- Toast Container visible -->
-		<Style Selector="Border.ToastContainer.Visible">
-			<Setter Property="RenderTransform" Value="translateY(0)"/>
-			<Setter Property="Opacity" Value="1"/>
-		</Style>
-
-		<!-- Toast Container hiding -->
-		<Style Selector="Border.ToastContainer.Hiding">
-			<Setter Property="RenderTransform" Value="translateY(100px)"/>
-			<Setter Property="Opacity" Value="0"/>
-			<Setter Property="Transitions">
-				<Transitions>
-					<DoubleTransition Property="Opacity" Duration="0:0:0.3">
-						<DoubleTransition.Easing>
-							<QuadraticEaseIn/>
-						</DoubleTransition.Easing>
-					</DoubleTransition>
-					<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3">
-						<TransformOperationsTransition.Easing>
-							<QuadraticEaseIn/>
-						</TransformOperationsTransition.Easing>
-					</TransformOperationsTransition>
-				</Transitions>
-			</Setter>
-		</Style>
 
 		<!-- Toast Content Style -->
 		<Style Selector="Grid.ToastContent">
@@ -157,10 +119,16 @@
 		</Style>
 	</UserControl.Styles>
 
+	<UserControl.Transitions>
+		<Transitions>
+			<TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" />
+			<DoubleTransition Property="Opacity" Duration="0:0:0.4" />
+		</Transitions>
+	</UserControl.Transitions>
+
 	<Grid>
 		<Border x:Name="ToastBorder"
-                Classes="ToastContainer"
-                Classes.Visible="{Binding IsVisible}">
+                Classes="ToastContainer">
 
 			<Grid>
 				<Grid.RowDefinitions>

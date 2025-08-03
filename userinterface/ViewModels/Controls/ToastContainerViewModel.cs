@@ -34,13 +34,15 @@ namespace userinterface.ViewModels.Controls
                 
                 toastViewModel.SetToastData(e.Message, e.Type, e.Duration);
                 
-                ToastItems.Add(toastViewModel);
+                // Insert new toast at the beginning (bottom of visual stack)
+                ToastItems.Insert(0, toastViewModel);
                 
                 if (ToastItems.Count > MaxToasts)
                 {
-                    var oldestToast = ToastItems.First();
+                    // Remove the oldest toast (now at the end)
+                    var oldestToast = ToastItems.Last();
                     oldestToast.ForceClose();
-                    ToastItems.RemoveAt(0);
+                    ToastItems.RemoveAt(ToastItems.Count - 1);
                 }
             });
         }

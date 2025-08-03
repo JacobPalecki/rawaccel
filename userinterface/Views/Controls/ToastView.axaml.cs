@@ -1,4 +1,7 @@
-﻿using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Transformation;
 
 namespace userinterface.Views.Controls
 {
@@ -7,6 +10,10 @@ namespace userinterface.Views.Controls
         public ToastView()
         {
             InitializeComponent();
+            
+            // Start toast below the visible area
+            RenderTransform = TransformOperations.Parse("translate(0px, 120px)");
+            Opacity = 0;
         }
     }
 }
