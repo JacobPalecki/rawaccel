@@ -155,6 +155,9 @@ public partial class App : Application
         services.AddTransient<SettingsPageViewModel>();
         services.AddTransient<ViewModels.Settings.GeneralSettingsViewModel>();
         services.AddTransient<ViewModels.Settings.SupportViewModel>();
+        services.AddTransient<ViewModels.Settings.DevicesSettingsViewModel>();
+        services.AddTransient<ViewModels.Settings.MappingsSettingsViewModel>();
+        services.AddTransient<ViewModels.Settings.ProfilesSettingsViewModel>();
 
         // Control ViewModels
         services.AddTransient<ViewModels.Controls.DualColumnLabelFieldViewModel>();

@@ -104,6 +104,54 @@
 					<settings:SupportView DataContext="{Binding SupportViewModel}" />
 				</StackPanel>
 			</Border>
+
+			<!-- Devices Section -->
+			<Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+				<StackPanel Spacing="16">
+					<TextBlock Text="Devices"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
+
+					<settings:DevicesSettingsView DataContext="{Binding DevicesSettingsViewModel}" />
+				</StackPanel>
+			</Border>
+
+			<!-- Mappings Section -->
+			<Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+				<StackPanel Spacing="16">
+					<TextBlock Text="Mappings"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
+
+					<settings:MappingsSettingsView DataContext="{Binding MappingsSettingsViewModel}" />
+				</StackPanel>
+			</Border>
+
+			<!-- Profiles Section -->
+			<Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+				<StackPanel Spacing="16">
+					<TextBlock Text="Profiles"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
+
+					<settings:ProfilesSettingsView DataContext="{Binding ProfilesSettingsViewModel}" />
+				</StackPanel>
+			</Border>
 		</StackPanel>
 	</ScrollViewer>
 </UserControl>

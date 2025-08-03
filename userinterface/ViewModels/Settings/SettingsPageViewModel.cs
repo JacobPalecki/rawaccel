@@ -13,6 +13,9 @@ public class SettingsPageViewModel : ViewModelBase
 
         GeneralSettingsViewModel = App.Services!.GetRequiredService<GeneralSettingsViewModel>();
         SupportViewModel = App.Services!.GetRequiredService<SupportViewModel>();
+        DevicesSettingsViewModel = App.Services!.GetRequiredService<DevicesSettingsViewModel>();
+        MappingsSettingsViewModel = App.Services!.GetRequiredService<MappingsSettingsViewModel>();
+        ProfilesSettingsViewModel = App.Services!.GetRequiredService<ProfilesSettingsViewModel>();
 
         GeneralSettingsViewModel.PropertyChanged += OnGeneralSettingsChanged;
     }
@@ -20,6 +23,12 @@ public class SettingsPageViewModel : ViewModelBase
     public GeneralSettingsViewModel GeneralSettingsViewModel { get; }
 
     public SupportViewModel SupportViewModel { get; }
+
+    public DevicesSettingsViewModel DevicesSettingsViewModel { get; }
+
+    public MappingsSettingsViewModel MappingsSettingsViewModel { get; }
+
+    public ProfilesSettingsViewModel ProfilesSettingsViewModel { get; }
 
     private void OnGeneralSettingsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
