@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using userspace_backend.Model;
 using userspace_backend.Data;
@@ -28,7 +27,6 @@ namespace userspace_backend.Hardware
                     activeDevice = FindDeviceByHID(CurrentInputDeviceHID);
                     if (activeDevice == null)
                     {
-                        // Create a temporary device model for unconfigured devices
                         activeDevice = CreateTemporaryDeviceModel();
                     }
                 }
@@ -52,13 +50,10 @@ namespace userspace_backend.Hardware
             CurrentInputDeviceHID = hid;
             CurrentInputDeviceName = name;
             
-            // If HID is a handle fallback, try to find the real HID
             if (hid.StartsWith("HANDLE_"))
             {
-                // Store the handle mapping for future use
                 if (!handleToHIDMap.ContainsKey(handle))
                 {
-                    // Try to find the real HID by matching device name
                     var systemDevice = devices.SystemDevices.FirstOrDefault(d => 
                         !string.IsNullOrEmpty(d.name) && d.name.Equals(name, StringComparison.OrdinalIgnoreCase));
                     
@@ -66,7 +61,6 @@ namespace userspace_backend.Hardware
                     {
                         handleToHIDMap[handle] = systemDevice.id;
                         CurrentInputDeviceHID = systemDevice.id;
-                        Debug.WriteLine($"\n=== Resolved Real HID ===\nHandle: {handle.ToInt64():X}\nFallback: {hid}\nReal HID: {systemDevice.id}\nDevice Name: {name}");
                     }
                 }
                 else
@@ -78,10 +72,6 @@ namespace userspace_backend.Hardware
             if (activeDevice == null && !string.IsNullOrEmpty(CurrentInputDeviceHID) && !CurrentInputDeviceHID.StartsWith("HANDLE_"))
             {
                 activeDevice = FindDeviceByHID(CurrentInputDeviceHID);
-                if (activeDevice != null)
-                {
-                    Debug.WriteLine($"\n=== Active Device Set ===\nDevice: {activeDevice.Name.CurrentValidatedValue}\nHID: {CurrentInputDeviceHID}");
-                }
             }
         }
 
@@ -155,12 +145,7 @@ namespace userspace_backend.Hardware
 
         public void EnsureActiveDeviceSet()
         {
-            // Force the ActiveDevice getter to run, which will create a temporary device if needed
             var device = ActiveDevice;
-            if (device != null)
-            {
-                Debug.WriteLine($"\n=== Active Device Ensured ===\nDevice: {device.Name.CurrentValidatedValue}\nHID: {device.HardwareID.CurrentValidatedValue}");
-            }
         }
 
         public (string userConfiguredName, string productString, bool hasProductString) GetCurrentDeviceDisplayInfo()
@@ -214,7 +199,6 @@ namespace userspace_backend.Hardware
             if (string.IsNullOrEmpty(CurrentInputDeviceHID))
                 return null;
 
-            // Get product string or device name
             string productString = devices.GetProductStringFromHID(CurrentInputDeviceHID);
             if (string.IsNullOrEmpty(productString))
             {
@@ -225,26 +209,21 @@ namespace userspace_backend.Hardware
                 productString = ExtractBasicNameFromHID(CurrentInputDeviceHID);
             }
 
-            // Create a temporary device data object
             var tempDevice = new Device
             {
                 Name = productString,
-                HWID = CurrentInputDeviceHID,  // This should now be the real HID, not the handle fallback
+                HWID = CurrentInputDeviceHID,
                 ProductString = productString,
-                DPI = 1000,  // Default DPI
-                PollingRate = 1000,  // Default polling rate
+                DPI = 1000,
+                PollingRate = 1000,
                 Ignore = false,
                 DeviceGroup = "Default"
             };
 
-            // Use the static default device group from DeviceGroups
             var defaultDeviceGroup = DeviceGroups.DefaultDeviceGroup;
-
-            // Create temporary validators (they won't be used for temporary devices)
             var nameValidator = new DeviceModelNameValidator(devices);
             var hwidValidator = new DeviceModelHWIDValidator(devices);
 
-            // Create and return the temporary device model
             return new DeviceModel(tempDevice, defaultDeviceGroup, nameValidator, hwidValidator);
         }
     }

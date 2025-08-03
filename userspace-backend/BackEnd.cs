@@ -151,8 +151,6 @@ namespace userspace_backend
         public void ValidateDevicesAfterUIReady()
         {
             ValidateDevicesAvailability();
-            
-            // Ensure we have an active device set after UI is ready
             Hardware.EnsureActiveDeviceSet();
         }
 
@@ -175,15 +173,12 @@ namespace userspace_backend
                 }
             }
             
-            // Try to detect the current mouse if we have system devices
             if (Devices.SystemDevices.Any())
             {
                 var firstMouse = Devices.SystemDevices.FirstOrDefault();
                 if (firstMouse != null && !string.IsNullOrEmpty(firstMouse.id))
                 {
-                    // Update the hardware manager with the first available mouse
                     Hardware.UpdateCurrentInputDevice(IntPtr.Zero, firstMouse.id, firstMouse.name ?? "Mouse");
-                    Debug.WriteLine($"\n=== Initial Device Set ===\nDevice: {firstMouse.name}\nHID: {firstMouse.id}");
                 }
             }
         }

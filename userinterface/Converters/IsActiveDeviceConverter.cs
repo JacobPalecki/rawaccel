@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,12 +17,6 @@ namespace userinterface.Converters
                 if (backEnd?.Hardware.ActiveDevice != null)
                 {
                     bool isActive = device.id.Equals(backEnd.Hardware.ActiveDevice.HardwareID.CurrentValidatedValue, StringComparison.OrdinalIgnoreCase);
-                    if (isActive)
-                    {
-                        string deviceDisplayName = string.IsNullOrWhiteSpace(device.name) ? device.id : device.name;
-                        Debug.WriteLine($"=== Active Device Match ===\nDevice: {deviceDisplayName}\nActive Device: {backEnd.Hardware.ActiveDevice.Name.CurrentValidatedValue}\nMatch: TRUE");
-                    }
-                    Debug.WriteLine($"=== Active Device ===\nDevice: {device.id}\nActive Device: {backEnd.Hardware.ActiveDevice.HardwareID.CurrentValidatedValue}\nMatch: TRUE");
                     return isActive;
                 }
             }
