@@ -8,7 +8,8 @@ namespace userspace_backend.Logging
         UI,
         Hardware,
         Performance,
-        System
+        System,
+        Modal
     }
 
     public static class LogSourceExtensions
@@ -22,6 +23,7 @@ namespace userspace_backend.Logging
                 LogSource.Hardware => "RawAccel.Hardware",
                 LogSource.Performance => "RawAccel.Performance",
                 LogSource.System => "RawAccel.System",
+                LogSource.Modal => "RawAccel.Modal",
                 _ => "RawAccel.Unknown"
             };
         }
@@ -35,6 +37,7 @@ namespace userspace_backend.Logging
                 LogSource.Hardware => "Hardware & Devices",
                 LogSource.Performance => "Performance Metrics",
                 LogSource.System => "System Operations",
+                LogSource.Modal => "Modal Dialogs",
                 _ => "Unknown"
             };
         }

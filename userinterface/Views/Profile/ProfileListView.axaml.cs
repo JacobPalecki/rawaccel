@@ -421,9 +421,13 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
 
     private async void OnDeleteButtonClicked(object? sender, RoutedEventArgs e)
     {
+        var logger = App.Services?.GetService<userspace_backend.Logging.ILoggingService>();
+        logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: Delete button clicked");
+        
         // Prevent deletion during animations to avoid bugs
         if (areAnimationsActive)
         {
+            logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: Animations active, returning");
             return;
         }
 
@@ -433,22 +437,41 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             grid.Parent is Border border)
         {
             var profileIndex = allItems.IndexOf(border) - 1; // Subtract 1 for add button
+            logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, $"OnDeleteButtonClicked: Profile index = {profileIndex}, Total profiles = {profilesModel.Profiles.Count}");
+            
             if (profileIndex >= 0 && profileIndex < profilesModel.Profiles.Count)
             {
                 var profileToDelete = profilesModel.Profiles[profileIndex];
+                logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, $"OnDeleteButtonClicked: Profile to delete = '{profileToDelete.Name.ModelValue}'");
 
                 // Show confirmation modal
+                logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: Calling ShowConfirmationAsync");
                 var confirmed = await modalService.ShowConfirmationAsync(
                     "ProfileDeleteTitle",
                     "ProfileDeleteMessage",
                     "ProfileDeleteConfirm",
                     "ModalCancel");
 
+                logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, $"OnDeleteButtonClicked: Modal result = {confirmed}");
+                
                 if (confirmed)
                 {
+                    logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: User confirmed, removing profile");
                     profilesModel.RemoveProfile(profileToDelete);
                 }
+                else
+                {
+                    logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: User cancelled");
+                }
             }
+            else
+            {
+                logger?.LogError(userspace_backend.Logging.LogSource.Modal, $"OnDeleteButtonClicked: Invalid profile index {profileIndex}");
+            }
+        }
+        else
+        {
+            logger?.LogError(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: Could not find parent elements");
         }
     }
 

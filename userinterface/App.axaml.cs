@@ -26,6 +26,8 @@ namespace userinterface;
 public partial class App : Application
 {
     public static IServiceProvider? Services { get; private set; }
+    public static bool IsAppLoaded { get; private set; }
+    public static event Action? AppLoadCompleted;
 
     public override void Initialize()
     {
@@ -80,6 +82,10 @@ public partial class App : Application
 
         // Apply settings from backend after services are built
         ApplyStartupSettings();
+
+        // Mark app as loaded after critical initialization
+        IsAppLoaded = true;
+        AppLoadCompleted?.Invoke();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
