@@ -83,10 +83,6 @@ public partial class App : Application
         // Apply settings from backend after services are built
         ApplyStartupSettings();
 
-        // Mark app as loaded after critical initialization
-        IsAppLoaded = true;
-        AppLoadCompleted?.Invoke();
-
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Line below is needed to remove Avalonia data validation.
@@ -101,6 +97,10 @@ public partial class App : Application
             // Set up the toast control (was already created in MainWindow.axaml)
 
             desktop.MainWindow = mainWindow;
+
+            // Mark app as loaded after MainWindow is created and assigned
+            IsAppLoaded = true;
+            AppLoadCompleted?.Invoke();
 
             // Preload libraries that cause first-page stutter
             _ = PreloadLibrariesAsync();
