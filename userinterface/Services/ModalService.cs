@@ -414,16 +414,60 @@ namespace userinterface.Services
                 var backEnd = App.Services?.GetService<userspace_backend.BackEnd>();
                 if (backEnd?.UnconfiguredActiveDevice != null)
                 {
-                    System.Diagnostics.Debug.WriteLine("User chose to create device, adding to configured devices");
-                    backEnd.Devices.TryAddDevice(backEnd.UnconfiguredActiveDevice.MapToData());
-                    backEnd.UnconfiguredActiveDevice = null;
-                    backEnd.ApplySettingsOnly();
-                    System.Diagnostics.Debug.WriteLine("Device configuration saved");
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine("User chose to create device, adding to configured devices");
+                        
+                        var deviceToAdd = backEnd.UnconfiguredActiveDevice;
+                        bool success = backEnd.Devices.TryAddDevice(deviceToAdd.MapToData());
+                        
+                        if (success)
+                        {
+                            backEnd.UnconfiguredActiveDevice = null;
+                            backEnd.ApplySettingsOnly();
+                            System.Diagnostics.Debug.WriteLine("Device configuration saved");
+                            
+                            // Show success notification
+                            userspace_backend.NotificationManager.QueueNotification(
+                                "DeviceCreatedSuccessfully",
+                                userspace_backend.NotificationType.Success,
+                                deviceToAdd.Name.CurrentValidatedValue);
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("Failed to add device - device may already exist");
+                            
+                            // Show error notification
+                            userspace_backend.NotificationManager.QueueNotification(
+                                "DeviceCreationFailed",
+                                userspace_backend.NotificationType.Error,
+                                deviceToAdd.Name.CurrentValidatedValue);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error creating device: {ex.Message}");
+                        
+                        // Show error notification
+                        userspace_backend.NotificationManager.QueueNotification(
+                            "DeviceCreationError",
+                            userspace_backend.NotificationType.Error,
+                            ex.Message);
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("No unconfigured device available");
+                    
+                    // Show error notification
+                    userspace_backend.NotificationManager.QueueNotification(
+                        "NoUnconfiguredDevice",
+                        userspace_backend.NotificationType.Error);
                 }
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("User cancelled or no unconfigured device available");
+                System.Diagnostics.Debug.WriteLine("User cancelled device creation");
             }
             
             return result;

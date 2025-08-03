@@ -563,4 +563,16 @@
   <data name="UnconfiguredDeviceCancelButton" xml:space="preserve">
     <value>後で</value>
   </data>
+  <data name="DeviceCreatedSuccessfully" xml:space="preserve">
+    <value>デバイス '{0}' が正常に作成され、設定に追加されました。</value>
+  </data>
+  <data name="DeviceCreationFailed" xml:space="preserve">
+    <value>デバイス '{0}' の作成に失敗しました。デバイスが既に存在する可能性があります。</value>
+  </data>
+  <data name="DeviceCreationError" xml:space="preserve">
+    <value>デバイス作成エラー: {0}</value>
+  </data>
+  <data name="NoUnconfiguredDevice" xml:space="preserve">
+    <value>作成可能な未構成デバイスがありません。</value>
+  </data>
 </root>

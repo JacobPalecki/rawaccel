@@ -563,4 +563,16 @@
   <data name="UnconfiguredDeviceCancelButton" xml:space="preserve">
     <value>Not Now</value>
   </data>
+  <data name="DeviceCreatedSuccessfully" xml:space="preserve">
+    <value>Device '{0}' was successfully created and added to your configuration.</value>
+  </data>
+  <data name="DeviceCreationFailed" xml:space="preserve">
+    <value>Failed to create device '{0}'. The device may already exist.</value>
+  </data>
+  <data name="DeviceCreationError" xml:space="preserve">
+    <value>Error creating device: {0}</value>
+  </data>
+  <data name="NoUnconfiguredDevice" xml:space="preserve">
+    <value>No unconfigured device available to create.</value>
+  </data>
 </root>
