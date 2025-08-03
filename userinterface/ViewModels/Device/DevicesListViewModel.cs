@@ -80,6 +80,7 @@ namespace userinterface.ViewModels.Device
         public void UpdateDeviceViews()
         {
             DeviceViews.Clear();
+            
             for (int i = 0; i < DevicesBE.Devices.Count; i++)
             {
                 var device = DevicesBE.Devices[i];

@@ -13,6 +13,7 @@
 
 	<UserControl.Resources>
 		<converters:DeviceNameConverter x:Key="DeviceNameConverter"/>
+		<converters:IsActiveDeviceConverter x:Key="IsActiveDeviceConverter"/>
 	</UserControl.Resources>
 
 	<UserControl.Styles>
@@ -148,7 +149,18 @@
                               Margin="0,0,8,0">
 						<ComboBox.ItemTemplate>
 							<DataTemplate>
-								<TextBlock Text="{Binding Converter={StaticResource DeviceNameConverter}}" />
+								<Grid ColumnDefinitions="*,Auto">
+									<TextBlock Grid.Column="0" 
+									           Text="{Binding Converter={StaticResource DeviceNameConverter}}" 
+									           VerticalAlignment="Center" />
+									<Ellipse Grid.Column="1" 
+									         Width="8" 
+									         Height="8" 
+									         Fill="#00FF00" 
+									         Margin="8,0,0,0"
+									         VerticalAlignment="Center"
+									         IsVisible="{Binding Converter={StaticResource IsActiveDeviceConverter}}" />
+								</Grid>
 							</DataTemplate>
 						</ComboBox.ItemTemplate>
 					</ComboBox>

@@ -770,7 +770,7 @@ namespace userinterface.ViewModels.Profile
             try
             {
                 // Update current device info using BackEnd cross-reference
-                var (deviceName, sourceDPI, isKnownDevice) = backEnd.GetCurrentDeviceInfo();
+                var (deviceName, sourceDPI, isKnownDevice) = backEnd.Hardware.GetCurrentDeviceInfo();
                 
                 string displayName = isKnownDevice ? deviceName : e.DeviceName;
                 string dpiInfo = $"{sourceDPI} DPI";

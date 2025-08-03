@@ -14,6 +14,7 @@ namespace userinterface.ViewModels.Device
     public partial class DeviceViewModel : ViewModelBase
     {
         private readonly IModalService modalService;
+        private readonly userspace_backend.BackEnd? backEnd;
 
         public DeviceViewModel(BE.DeviceModel deviceBE, BE.DevicesModel devicesBE, bool isDefault = false, Func<DeviceViewModel, Task>? animatedDeleteCallback = null)
         {
@@ -22,6 +23,7 @@ namespace userinterface.ViewModels.Device
             IsDefaultDevice = isDefault;
             AnimatedDeleteCallback = animatedDeleteCallback;
             modalService = App.Services?.GetRequiredService<IModalService>() ?? throw new InvalidOperationException("ModalService not available");
+            backEnd = App.Services?.GetService<userspace_backend.BackEnd>();
 
             NameField = new NamedEditableFieldViewModel(DeviceBE.Name);
 
@@ -88,6 +90,17 @@ namespace userinterface.ViewModels.Device
 
         public bool IsExpanderEnabled => !IgnoreBool.Value;
 
+        public bool IsActiveDevice
+        {
+            get
+            {
+                if (backEnd?.Hardware.ActiveDevice == null)
+                    return false;
+                
+                return DeviceBE.HardwareID == backEnd.Hardware.ActiveDevice.HardwareID;
+            }
+        }
+
         private bool isDeleting = false;
 
         private void RefreshAvailableDevices()
@@ -138,5 +151,6 @@ namespace userinterface.ViewModels.Device
         {
             DevicesBE.RemoveDevice(DeviceBE);
         }
+
     }
 }

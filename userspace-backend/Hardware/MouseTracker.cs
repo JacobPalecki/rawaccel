@@ -435,7 +435,7 @@ namespace userspace_backend.Hardware
             string deviceName = GetDeviceName(deviceHandle);
             string deviceHID = GetDeviceHID(deviceHandle);
             
-            backEnd.UpdateCurrentInputDevice(deviceHandle, deviceHID, deviceName);
+            backEnd.Hardware.UpdateCurrentInputDevice(deviceHandle, deviceHID, deviceName);
         }
 
         private void LogDeviceChange(IntPtr deviceHandle)
