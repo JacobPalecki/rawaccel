@@ -10,6 +10,7 @@ namespace userspace_backend.Data
         private bool showConfirmModals = true;
         private string theme = "System";
         private string language = "en-US";
+        private bool forceProfilesListOpen = false;
         private LoggingConfiguration loggingConfiguration = new();
 
         public bool ShowToastNotifications
@@ -59,6 +60,19 @@ namespace userspace_backend.Data
                 if (language != value)
                 {
                     language = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool ForceProfilesListOpen
+        {
+            get => forceProfilesListOpen;
+            set
+            {
+                if (forceProfilesListOpen != value)
+                {
+                    forceProfilesListOpen = value;
                     OnPropertyChanged();
                 }
             }

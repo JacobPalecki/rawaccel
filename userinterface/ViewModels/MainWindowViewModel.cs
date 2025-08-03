@@ -38,10 +38,10 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
     private readonly ProfileListViewModel profileListView;
     private readonly ToastContainerViewModel toastContainerViewModel;
     private readonly IModalService modalService;
+    private readonly ISettingsService settingsService;
 
     private readonly BE.BackEnd backEnd;
     private readonly IThemeService themeService;
-    private readonly ISettingsService settingsService;
     private readonly INotificationService notificationService;
     private readonly FrameTimerService frameTimer;
 
@@ -62,6 +62,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         profileListView = App.Services!.GetRequiredService<ProfileListViewModel>();
         toastContainerViewModel = App.Services!.GetRequiredService<ToastContainerViewModel>();
         modalService = App.Services!.GetRequiredService<IModalService>();
+        settingsService = App.Services!.GetRequiredService<ISettingsService>();
 
         ApplyCommand = new RelayCommand(() => Apply());
         NavigateCommand = new RelayCommand<NavigationPage>(page => SelectPage(page));
@@ -118,6 +119,12 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         {
             if (isProfilesExpandedValue != value)
             {
+                // Check if force profiles list open is enabled before allowing collapse
+                if (!value && settingsService.ForceProfilesListOpen)
+                {
+                    return; // Don't collapse if force setting is enabled
+                }
+
                 isProfilesExpandedValue = value;
                 OnPropertyChanged();
 

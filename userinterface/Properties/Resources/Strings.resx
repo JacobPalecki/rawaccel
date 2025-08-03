@@ -424,6 +424,9 @@
   <data name="SettingsShowConfirmModals" xml:space="preserve">
     <value>Show Confirmation Dialogs</value>
   </data>
+  <data name="ForceProfilesListOpen" xml:space="preserve">
+    <value>Force Profiles List Open</value>
+  </data>
   <data name="SettingsTheme" xml:space="preserve">
     <value>Theme</value>
   </data>

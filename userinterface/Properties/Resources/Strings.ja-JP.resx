@@ -424,6 +424,9 @@
   <data name="SettingsShowConfirmModals" xml:space="preserve">
     <value>確認画面を表示</value>
   </data>
+  <data name="ForceProfilesListOpen" xml:space="preserve">
+    <value>プロファイルリストを強制的に開く</value>
+  </data>
   <data name="SettingsTheme" xml:space="preserve">
     <value>テーマ</value>
   </data>

@@ -78,6 +78,19 @@ public class SettingsService : ISettingsService
         }
     }
 
+    public bool ForceProfilesListOpen
+    {
+        get => backEnd.Settings?.ForceProfilesListOpen ?? false;
+        set
+        {
+            if (backEnd.Settings != null && backEnd.Settings.ForceProfilesListOpen != value)
+            {
+                backEnd.Settings.ForceProfilesListOpen = value;
+                Save();
+            }
+        }
+    }
+
     public bool TrySave(out string? errorMessage)
     {
         errorMessage = null;

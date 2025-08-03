@@ -9,6 +9,7 @@ public interface ISettingsService : INotifyPropertyChanged
     string Theme { get; set; }
     bool ShowConfirmModals { get; set; }
     string Language { get; set; }
+    bool ForceProfilesListOpen { get; set; }
 
     event EventHandler? ThemeChanged;
 
