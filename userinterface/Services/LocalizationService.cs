@@ -27,7 +27,6 @@ public class LocalizationService : INotifyPropertyChanged
         }
         catch (CultureNotFoundException ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Culture not found: {cultureCode} - {ex.Message}");
             return false;
         }
     }
@@ -44,7 +43,6 @@ public class LocalizationService : INotifyPropertyChanged
         
         if (stopwatch.ElapsedMilliseconds >= 10)
         {
-            System.Diagnostics.Debug.WriteLine($"[LOCALIZATION] SLOW: GetText('{key}') took {stopwatch.ElapsedMilliseconds}ms on thread {System.Threading.Thread.CurrentThread.ManagedThreadId}");
         }
         
         return result;

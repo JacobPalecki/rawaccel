@@ -57,7 +57,6 @@ namespace userinterface.Services
             
             if (stopwatch.ElapsedMilliseconds >= 10)
             {
-                System.Diagnostics.Debug.WriteLine($"[THEME SERVICE] SLOW: GetCachedColor('{resourceKey}') took {stopwatch.ElapsedMilliseconds}ms on thread {System.Threading.Thread.CurrentThread.ManagedThreadId}");
             }
             
             colorCache[resourceKey] = color;

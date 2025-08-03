@@ -97,7 +97,6 @@ public class GeneralSettingsViewModel : ViewModelBase
         }
         catch (CultureNotFoundException ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Culture not found: {cultureCode} - {ex.Message}");
         }
     }
 
@@ -109,7 +108,6 @@ public class GeneralSettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to change theme: {themeCode} - {ex.Message}");
         }
     }
 

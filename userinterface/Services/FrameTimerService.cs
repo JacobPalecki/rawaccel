@@ -10,7 +10,6 @@ namespace userinterface.Services
     // - Call StopMonitoring("context") after completion
     // - Use MonitorOperation("name", action) for automatic monitoring
     // 
-    // To re-enable debug logging, uncomment Debug.WriteLine calls and add using System.Diagnostics;
     public class FrameTimerService
     {
         private readonly Stopwatch frameStopwatch = new();
@@ -34,7 +33,6 @@ namespace userinterface.Services
             isMonitoring = true;
             frameStopwatch.Restart();
             frameTimer.Start();
-            // Debug.WriteLine($"[FRAME TIMER] Started monitoring: {context}");
         }
 
         public void StopMonitoring(string context = "")
@@ -43,7 +41,6 @@ namespace userinterface.Services
             
             frameTimer.Stop();
             isMonitoring = false;
-            // Debug.WriteLine($"[FRAME TIMER] Stopped monitoring: {context}");
         }
 
 
@@ -54,7 +51,6 @@ namespace userinterface.Services
             var elapsed = frameStopwatch.ElapsedMilliseconds;
             if (elapsed >= THRESHOLD_MS)
             {
-                // Debug.WriteLine($"[FRAME TIMER] ⚠️ UI Thread blocked for {elapsed}ms - potential frame drop!");
             }
             
             frameStopwatch.Restart();
@@ -65,7 +61,6 @@ namespace userinterface.Services
         public void MonitorOperation(string operationName, Action operation)
         {
             var stopwatch = Stopwatch.StartNew();
-            // Debug.WriteLine($"[OPERATION MONITOR] Starting: {operationName}");
             
             StartMonitoring($"Operation: {operationName}");
             
@@ -77,7 +72,6 @@ namespace userinterface.Services
             {
                 stopwatch.Stop();
                 StopMonitoring($"Operation: {operationName}");
-                // Debug.WriteLine($"[OPERATION MONITOR] Completed: {operationName} in {stopwatch.ElapsedMilliseconds}ms");
             }
         }
     }

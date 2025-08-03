@@ -115,7 +115,6 @@ namespace userinterface.Services
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[CHART PREVIEW] Error generating preview: {ex.Message}");
                     return Array.Empty<byte>();
                 }
             });

@@ -11,6 +11,5 @@ public class ViewModelBase : ObservableObject
         var sw = Stopwatch.StartNew();
         action();
         sw.Stop();
-        Debug.WriteLine($"[PERF] {operation}: {sw.ElapsedMilliseconds}ms");
     }
 }

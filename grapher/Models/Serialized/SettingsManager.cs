@@ -324,7 +324,6 @@ namespace grapher.Models.Serialized
                 }
                 catch (JsonException e)
                 {
-                    System.Diagnostics.Debug.WriteLine($"bad settings: {e}");
                 }
             }
 

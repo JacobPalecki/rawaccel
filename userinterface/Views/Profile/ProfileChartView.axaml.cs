@@ -30,7 +30,6 @@ public partial class ProfileChartView : UserControl
         }
         catch (System.Exception ex)
         {
-            Debug.WriteLine($"[CHART INIT] Error during initialization: {ex.Message}");
         }
     }
 }

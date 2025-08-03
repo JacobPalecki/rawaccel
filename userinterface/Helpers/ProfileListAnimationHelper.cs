@@ -250,11 +250,9 @@ public class ProfileListAnimationHelper : IDisposable
         catch (OperationCanceledException)
         {
             // Silently handle cancellation - this is expected behavior
-            Debug.WriteLine($"[ANIMATION] Animation for profile {profileIndex} was canceled");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ANIMATION] Unexpected error in animation for profile {profileIndex}: {ex.Message}");
         }
         finally
         {
@@ -269,7 +267,6 @@ public class ProfileListAnimationHelper : IDisposable
             if (remainingCount == 0 && areAnimationsActive)
             {
                 areAnimationsActive = false;
-                Debug.WriteLine($"[ANIMATION] All animations completed, re-enabling interactions at {DateTime.Now:HH:mm:ss.fff}");
             }
         }
     }
@@ -330,7 +327,6 @@ public class ProfileListAnimationHelper : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ANIMATION] Error in AnimateAllProfilesToCorrectPositionsAsync: {ex.Message}");
                 }
                 finally
                 {
@@ -506,11 +502,9 @@ public class ProfileListAnimationHelper : IDisposable
         }
         catch (OperationCanceledException)
         {
-            Debug.WriteLine($"[ANIMATION] Collapse animation for profile {profileIndex} was canceled");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ANIMATION] Error in collapse animation for profile {profileIndex}: {ex.Message}");
         }
         finally
         {

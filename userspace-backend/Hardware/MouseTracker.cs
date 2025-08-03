@@ -187,13 +187,11 @@ namespace userspace_backend.Hardware
                 {
                     isTracking = true;
                     throttleTimer.Change(16, 16); // ~60 FPS
-                    Debug.WriteLine("\n=== Mouse Tracking Started ===\nListening for mouse input from all devices...");
                     LogAvailableMouseDevices();
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Mouse Tracking Error ===\nFailed to start tracking: {ex.Message}");
             }
         }
 
@@ -218,15 +216,12 @@ namespace userspace_backend.Hardware
                 idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 lastEventArgs = null;
                 
-                Debug.WriteLine("\n=== Mouse Tracking Stopped ===\nNo longer listening for mouse input.");
-                
                 // Reset device tracking
                 lastActiveDeviceHandle = IntPtr.Zero;
                 lastActiveDeviceName = string.Empty;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Mouse Tracking Error ===\nFailed to stop tracking: {ex.Message}");
             }
         }
 
@@ -397,7 +392,6 @@ namespace userspace_backend.Hardware
 
             // Fallback to handle-based identification
             string fallbackName = $"Mouse Device ({deviceHandle.ToInt64():X})";
-            Debug.WriteLine($"\n=== Device Discovery (Fallback) ===\nUsing fallback name: {fallbackName}\nHandle: {deviceHandle.ToInt64():X}");
             deviceNameCache[deviceHandle] = fallbackName;
             return fallbackName;
         }
@@ -446,11 +440,9 @@ namespace userspace_backend.Hardware
                 
                 if (lastActiveDeviceHandle == IntPtr.Zero)
                 {
-                    Debug.WriteLine($"\n=== Mouse Device Detection ===\nInitial device detected: {deviceName} (Handle: {deviceHandle.ToInt64():X})");
                 }
                 else
                 {
-                    Debug.WriteLine($"\n=== Mouse Device Change ===\nFrom: {lastActiveDeviceName} (Handle: {lastActiveDeviceHandle.ToInt64():X})\nTo: {deviceName} (Handle: {deviceHandle.ToInt64():X})");
                 }
                 
                 lastActiveDeviceHandle = deviceHandle;
@@ -475,8 +467,6 @@ namespace userspace_backend.Hardware
                         // Second call to get the actual device list
                         if (GetRawInputDeviceList(deviceListPtr, ref deviceCount, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICELIST))) != uint.MaxValue)
                         {
-                            Debug.WriteLine($"\n=== Available Mouse Devices ({deviceCount} total devices) ===");
-                            
                             for (int i = 0; i < deviceCount; i++)
                             {
                                 IntPtr currentDevicePtr = IntPtr.Add(deviceListPtr, i * Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
@@ -486,7 +476,6 @@ namespace userspace_backend.Hardware
                                 if (device.dwType == 0)
                                 {
                                     string deviceName = GetDeviceName(device.hDevice);
-                                    Debug.WriteLine($"Mouse {i + 1}: {deviceName} (Handle: {device.hDevice.ToInt64():X})");
                                 }
                             }
                         }
@@ -499,7 +488,6 @@ namespace userspace_backend.Hardware
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Device Enumeration Error ===\nFailed to enumerate devices: {ex.Message}");
             }
         }
 

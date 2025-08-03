@@ -80,8 +80,6 @@ namespace userspace_backend.Hardware
                             string devicePath = Marshal.PtrToStringUni(nameBuffer) ?? "Unknown Device";
                             string deviceName = GetDeviceNameFromPath(devicePath);
                             
-                            Debug.WriteLine($"\n=== Device Discovery ===\nFound device: {deviceName}\nDevice path: {devicePath}\nHandle: {deviceHandle.ToInt64():X}");
-                            
                             deviceNameCache[deviceHandle] = deviceName;
                             return deviceName;
                         }
@@ -94,11 +92,9 @@ namespace userspace_backend.Hardware
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Device Name Error ===\nFailed to get name for handle {deviceHandle.ToInt64():X}: {ex.Message}");
             }
 
             string fallbackName = $"Mouse Device ({deviceHandle.ToInt64():X})";
-            Debug.WriteLine($"\n=== Device Discovery (Fallback) ===\nUsing fallback name: {fallbackName}\nHandle: {deviceHandle.ToInt64():X}");
             deviceNameCache[deviceHandle] = fallbackName;
             return fallbackName;
         }
@@ -148,8 +144,6 @@ namespace userspace_backend.Hardware
                                             int lastBackslash = instanceId.LastIndexOf('\\');
                                             string hardwareId = lastBackslash > 0 ? instanceId.Substring(0, lastBackslash) : instanceId;
                                             
-                                            Debug.WriteLine($"\n=== Device HID Extraction ===\nDevice Path: {devicePath}\nInstance ID: {instanceId}\nHardware ID: {hardwareId}");
-                                            
                                             deviceHIDCache[deviceHandle] = hardwareId;
                                             return hardwareId;
                                         }
@@ -170,7 +164,6 @@ namespace userspace_backend.Hardware
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Device HID Error ===\nFailed to get HID for handle {deviceHandle.ToInt64():X}: {ex.Message}");
             }
 
             string fallbackHID = $"HANDLE_{deviceHandle.ToInt64():X}";
@@ -224,7 +217,6 @@ namespace userspace_backend.Hardware
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Device Name from HID Error ===\nFailed to resolve name for HID {hardwareID}: {ex.Message}");
             }
 
             return ExtractBasicNameFromHID(hardwareID);
@@ -288,7 +280,6 @@ namespace userspace_backend.Hardware
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== HID Device Name Error ===\nFailed to get exact name for {devicePath}: {ex.Message}");
             }
 
             return ExtractBasicNameFromPath(devicePath);
@@ -331,7 +322,6 @@ namespace userspace_backend.Hardware
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\n=== Device Enumeration Error ===\nFailed to enumerate devices: {ex.Message}");
             }
 
             return devices;

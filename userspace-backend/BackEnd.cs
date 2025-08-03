@@ -73,13 +73,11 @@ namespace userspace_backend
         
         public static void QueueModal(string modalType, params object[] parameters)
         {
-            Debug.WriteLine($"\n=== MODAL QUEUE ===\nQueueing modal: {modalType}\nParameters: {string.Join(", ", parameters)}");
             QueuedModalRequested?.Invoke(null, new ModalEventArgs
             {
                 ModalType = modalType,
                 Parameters = parameters
             });
-            Debug.WriteLine($"Modal queued. Event subscribers: {QueuedModalRequested?.GetInvocationList().Length ?? 0}");
         }
     }
 
@@ -170,27 +168,19 @@ namespace userspace_backend
 
         public void ValidateDevicesAfterUIReady()
         {
-            Debug.WriteLine("\n=== VALIDATE DEVICES AFTER UI READY ===");
             ValidateDevicesAvailability();
             
             var activeDevice = Hardware.ActiveDevice;
-            Debug.WriteLine($"Active device: {(activeDevice != null ? activeDevice.Name.CurrentValidatedValue : "null")}");
             
             if (activeDevice != null)
             {
                 bool isConfigured = Devices.Devices.Contains(activeDevice);
-                Debug.WriteLine($"Device is configured: {isConfigured}");
                 
                 if (!isConfigured)
                 {
                     UnconfiguredActiveDevice = activeDevice;
-                    Debug.WriteLine($"Setting UnconfiguredActiveDevice and queuing modal for: {activeDevice.Name.CurrentValidatedValue}");
                     NotificationManager.QueueModal("UnconfiguredDevice", activeDevice.Name.CurrentValidatedValue);
                 }
-            }
-            else
-            {
-                Debug.WriteLine("No active device found");
             }
         }
 
@@ -259,28 +249,6 @@ namespace userspace_backend
         {
             MappingModel mappingToApply = Mappings.GetMappingToSetActive();
             
-            Debug.WriteLine("\n=== Raw Accel: Applying Settings ===");
-            Debug.WriteLine($"Active Mapping: {mappingToApply.Name.ModelValue}");
-            
-            // Log profile to device group mappings
-            foreach (var individualMapping in mappingToApply.IndividualMappings)
-            {
-                var deviceGroup = individualMapping.DeviceGroup;
-                var profile = individualMapping.Profile;
-                var devicesInGroup = Devices.Devices.Where(d => d.DeviceGroup.Equals(deviceGroup) && !d.Ignore.ModelValue).ToList();
-                
-                Debug.WriteLine($"\n  Device Group: {deviceGroup.DisplayText}");
-                Debug.WriteLine($"  Profile: {profile.Name.ModelValue}");
-                Debug.WriteLine($"  Devices in group ({devicesInGroup.Count}):");
-                
-                foreach (var device in devicesInGroup)
-                {
-                    Debug.WriteLine($"    - {device.Name.ModelValue} (ID: {device.HardwareID.ModelValue})");
-                }
-            }
-            
-            Debug.WriteLine("\n=== End of Mapping Info ===");
-            
             // Validate mappings before applying
             if (!ValidateMappingBeforeApplying(mappingToApply))
             {
@@ -291,12 +259,10 @@ namespace userspace_backend
             try
             {
                 config.Activate();
-                Debug.WriteLine("\nSettings applied successfully to driver.");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"\nFailed to apply settings to driver: {ex.Message}");
                 return false;
             }
         }

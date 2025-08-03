@@ -208,13 +208,11 @@ namespace userinterface.ViewModels.Profile
                             {
                                 IsLoadingChart = false;
                                 OnPropertyChanged(nameof(IsLoadingChart));
-                                Debug.WriteLine($"Error initializing chart axes: {ex.Message}");
                             }
                         });
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"Error during chart initialization: {ex.Message}");
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             IsLoadingChart = false;
@@ -717,7 +715,6 @@ namespace userinterface.ViewModels.Profile
             mouseTracker.MouseIdle += OnMouseIdle;
             mouseTracker.StartTracking();
             
-            Debug.WriteLine("\n=== Real-Time Tracking Started ===\nChart will now display current mouse device and track movement.");
             
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
         }
@@ -749,7 +746,6 @@ namespace userinterface.ViewModels.Profile
             OnPropertyChanged(nameof(CurrentMouseDevice));
             OnPropertyChanged(nameof(CurrentDeviceDPI));
             
-            Debug.WriteLine("\n=== Real-Time Tracking Stopped ===\nChart no longer tracking mouse devices.");
             
             if (currentSpeedDotSeries != null)
             {
@@ -777,7 +773,6 @@ namespace userinterface.ViewModels.Profile
                 
                 if (CurrentMouseDevice != displayName || CurrentDeviceDPI != dpiInfo)
                 {
-                    Debug.WriteLine($"\n=== UI Device Change ===\nDevice: {displayName}\nDPI: {sourceDPI}\nKnown Device: {isKnownDevice}\nHandle: {e.DeviceHandle.ToInt64():X}");
                     
                     CurrentMouseDevice = displayName;
                     CurrentDeviceDPI = dpiInfo;
@@ -811,7 +806,6 @@ namespace userinterface.ViewModels.Profile
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error in OnMouseMoved: {ex.Message}");
             }
         }
         

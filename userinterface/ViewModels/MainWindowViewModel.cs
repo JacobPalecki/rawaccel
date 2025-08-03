@@ -68,7 +68,6 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         BE.NotificationManager.NotificationRequested += OnBackEndNotificationRequested;
         BE.NotificationManager.QueuedNotificationRequested += OnBackEndQueuedNotificationRequested;
         
-        System.Diagnostics.Debug.WriteLine("\n=== MAIN WINDOW VIEW MODEL INIT ===\nEvent handlers subscribed, calling ValidateDevicesAfterUIReady");
         
         // Now that UI is ready and event handlers are subscribed, validate devices
         backEnd.ValidateDevicesAfterUIReady();

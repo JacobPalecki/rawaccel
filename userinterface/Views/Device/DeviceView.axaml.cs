@@ -15,7 +15,6 @@ public partial class DeviceView : UserControl
 
     private void OnDeleteButtonClick(object? sender, RoutedEventArgs e)
     {
-        Debug.WriteLine("[DeviceView] OnDeleteButtonClick called");
         
         // Stop the event from propagating first
         e.Handled = true;
@@ -23,19 +22,16 @@ public partial class DeviceView : UserControl
         // Manually execute the delete command
         if (DataContext is DeviceViewModel deviceViewModel)
         {
-            Debug.WriteLine("[DeviceView] Executing DeleteCommand manually");
             if (deviceViewModel.DeleteCommand.CanExecute(null))
             {
                 deviceViewModel.DeleteCommand.Execute(null);
             }
             else
             {
-                Debug.WriteLine("[DeviceView] DeleteCommand cannot execute");
             }
         }
         else
         {
-            Debug.WriteLine("[DeviceView] DataContext is not DeviceViewModel");
         }
     }
 }

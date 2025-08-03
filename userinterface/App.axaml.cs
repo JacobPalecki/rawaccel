@@ -238,7 +238,6 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to open bug report URL: {ex.Message}");
         }
     }
 
@@ -254,7 +253,6 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Failed to open Discord URL: {ex.Message}");
         }
     }
 
@@ -273,8 +271,6 @@ public partial class App : Application
     {
         try
         {
-            Debug.WriteLine("[PRELOAD] Starting library preload...");
-
             await Task.Run(() =>
             {
                 try
@@ -297,15 +293,12 @@ public partial class App : Application
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[PRELOAD] Library loading failed: {ex.Message}");
                 }
             });
 
-            Debug.WriteLine("[PRELOAD] All libraries preloaded successfully");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[PRELOAD] Preload task failed: {ex.Message}");
         }
     }
 
@@ -331,7 +324,6 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[STARTUP] Failed to apply startup settings: {ex.Message}");
         }
     }
 }

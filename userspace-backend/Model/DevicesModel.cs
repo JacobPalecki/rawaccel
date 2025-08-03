@@ -132,7 +132,6 @@ namespace userspace_backend.Model
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Failed to resolve product string for {systemDevice.id}: {ex.Message}");
                     }
                 }
             }

@@ -58,8 +58,6 @@ namespace userinterface.Services
         
         private void OnBackEndQueuedModalRequested(object? sender, userspace_backend.ModalEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"\n=== MODAL SERVICE QUEUE HANDLER ===\nReceived modal request: {e.ModalType}\nParameters: {string.Join(", ", e.Parameters)}");
-            
             if (e.ModalType == "AlphaBuildWarning")
             {
                 EnqueueModal(new ModalQueueItem
@@ -79,9 +77,7 @@ namespace userinterface.Services
         
         private void EnqueueModal(ModalQueueItem item)
         {
-            System.Diagnostics.Debug.WriteLine($"ModalService: Enqueueing modal of type {item.Type}");
             modalQueue.Enqueue(item);
-            System.Diagnostics.Debug.WriteLine($"ModalService: Queue length: {modalQueue.Count}");
             
             if (!isProcessingQueue)
             {
@@ -93,12 +89,10 @@ namespace userinterface.Services
         {
             if (isProcessingQueue)
             {
-                System.Diagnostics.Debug.WriteLine("ModalService: Queue already being processed");
                 return;
             }
             
             isProcessingQueue = true;
-            System.Diagnostics.Debug.WriteLine("\n=== MODAL SERVICE STARTING QUEUE PROCESSING ===");
             
             // Wait a bit to ensure UI is fully loaded
             await Task.Delay(500);
@@ -106,7 +100,6 @@ namespace userinterface.Services
             while (modalQueue.Count > 0)
             {
                 var item = modalQueue.Dequeue();
-                System.Diagnostics.Debug.WriteLine($"\n=== PROCESSING QUEUED MODAL ===\nType: {item.Type}\nRemaining in queue: {modalQueue.Count}");
                 
                 try
                 {
@@ -140,15 +133,12 @@ namespace userinterface.Services
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ModalService: Error processing modal: {ex.Message}");
                     item.TaskCompletionSource.SetException(ex);
                 }
                 
-                System.Diagnostics.Debug.WriteLine($"Modal of type {item.Type} completed, continuing to next item in queue");
             }
             
             isProcessingQueue = false;
-            System.Diagnostics.Debug.WriteLine("=== MODAL SERVICE QUEUE PROCESSING COMPLETE ===");
         }
 
         private bool TryGetModalOverlay(out ModalOverlay modalOverlay)
@@ -296,7 +286,6 @@ namespace userinterface.Services
 
         public async Task<T?> ShowDialogAsync<T>(UserControl dialogContent, string titleKey = "")
         {
-            System.Diagnostics.Debug.WriteLine($"ModalService: ShowDialogAsync called for {dialogContent.GetType().Name}");
             
             var item = new ModalQueueItem
             {
@@ -312,26 +301,21 @@ namespace userinterface.Services
         
         private async Task<T?> ShowDialogImmediatelyAsync<T>(UserControl dialogContent, string titleKey)
         {
-            System.Diagnostics.Debug.WriteLine($"ModalService: ShowDialogImmediatelyAsync called for {dialogContent.GetType().Name}");
             if (!TryGetModalOverlay(out var modalOverlay)) return default(T);
 
             if (currentModalContent != null)
             {
-                System.Diagnostics.Debug.WriteLine("ModalService: Closing existing modal");
                 CloseCurrentModal();
             }
 
             currentDialogTask = new TaskCompletionSource<object?>();
-            System.Diagnostics.Debug.WriteLine("ModalService: Created new dialog task");
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 modalOverlay.BackgroundClicked += () =>
                 {
-                    System.Diagnostics.Debug.WriteLine("ModalService: Background clicked");
                     if (!currentDialogTask!.Task.IsCompleted)
                     {
-                        System.Diagnostics.Debug.WriteLine("ModalService: Setting result to null due to background click");
                         currentDialogTask.SetResult(null);
                         CloseCurrentModal();
                     }
@@ -339,28 +323,22 @@ namespace userinterface.Services
 
                 currentModalContent = dialogContent;
                 modalOverlay.ShowModal(dialogContent);
-                System.Diagnostics.Debug.WriteLine("ModalService: Modal shown in overlay");
             });
 
-            System.Diagnostics.Debug.WriteLine("ModalService: Waiting for dialog task completion...");
             var result = await currentDialogTask.Task;
-            System.Diagnostics.Debug.WriteLine($"ModalService: Dialog task completed with result: {result}");
             return result is T typedResult ? typedResult : default(T);
         }
 
         public void CloseCurrentModal()
         {
-            System.Diagnostics.Debug.WriteLine("ModalService: CloseCurrentModal called");
             if (TryGetModalOverlay(out var modalOverlay) && currentModalContent != null)
             {
-                System.Diagnostics.Debug.WriteLine($"ModalService: Hiding modal: {currentModalContent.GetType().Name}");
                 modalOverlay.HideModal();
                 currentModalContent = null;
                 
                 // Complete the dialog task if it hasn't been completed yet
                 if (currentDialogTask != null && !currentDialogTask.Task.IsCompleted)
                 {
-                    System.Diagnostics.Debug.WriteLine("ModalService: Completing dialog task as modal was closed");
                     currentDialogTask.SetResult(null);
                 }
             }
@@ -368,15 +346,11 @@ namespace userinterface.Services
         
         public void CloseCurrentModalWithResult<T>(T result)
         {
-            System.Diagnostics.Debug.WriteLine($"ModalService: CloseCurrentModalWithResult called with result: {result}");
             if (TryGetModalOverlay(out var modalOverlay) && currentModalContent != null)
             {
-                System.Diagnostics.Debug.WriteLine($"ModalService: Hiding modal: {currentModalContent.GetType().Name}");
-                
                 // Set the result first, then close
                 if (currentDialogTask != null && !currentDialogTask.Task.IsCompleted)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ModalService: Setting dialog task result to: {result}");
                     currentDialogTask.SetResult(result);
                 }
                 
@@ -387,26 +361,18 @@ namespace userinterface.Services
 
         private async Task ShowAlphaBuildWarningAsync()
         {
-            System.Diagnostics.Debug.WriteLine("\n=== SHOWING ALPHA BUILD WARNING MODAL ===");
-            
             var warningView = new Views.Controls.AlphaBuildWarningView();
-            System.Diagnostics.Debug.WriteLine("Created AlphaBuildWarningView, showing modal...");
             
             await ShowDialogImmediatelyAsync<bool>(warningView, "");
             
-            System.Diagnostics.Debug.WriteLine("Alpha build warning modal closed");
         }
         
         private async Task<bool?> ShowDeviceConfigurationAsync(string deviceName)
         {
-            System.Diagnostics.Debug.WriteLine($"\n=== SHOWING UNCONFIGURED DEVICE MODAL ===\nDevice: {deviceName}");
-            
-            var confirmationView = new Views.Controls.DeviceConfigurationPromptView(deviceName);
-            System.Diagnostics.Debug.WriteLine("Created DeviceConfigurationPromptView, showing modal...");
+            var confirmationView = new DeviceConfigurationPromptView(deviceName);
             
             var result = await ShowDialogImmediatelyAsync<bool?>(confirmationView, "UnconfiguredDeviceTitle");
             
-            System.Diagnostics.Debug.WriteLine($"Modal closed. Dialog result: {result}");
             
             // Get the BackEnd service to handle the device configuration
             if (result == true)
@@ -416,7 +382,6 @@ namespace userinterface.Services
                 {
                     try
                     {
-                        System.Diagnostics.Debug.WriteLine("User chose to create device, adding to configured devices");
                         
                         var deviceToAdd = backEnd.UnconfiguredActiveDevice;
                         bool success = backEnd.Devices.TryAddDevice(deviceToAdd.MapToData());
@@ -425,7 +390,6 @@ namespace userinterface.Services
                         {
                             backEnd.UnconfiguredActiveDevice = null;
                             backEnd.ApplySettingsOnly();
-                            System.Diagnostics.Debug.WriteLine("Device configuration saved");
                             
                             // Show success notification
                             userspace_backend.NotificationManager.QueueNotification(
@@ -435,7 +399,6 @@ namespace userinterface.Services
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine("Failed to add device - device may already exist");
                             
                             // Show error notification
                             userspace_backend.NotificationManager.QueueNotification(
@@ -446,7 +409,6 @@ namespace userinterface.Services
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error creating device: {ex.Message}");
                         
                         // Show error notification
                         userspace_backend.NotificationManager.QueueNotification(
@@ -457,7 +419,6 @@ namespace userinterface.Services
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("No unconfigured device available");
                     
                     // Show error notification
                     userspace_backend.NotificationManager.QueueNotification(
@@ -467,7 +428,6 @@ namespace userinterface.Services
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("User cancelled device creation");
             }
             
             return result;

@@ -46,16 +46,13 @@ public partial class MainWindow : Window
             {
                 MouseTracker.SetWindowHandle(hwnd);
                 SetupWindowProcHook(hwnd);
-                System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Window handle set for mouse tracking: {hwnd}");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("[MAIN WINDOW] Failed to get window handle");
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Error setting up mouse tracking: {ex.Message}");
         }
     }
 
@@ -80,11 +77,9 @@ public partial class MainWindow : Window
             wndProcDelegate = new WndProcDelegate(WindowProc);
             IntPtr newWndProc = Marshal.GetFunctionPointerForDelegate(wndProcDelegate);
             originalWndProc = SetWindowLongPtr(hwnd, GWL_WNDPROC, newWndProc);
-            System.Diagnostics.Debug.WriteLine("[MAIN WINDOW] Window procedure hook installed");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Error setting up window proc hook: {ex.Message}");
         }
     }
     
@@ -99,7 +94,6 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MAIN WINDOW] Error in window proc: {ex.Message}");
         }
         
         return CallWindowProc(originalWndProc, hWnd, msg, wParam, lParam);
