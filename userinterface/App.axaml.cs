@@ -17,6 +17,7 @@ using userinterface.ViewModels.Settings;
 using userinterface.Views;
 using userspace_backend;
 using userspace_backend.Hardware;
+// using userspace_backend.Logging;
 using Windows.System;
 using DATA = userspace_backend.Data;
 
@@ -48,6 +49,15 @@ public partial class App : Application
         services.AddSingleton<PreviewChartRenderer>();
         services.AddSingleton<IMouseTracker, MouseTracker>();
 
+        // Register logging service
+        services.AddSingleton<userspace_backend.Logging.ILoggingService>(provider =>
+        {
+            var bootstrapper = BootstrapBackEnd();
+            var settings = bootstrapper.LoadSettings();
+            var loggingConfig = settings?.LoggingConfiguration ?? new userspace_backend.Logging.LoggingConfiguration();
+            return new userspace_backend.Logging.LoggingService(loggingConfig);
+        });
+
         // Register backend services
         services.AddSingleton<IDeviceInfoProvider, DeviceInfoProvider>();
         services.AddSingleton<Bootstrapper>(provider => BootstrapBackEnd());
@@ -55,7 +65,8 @@ public partial class App : Application
         {
             var bootstrapper = provider.GetRequiredService<Bootstrapper>();
             var deviceInfoProvider = provider.GetRequiredService<IDeviceInfoProvider>();
-            var backEnd = new BackEnd(bootstrapper, deviceInfoProvider);
+            var loggingService = provider.GetRequiredService<userspace_backend.Logging.ILoggingService>();
+            var backEnd = new BackEnd(bootstrapper, deviceInfoProvider, loggingService);
             backEnd.Load();
             return backEnd;
         });

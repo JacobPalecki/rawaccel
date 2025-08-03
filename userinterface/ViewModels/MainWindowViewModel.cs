@@ -20,6 +20,7 @@ using userinterface.ViewModels.Mapping;
 using userinterface.ViewModels.Profile;
 using userinterface.ViewModels.Settings;
 using userinterface.Views;
+// using userspace_backend.Logging;
 using BE = userspace_backend;
 
 namespace userinterface.ViewModels;
@@ -52,6 +53,8 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         this.frameTimer = frameTimer ?? throw new ArgumentNullException(nameof(frameTimer));
 
+        backEnd.LoggingService?.LogInformation(userspace_backend.Logging.LogSource.UI, "MainWindowViewModel initializing");
+
         devicesPage = App.Services!.GetRequiredService<DevicesPageViewModel>();
         profilesPage = App.Services!.GetRequiredService<ProfilesPageViewModel>();
         mappingsPage = App.Services!.GetRequiredService<MappingsPageViewModel>();
@@ -68,6 +71,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         BE.NotificationManager.NotificationRequested += OnBackEndNotificationRequested;
         BE.NotificationManager.QueuedNotificationRequested += OnBackEndQueuedNotificationRequested;
         
+        backEnd.LoggingService?.LogInformation(userspace_backend.Logging.LogSource.UI, "MainWindowViewModel initialized, validating devices");
         
         // Now that UI is ready and event handlers are subscribed, validate devices
         backEnd.ValidateDevicesAfterUIReady();
@@ -141,7 +145,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
     public void SelectPage(NavigationPage page)
     {
-        Console.WriteLine($"SelectPage called with: {page}");
+        backEnd.LoggingService?.LogDebug(userspace_backend.Logging.LogSource.UI, "Navigating to page: {PageName}", page);
         SelectedPage = page;
         IsProfilesExpanded = page == NavigationPage.Profiles;
         
@@ -231,7 +235,10 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
     public bool Apply()
     {
-        return BackEnd.Apply();
+        backEnd.LoggingService?.LogInformation(userspace_backend.Logging.LogSource.UI, "Apply settings requested from UI");
+        var result = BackEnd.Apply();
+        backEnd.LoggingService?.LogInformation(userspace_backend.Logging.LogSource.UI, "Apply settings result: {Success}", result);
+        return result;
     }
 
     private void ToggleTheme()

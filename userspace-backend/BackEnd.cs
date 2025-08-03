@@ -10,6 +10,7 @@ using userspace_backend.Data.Profiles;
 using userspace_backend.IO;
 using userspace_backend.Model;
 using userspace_backend.Hardware;
+using userspace_backend.Logging;
 using DATA = userspace_backend.Data;
 
 namespace userspace_backend
@@ -84,19 +85,27 @@ namespace userspace_backend
     public class BackEnd
     {
         private readonly IDeviceInfoProvider? deviceInfoProvider;
+        private readonly ILoggingService? loggingService;
 
-        public BackEnd(IBackEndLoader backEndLoader) : this(backEndLoader, null)
+        public BackEnd(IBackEndLoader backEndLoader) : this(backEndLoader, null, null)
         {
         }
 
-        public BackEnd(IBackEndLoader backEndLoader, IDeviceInfoProvider? deviceInfoProvider)
+        public BackEnd(IBackEndLoader backEndLoader, IDeviceInfoProvider? deviceInfoProvider) : this(backEndLoader, deviceInfoProvider, null)
+        {
+        }
+
+        public BackEnd(IBackEndLoader backEndLoader, IDeviceInfoProvider? deviceInfoProvider, ILoggingService? loggingService)
         {
             BackEndLoader = backEndLoader;
             this.deviceInfoProvider = deviceInfoProvider;
+            this.loggingService = loggingService;
             Devices = new DevicesModel(deviceInfoProvider);
             Profiles = new ProfilesModel([]);
             Settings = new DATA.Settings();
             Hardware = new HardwareManager(Devices);
+
+            loggingService?.LogInformation(LogSource.Backend, "BackEnd initialized");
         }
 
         public DevicesModel Devices { get; set; }
@@ -110,6 +119,8 @@ namespace userspace_backend
         public HardwareManager Hardware { get; set; }
 
         public DeviceModel? UnconfiguredActiveDevice { get; set; }
+
+        public ILoggingService? LoggingService => loggingService;
 
         protected IBackEndLoader BackEndLoader { get; set; }
 
@@ -138,23 +149,46 @@ namespace userspace_backend
 
         public void Load()
         {
-            IEnumerable<DATA.Device> devicesData = BackEndLoader.LoadDevices(); ;
-            LoadDevicesFromData(devicesData);
+            loggingService?.LogInformation(LogSource.Backend, "Starting backend data load");
 
-            IEnumerable<DATA.Profile> profilesData = BackEndLoader.LoadProfiles(); ;
-            LoadProfilesFromData(profilesData);
+            try
+            {
+                IEnumerable<DATA.Device> devicesData = BackEndLoader.LoadDevices();
+                LoadDevicesFromData(devicesData);
+                loggingService?.LogInformation(LogSource.Backend, "Loaded {DeviceCount} devices", devicesData.Count());
 
-            DATA.MappingSet mappingData = BackEndLoader.LoadMappings();
-            Mappings = new MappingsModel(mappingData, Devices.DeviceGroups, Profiles);
+                IEnumerable<DATA.Profile> profilesData = BackEndLoader.LoadProfiles();
+                LoadProfilesFromData(profilesData);
+                loggingService?.LogInformation(LogSource.Backend, "Loaded {ProfileCount} profiles", profilesData.Count());
 
-            Settings = BackEndLoader.LoadSettings() ?? new DATA.Settings();
+                DATA.MappingSet mappingData = BackEndLoader.LoadMappings();
+                Mappings = new MappingsModel(mappingData, Devices.DeviceGroups, Profiles);
+                loggingService?.LogInformation(LogSource.Backend, "Loaded {MappingCount} mappings", mappingData.Mappings?.Length ?? 0);
+
+                Settings = BackEndLoader.LoadSettings() ?? new DATA.Settings();
+                loggingService?.LogInformation(LogSource.Backend, "Settings loaded successfully");
+
+                loggingService?.LogInformation(LogSource.Backend, "Backend data load completed");
+            }
+            catch (Exception ex)
+            {
+                loggingService?.LogError(LogSource.Backend, ex, "Failed to load backend data");
+                throw;
+            }
         }
 
         protected void LoadDevicesFromData(IEnumerable<DATA.Device> devicesData)
         {
             foreach(var deviceData in devicesData)
             {
-                Devices.TryAddDevice(deviceData);
+                if (Devices.TryAddDevice(deviceData))
+                {
+                    loggingService?.LogDebug(LogSource.Backend, "Added device: {DeviceName} ({HWID})", deviceData.Name, deviceData.HWID);
+                }
+                else
+                {
+                    loggingService?.LogWarning(LogSource.Backend, "Failed to add device: {DeviceName} ({HWID})", deviceData.Name, deviceData.HWID);
+                }
             }
         }
 
@@ -162,25 +196,44 @@ namespace userspace_backend
         {
             foreach (var profile in profileData)
             {
-                Profiles.TryAddProfile(profile);
+                if (Profiles.TryAddProfile(profile))
+                {
+                    loggingService?.LogDebug(LogSource.Backend, "Added profile: {ProfileName}", profile.Name);
+                }
+                else
+                {
+                    loggingService?.LogWarning(LogSource.Backend, "Failed to add profile: {ProfileName}", profile.Name);
+                }
             }
         }
 
         public void ValidateDevicesAfterUIReady()
         {
+            loggingService?.LogInformation(LogSource.Hardware, "Validating devices after UI ready");
+            
             ValidateDevicesAvailability();
             
             var activeDevice = Hardware.ActiveDevice;
             
             if (activeDevice != null)
             {
+                loggingService?.LogInformation(LogSource.Hardware, "Active device detected: {DeviceName}", activeDevice.Name.CurrentValidatedValue);
                 bool isConfigured = Devices.Devices.Contains(activeDevice);
                 
                 if (!isConfigured)
                 {
                     UnconfiguredActiveDevice = activeDevice;
+                    loggingService?.LogWarning(LogSource.Hardware, "Active device is not configured: {DeviceName}", activeDevice.Name.CurrentValidatedValue);
                     NotificationManager.QueueModal("UnconfiguredDevice", activeDevice.Name.CurrentValidatedValue);
                 }
+                else
+                {
+                    loggingService?.LogInformation(LogSource.Hardware, "Active device is properly configured: {DeviceName}", activeDevice.Name.CurrentValidatedValue);
+                }
+            }
+            else
+            {
+                loggingService?.LogInformation(LogSource.Hardware, "No active device detected");
             }
         }
 
