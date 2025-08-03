@@ -88,6 +88,7 @@ public class SettingsService : ISettingsService
         }
         catch (Exception ex)
         {
+            backEnd.LoggingService?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed to save settings via SettingsService");
             errorMessage = $"Failed to save settings: {ex.Message}";
             return false;
         }
@@ -108,6 +109,7 @@ public class SettingsService : ISettingsService
         }
         catch (Exception ex)
         {
+            backEnd.LoggingService?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed to load settings via SettingsService");
             errorMessage = $"Failed to load settings: {ex.Message}";
             return false;
         }

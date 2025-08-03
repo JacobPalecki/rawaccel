@@ -244,6 +244,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            Services?.GetService<userspace_backend.Logging.ILoggingService>()?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed to open bug report URL");
         }
     }
 
@@ -259,6 +260,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            Services?.GetService<userspace_backend.Logging.ILoggingService>()?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed to open Discord URL");
         }
     }
 
@@ -299,12 +301,14 @@ public partial class App : Application
                 }
                 catch (Exception ex)
                 {
+                    Services?.GetService<userspace_backend.Logging.ILoggingService>()?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed to preload library during async initialization");
                 }
             });
 
         }
         catch (Exception ex)
         {
+            Services?.GetService<userspace_backend.Logging.ILoggingService>()?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed during PreloadLibrariesAsync");
         }
     }
 
@@ -330,6 +334,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            Services?.GetService<userspace_backend.Logging.ILoggingService>()?.LogError(userspace_backend.Logging.LogSource.System, ex, "Failed to apply startup settings");
         }
     }
 }
