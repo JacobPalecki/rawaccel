@@ -82,11 +82,6 @@ public partial class App : Application
             };
 
             // Set up the toast control (was already created in MainWindow.axaml)
-            var toastView = mainWindow.FindControl<Views.Controls.ToastView>("ToastView");
-            if (toastView != null)
-            {
-                toastView.DataContext = Services.GetRequiredService<ToastViewModel>();
-            }
 
             desktop.MainWindow = mainWindow;
 
@@ -111,7 +106,7 @@ public partial class App : Application
                 provider.GetRequiredService<ISettingsService>(),
                 provider.GetRequiredService<FrameTimerService>(),
                 provider.GetRequiredService<INotificationService>()));
-        services.AddSingleton<ToastViewModel>();
+        services.AddSingleton<ToastContainerViewModel>();
 
         // Device ViewModels
         services.AddTransient<ViewModels.Device.DevicesPageViewModel>();

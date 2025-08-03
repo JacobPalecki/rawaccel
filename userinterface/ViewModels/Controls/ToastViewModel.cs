@@ -27,6 +27,14 @@ namespace userinterface.ViewModels.Controls
             this.notificationService.ToastRequested += OnToastRequested;
             this.notificationService.ToastDismissed += OnToastDismissed;
             CloseCommand = new RelayCommand(Close);
+            Id = Guid.NewGuid();
+        }
+
+        public ToastViewModel(INotificationService notificationService, Guid id)
+        {
+            this.notificationService = notificationService;
+            CloseCommand = new RelayCommand(Close);
+            Id = id;
         }
 
         public bool IsVisible
@@ -70,6 +78,10 @@ namespace userinterface.ViewModels.Controls
         }
 
         public ICommand CloseCommand { get; }
+
+        public Guid Id { get; private set; }
+
+        public event EventHandler<Guid>? ToastExpired;
 
         private async void OnToastRequested(object? sender, ToastNotificationEventArgs e)
         {
@@ -120,7 +132,8 @@ namespace userinterface.ViewModels.Controls
                                 Progress = 0;
                                 if (IsVisible)
                                 {
-                                    notificationService.HideToast();
+                                    IsVisible = false;
+                                    ToastExpired?.Invoke(this, Id);
                                 }
                             });
                         }
@@ -138,9 +151,27 @@ namespace userinterface.ViewModels.Controls
             }
         }
 
+        public void SetToastData(string message, ToastType type, TimeSpan duration)
+        {
+            Message = message;
+            Type = type;
+            IsVisible = true;
+            Progress = 100;
+
+            _ = StartProgressAnimation(duration);
+        }
+
+        public void ForceClose()
+        {
+            animationCancellation?.Cancel();
+            IsVisible = false;
+            Progress = 0;
+            ToastExpired?.Invoke(this, Id);
+        }
+
         private void Close()
         {
-            notificationService.HideToast();
+            ForceClose();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -154,12 +185,6 @@ namespace userinterface.ViewModels.Controls
         {
             animationCancellation?.Cancel();
             animationCancellation?.Dispose();
-
-            if (notificationService != null)
-            {
-                notificationService.ToastRequested -= OnToastRequested;
-                notificationService.ToastDismissed -= OnToastDismissed;
-            }
         }
     }
 }

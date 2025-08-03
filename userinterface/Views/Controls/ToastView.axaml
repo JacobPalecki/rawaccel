@@ -19,9 +19,7 @@
 			<Setter Property="CornerRadius" Value="8"/>
 			<Setter Property="MaxWidth" Value="400"/>
 			<Setter Property="MinWidth" Value="300"/>
-			<Setter Property="HorizontalAlignment" Value="Center"/>
-			<Setter Property="VerticalAlignment" Value="Bottom"/>
-			<Setter Property="Margin" Value="20"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
 			<Setter Property="BoxShadow" Value="{DynamicResource ToastShadow}"/>
 			<!-- Initial state: hidden below -->
 			<Setter Property="RenderTransform" Value="translateY(100px)"/>

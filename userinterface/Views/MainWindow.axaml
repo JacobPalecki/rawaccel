@@ -395,7 +395,7 @@
 			<ContentControl Content="{Binding CurrentPageContent}"/>
 		</Border>
 
-		<controls:ToastView DataContext="{Binding ToastViewModel}" />
+		<controls:ToastContainerView DataContext="{Binding ToastContainerViewModel}" />
 
 		<!-- Modal Overlay -->
 		<controls:ModalOverlay Name="ModalOverlay" />

@@ -35,7 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
     private readonly MappingsPageViewModel mappingsPage;
     private readonly SettingsPageViewModel settingsPage;
     private readonly ProfileListViewModel profileListView;
-    private readonly ToastViewModel toastViewModel;
+    private readonly ToastContainerViewModel toastContainerViewModel;
     private readonly IModalService modalService;
 
     private readonly BE.BackEnd backEnd;
@@ -57,7 +57,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         mappingsPage = App.Services!.GetRequiredService<MappingsPageViewModel>();
         settingsPage = App.Services!.GetRequiredService<SettingsPageViewModel>();
         profileListView = App.Services!.GetRequiredService<ProfileListViewModel>();
-        toastViewModel = App.Services!.GetRequiredService<ToastViewModel>();
+        toastContainerViewModel = App.Services!.GetRequiredService<ToastContainerViewModel>();
         modalService = App.Services!.GetRequiredService<IModalService>();
 
         ApplyCommand = new RelayCommand(() => Apply());
@@ -83,7 +83,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
     public ProfileListViewModel ProfileListView => profileListView;
 
-    public ToastViewModel ToastViewModel => toastViewModel;
+    public ToastContainerViewModel ToastContainerViewModel => toastContainerViewModel;
 
     protected BE.BackEnd BackEnd => backEnd;
 
@@ -294,11 +294,11 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
         if (e.FormatArgs.Length > 0)
         {
-            notificationService.QueueToast(e.MessageKey, toastType, 5000, e.FormatArgs);
+            notificationService.ShowToast(e.MessageKey, toastType, 5000, e.FormatArgs);
         }
         else
         {
-            notificationService.QueueToast(e.MessageKey, toastType);
+            notificationService.ShowToast(e.MessageKey, toastType);
         }
     }
 

@@ -1,0 +1,39 @@
+<UserControl x:Class="userinterface.Views.Controls.ToastContainerView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:userinterface.ViewModels.Controls"
+             xmlns:controls="using:userinterface.Views.Controls"
+             x:DataType="vm:ToastContainerViewModel">
+
+	<UserControl.Styles>
+		<!-- Toast Container Panel Style -->
+		<Style Selector="StackPanel.ToastStack">
+			<Setter Property="VerticalAlignment" Value="Bottom"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="Margin" Value="20"/>
+			<Setter Property="Spacing" Value="10"/>
+		</Style>
+
+		<!-- Individual Toast Item Style -->
+		<Style Selector="controls|ToastView.StackedToast">
+			<Setter Property="Margin" Value="0"/>
+		</Style>
+	</UserControl.Styles>
+
+	<Grid>
+		<StackPanel Classes="ToastStack">
+			<ItemsControl ItemsSource="{Binding ToastItems}">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<controls:ToastView Classes="StackedToast" DataContext="{Binding}" />
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<StackPanel Spacing="10" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+			</ItemsControl>
+		</StackPanel>
+	</Grid>
+</UserControl>
