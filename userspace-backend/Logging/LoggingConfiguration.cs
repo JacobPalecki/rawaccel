@@ -20,7 +20,8 @@ namespace userspace_backend.Logging
             { LogSource.UI, LogLevel.Information },
             { LogSource.Hardware, LogLevel.Information },
             { LogSource.Performance, LogLevel.Warning },
-            { LogSource.System, LogLevel.Information }
+            { LogSource.System, LogLevel.Information },
+            { LogSource.Modal, LogLevel.None }
         };
 
         public LoggingConfiguration()
