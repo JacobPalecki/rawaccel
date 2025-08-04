@@ -173,10 +173,7 @@ public partial class MainWindow : Window
                 LoadingProgressBar.IsVisible = false;
             }
 
-            if (applySuccess)
-            {
-                NotificationService.ShowSuccessToast("MainWindowSettingsAppliedSuccess");
-            }
+            // Individual device success toasts are now handled in the backend
 
             if (ApplyButtonControl != null)
             {

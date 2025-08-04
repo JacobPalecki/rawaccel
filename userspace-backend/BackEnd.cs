@@ -12,6 +12,7 @@ using userspace_backend.Model;
 using userspace_backend.Hardware;
 using userspace_backend.Logging;
 using DATA = userspace_backend.Data;
+using BE = userspace_backend.Model;
 
 namespace userspace_backend
 {
@@ -301,21 +302,81 @@ namespace userspace_backend
         protected bool WriteToDriver()
         {
             MappingModel mappingToApply = Mappings.GetMappingToSetActive();
+            loggingService?.LogInformation(LogSource.Backend, "Starting WriteToDriver for mapping: {MappingName}", mappingToApply?.Name?.ModelValue ?? "Unknown");
             
-            // Validate mappings before applying
-            if (!ValidateMappingBeforeApplying(mappingToApply))
+            if (mappingToApply?.IndividualMappings?.Count > 0)
             {
+                loggingService?.LogInformation(LogSource.Backend, "Mapping contains {MappingCount} individual mappings", mappingToApply.IndividualMappings.Count);
+                foreach (var individualMapping in mappingToApply.IndividualMappings)
+                {
+                    loggingService?.LogInformation(LogSource.Backend, "  - DeviceGroup: {DeviceGroup}, Profile: {ProfileName}", 
+                        individualMapping.DeviceGroup?.DisplayName ?? "Unknown", 
+                        individualMapping.Profile?.Name?.ModelValue ?? "Unknown");
+                }
+            }
+            else
+            {
+                loggingService?.LogWarning(LogSource.Backend, "Mapping has no individual mappings");
+            }
+            
+            var validationResult = ValidateMappingAndSeparateDevices(mappingToApply);
+            
+            loggingService?.LogInformation(LogSource.Backend, "Validation result: {ValidCount} valid mappings, {InvalidCount} invalid mappings", 
+                validationResult.ValidMappings.Count, validationResult.InvalidMappings.Count);
+            
+            foreach (var invalidMapping in validationResult.InvalidMappings)
+            {
+                loggingService?.LogWarning(LogSource.Backend, "Invalid mapping: {DeviceGroup} - {Error}", 
+                    invalidMapping.mapping.DeviceGroup?.DisplayName ?? "Unknown", invalidMapping.error);
+            }
+            
+            if (!validationResult.HasValidMappings)
+            {
+                loggingService?.LogError(LogSource.Backend, "No valid devices found for mapping - aborting driver write");
+                NotificationManager.QueueNotification("NoValidDevicesForMapping", NotificationType.Error);
                 return false;
             }
             
-            DriverConfig config = MapToDriverConfig(mappingToApply);
+            DriverConfig config = MapToDriverConfig(validationResult.ValidMappings);
+            loggingService?.LogInformation(LogSource.Backend, "Created driver config with {DeviceCount} devices and {ProfileCount} profiles", 
+                config.devices?.Count ?? 0, config.profiles?.Count ?? 0);
+            
+            if (config.devices != null)
+            {
+                foreach (var device in config.devices)
+                {
+                    loggingService?.LogInformation(LogSource.Backend, "Driver device: {DeviceName} (ID: {DeviceId}, Profile: {ProfileName}, Disabled: {Disabled})", 
+                        device.name, device.id, device.profile, device.config.disable);
+                }
+            }
+            
             try
             {
+                loggingService?.LogInformation(LogSource.Backend, "Attempting to activate driver config");
                 config.Activate();
+                loggingService?.LogInformation(LogSource.Backend, "Driver config activated successfully");
+                
+                // Delay success notifications by 1 second
+                Task.Delay(1000).ContinueWith(_ =>
+                {
+                    foreach (var validMapping in validationResult.ValidMappings)
+                    {
+                        var devicesInGroup = Devices.Devices.Where(d => d.DeviceGroup.Equals(validMapping.DeviceGroup));
+                        foreach (var device in devicesInGroup.Where(d => !d.Ignore.ModelValue))
+                        {
+                            loggingService?.LogInformation(LogSource.Backend, "Settings applied successfully to device: {DeviceName} ({DeviceId})", 
+                                device.Name.ModelValue, device.HardwareID.ModelValue);
+                            NotificationManager.QueueNotification("DeviceSettingsAppliedSuccessfully", NotificationType.Success, device.Name.ModelValue);
+                        }
+                    }
+                });
+                
                 return true;
             }
             catch (Exception ex)
             {
+                loggingService?.LogError(LogSource.Backend, ex, "Failed to activate driver config");
+                NotificationManager.QueueNotification("DriverActivationFailed", NotificationType.Error, ex.Message);
                 return false;
             }
         }
@@ -332,15 +393,39 @@ namespace userspace_backend
             return config;
         }
 
+        protected DriverConfig MapToDriverConfig(IEnumerable<BE.MappingGroup> validMappings)
+        {
+            IEnumerable<DeviceSettings> configDevices = MapToDriverDevices(validMappings);
+            IEnumerable<Profile> configProfiles = MapToDriverProfiles(validMappings);
+
+            DriverConfig config = DriverConfig.GetDefault();
+            config.profiles = configProfiles.ToList();
+            config.devices = configDevices.ToList();
+            config.accels = configProfiles.Select(p => new ManagedAccel(p)).ToList();
+            return config;
+        }
+
         protected IEnumerable<DeviceSettings> MapToDriverDevices(MappingModel mapping)
         {
             return mapping.IndividualMappings.SelectMany(
                 dg => MapToDriverDevices(dg.DeviceGroup, dg.Profile.Name.ModelValue));
         }
 
+        protected IEnumerable<DeviceSettings> MapToDriverDevices(IEnumerable<BE.MappingGroup> validMappings)
+        {
+            return validMappings.SelectMany(
+                dg => MapToDriverDevices(dg.DeviceGroup, dg.Profile.Name.ModelValue));
+        }
+
         protected IEnumerable<Profile> MapToDriverProfiles(MappingModel mapping)
         {
             IEnumerable<ProfileModel> ProfilesToMap = mapping.IndividualMappings.Select(m => m.Profile).Distinct();
+            return ProfilesToMap.Select(p => p.CurrentValidatedDriverProfile);
+        }
+
+        protected IEnumerable<Profile> MapToDriverProfiles(IEnumerable<BE.MappingGroup> validMappings)
+        {
+            IEnumerable<ProfileModel> ProfilesToMap = validMappings.Select(m => m.Profile).Distinct();
             return ProfilesToMap.Select(p => p.CurrentValidatedDriverProfile);
         }
 
@@ -370,38 +455,94 @@ namespace userspace_backend
             };
         }
 
-        protected bool ValidateMappingBeforeApplying(MappingModel mapping)
+        protected class MappingValidationResult
         {
-            bool hasErrors = false;
+            public List<BE.MappingGroup> ValidMappings { get; set; } = new List<BE.MappingGroup>();
+            public List<(BE.MappingGroup mapping, string error)> InvalidMappings { get; set; } = new List<(BE.MappingGroup, string)>();
+            public bool HasValidMappings => ValidMappings.Count > 0;
+            public bool HasInvalidMappings => InvalidMappings.Count > 0;
+        }
+
+        protected MappingValidationResult ValidateMappingAndSeparateDevices(MappingModel mapping)
+        {
+            loggingService?.LogInformation(LogSource.Backend, "Starting device validation for mapping: {MappingName}", 
+                mapping?.Name?.ModelValue ?? "Unknown");
+            
+            var result = new MappingValidationResult();
             var systemDevices = MultiHandleDevice.GetList();
             var systemDeviceIds = systemDevices.Select(d => d.id.ToUpperInvariant()).ToHashSet();
+            
+            loggingService?.LogInformation(LogSource.Backend, "Found {SystemDeviceCount} system devices: [{SystemDevices}]", 
+                systemDevices.Count(), string.Join(", ", systemDevices.Select(d => $"{d.name}({d.id})")));
 
             foreach (var individualMapping in mapping.IndividualMappings)
             {
+                loggingService?.LogInformation(LogSource.Backend, "Validating mapping: DeviceGroup={DeviceGroup}, Profile={ProfileName}", 
+                    individualMapping.DeviceGroup?.DisplayName ?? "Unknown", 
+                    individualMapping.Profile?.Name?.ModelValue ?? "Unknown");
+                
                 if (!Profiles.TryGetProfile(individualMapping.Profile.Name.ModelValue, out _))
                 {
+                    loggingService?.LogError(LogSource.Backend, "Profile not found: {ProfileName}", individualMapping.Profile.Name.ModelValue);
                     NotificationManager.QueueNotification("ProfileNotFound", NotificationType.Error, individualMapping.Profile.Name.ModelValue);
-                    hasErrors = true;
+                    result.InvalidMappings.Add((individualMapping, $"Profile not found: {individualMapping.Profile.Name.ModelValue}"));
                     continue;
                 }
 
+                bool mappingIsValid = true;
                 var devicesInGroup = Devices.Devices.Where(d => d.DeviceGroup.Equals(individualMapping.DeviceGroup));
+                
+                loggingService?.LogInformation(LogSource.Backend, "Found {DeviceCount} devices in group {DeviceGroup}", 
+                    devicesInGroup.Count(), individualMapping.DeviceGroup?.DisplayName ?? "Unknown");
                 
                 foreach (var device in devicesInGroup)
                 {
-                    if (device.Ignore.ModelValue) continue;
+                    loggingService?.LogInformation(LogSource.Backend, "Checking device: {DeviceName} (ID: {DeviceId}, Ignored: {Ignored})", 
+                        device.Name.ModelValue, device.HardwareID.ModelValue, device.Ignore.ModelValue);
                     
-                    // Check if the device hardware ID exists in the system
+                    if (device.Ignore.ModelValue) 
+                    {
+                        loggingService?.LogInformation(LogSource.Backend, "Device {DeviceName} is set to ignore - skipping", device.Name.ModelValue);
+                        continue;
+                    }
+                    
                     string deviceHwId = device.HardwareID.ModelValue.ToUpperInvariant();
                     if (!string.IsNullOrEmpty(deviceHwId) && !systemDeviceIds.Contains(deviceHwId))
                     {
+                        loggingService?.LogWarning(LogSource.Backend, "Device {DeviceName} (ID: {DeviceId}) not found in system devices", 
+                            device.Name.ModelValue, deviceHwId);
                         NotificationManager.QueueNotification("DeviceNotConnected", NotificationType.Error, device.Name.ModelValue, deviceHwId);
-                        hasErrors = true;
+                        result.InvalidMappings.Add((individualMapping, $"Device not connected: {device.Name.ModelValue}"));
+                        mappingIsValid = false;
+                        break;
+                    }
+                    else
+                    {
+                        loggingService?.LogInformation(LogSource.Backend, "Device {DeviceName} (ID: {DeviceId}) found in system - valid", 
+                            device.Name.ModelValue, deviceHwId);
                     }
                 }
-            }
 
-            return !hasErrors;
+                if (mappingIsValid)
+                {
+                    loggingService?.LogInformation(LogSource.Backend, "Mapping for DeviceGroup {DeviceGroup} is valid", 
+                        individualMapping.DeviceGroup?.DisplayName ?? "Unknown");
+                    result.ValidMappings.Add(individualMapping);
+                }
+                else
+                {
+                    loggingService?.LogWarning(LogSource.Backend, "Mapping for DeviceGroup {DeviceGroup} is invalid", 
+                        individualMapping.DeviceGroup?.DisplayName ?? "Unknown");
+                }
+            }
+                
+            return result;
+        }
+
+        protected bool ValidateMappingBeforeApplying(MappingModel mapping)
+        {
+            var result = ValidateMappingAndSeparateDevices(mapping);
+            return !result.HasInvalidMappings;
         }
     }
 }

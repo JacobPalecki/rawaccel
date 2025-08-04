@@ -197,6 +197,9 @@
   <data name="MainWindowSettingsAppliedSuccess" xml:space="preserve">
     <value>Settings applied successfully!</value>
   </data>
+  <data name="DeviceSettingsAppliedSuccessfully" xml:space="preserve">
+    <value>Settings applied successfully to {0}</value>
+  </data>
   <data name="DeviceNoLongerAvailable" xml:space="preserve">
     <value>Device {0} is no longer available</value>
   </data>
