@@ -31,7 +31,6 @@ namespace userinterface.ViewModels.Profile
         // Data fitting and bounds
         private const double DataPaddingRatio = 0.1;
 
-        private const double ToleranceThreshold = 0.001;
 
         // Default chart limits when no data or centering
         private const int DefaultAxisRange = 50;
@@ -361,7 +360,7 @@ namespace userinterface.ViewModels.Profile
         {
             var allPoints = XCurvePreview.Points.ToList();
 
-            if (Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold)
+            if (YXRatio.CurrentValidatedValue != 1.0)
             {
                 allPoints.AddRange(YCurvePreview.Points);
             }
@@ -373,7 +372,7 @@ namespace userinterface.ViewModels.Profile
             }
 
             var (minX, maxX, minY, maxY) = CalculateDataBounds(allPoints);
-            if (Math.Abs(maxY - minY) < ToleranceThreshold)
+            if (maxY == minY)
             {
                 SetCenteredLimits(minX, maxX, minY, maxY);
             }
@@ -418,7 +417,6 @@ namespace userinterface.ViewModels.Profile
             
             previewRenderer.ClearCache();
         }
-
 
         // ================================================================================================
         // EVENT HANDLERS

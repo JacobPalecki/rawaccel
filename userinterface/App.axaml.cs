@@ -6,6 +6,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Security.AccessControl;
@@ -38,6 +39,18 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
+        // Register logging
+        services.AddLogging(builder =>
+        {
+            // Change this to be "LogLevel.Debug" if you want to see logs.
+#if DEBUG
+            builder.AddDebug();
+            builder.SetMinimumLevel(LogLevel.Warning);
+#else
+            builder.SetMinimumLevel(LogLevel.Warning);
+#endif
+        });
+
         // Register services
         services.AddSingleton<INotificationService>(provider =>
             new NotificationService(provider.GetRequiredService<LocalizationService>(), provider.GetRequiredService<ISettingsService>()));
@@ -50,6 +63,7 @@ public partial class App : Application
         services.AddSingleton<FrameTimerService>();
         services.AddSingleton<PreviewChartRenderer>();
         services.AddSingleton<IMouseTracker, MouseTracker>();
+        services.AddSingleton<IAnimationStateService, AnimationStateService>();
 
         // Register logging service
         services.AddSingleton<userspace_backend.Logging.ILoggingService>(provider =>
@@ -126,8 +140,16 @@ public partial class App : Application
         services.AddSingleton<ToastContainerViewModel>();
 
         // Device ViewModels
-        services.AddTransient<ViewModels.Device.DevicesPageViewModel>();
-        services.AddTransient<ViewModels.Device.DevicesListViewModel>();
+        services.AddTransient<ViewModels.Device.DevicesPageViewModel>(provider =>
+            new ViewModels.Device.DevicesPageViewModel(
+                provider.GetRequiredService<BackEnd>(),
+                provider.GetRequiredService<IModalService>(),
+                provider.GetRequiredService<LocalizationService>()));
+        services.AddTransient<ViewModels.Device.DevicesListViewModel>(provider =>
+            new ViewModels.Device.DevicesListViewModel(
+                provider.GetRequiredService<BackEnd>().Devices,
+                provider.GetRequiredService<IModalService>(),
+                provider.GetRequiredService<LocalizationService>()));
         services.AddTransient<ViewModels.Device.DeviceGroupsViewModel>();
         services.AddTransient<ViewModels.Device.DeviceGroupViewModel>();
         services.AddTransient<ViewModels.Device.DeviceGroupSelectorViewModel>();
@@ -137,7 +159,10 @@ public partial class App : Application
         services.AddTransient<ViewModels.Profile.ProfilesPageViewModel>();
         services.AddSingleton<ViewModels.Profile.ProfileListViewModel>();
         services.AddTransient<ViewModels.Profile.ProfileViewModel>();
-        services.AddTransient<ViewModels.Profile.ProfileSettingsViewModel>();
+        services.AddTransient<ViewModels.Profile.ProfileSettingsViewModel>(provider =>
+            new ViewModels.Profile.ProfileSettingsViewModel(
+                provider.GetRequiredService<INotificationService>(),
+                provider.GetRequiredService<LocalizationService>()));
         services.AddTransient<ViewModels.Profile.ProfileChartViewModel>();
         services.AddTransient<ViewModels.Profile.AccelerationFormulaSettingsViewModel>();
         services.AddTransient<ViewModels.Profile.AccelerationLUTSettingsViewModel>();
@@ -160,10 +185,10 @@ public partial class App : Application
         services.AddTransient<ViewModels.Settings.ProfilesSettingsViewModel>();
 
         // Control ViewModels
-        services.AddTransient<ViewModels.Controls.DualColumnLabelFieldViewModel>();
-        services.AddTransient<ViewModels.Controls.EditableBoolViewModel>();
+        services.AddTransient<ViewModels.Controls.DualColumnLabelFieldViewModel>(provider =>
+            new ViewModels.Controls.DualColumnLabelFieldViewModel(
+                provider.GetRequiredService<LocalizationService>()));
         services.AddTransient<ViewModels.Controls.EditableFieldViewModel>();
-        services.AddTransient<ViewModels.Controls.NamedEditableFieldViewModel>();
     }
 
     protected static Bootstrapper BootstrapBackEnd()

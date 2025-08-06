@@ -27,32 +27,25 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
     private readonly List<Border> allItems = [];
     private Panel? profileContainer;
     private readonly BE.ProfilesModel profilesModel;
-    private readonly SemaphoreSlim operationSemaphore = new(1, 1);
     private BE.ProfileModel? selectedProfile;
 
     private int GetProfileCount() => allItems.Count - 1;
-    private volatile bool areAnimationsActive = false;
+    private readonly IAnimationStateService animationStateService;
 
     public new event PropertyChangedEventHandler? PropertyChanged;
     private readonly IModalService modalService;
     private readonly LocalizationService localizationService;
     private TextBlock? addProfileTextBlock;
 
-    private const double ProfileHeight = 38.0;
-    private const double ProfileSpacing = 4.0;
-    private const double FirstIndexOffset = 6;
-    private const int StaggerDelayMs = 20;
-    private const int CollapseStaggerDelayMs = 15;
-    private const int ElementRenderDelayMs = 50;
-    private const int AnimationCompleteDelayMs = 200;
-
 
     public ProfileListView()
     {
         var backEnd = App.Services?.GetRequiredService<BackEnd>() ?? throw new InvalidOperationException("BackEnd service not available");
-        profilesModel = backEnd.Profiles ?? throw new ArgumentNullException(nameof(backEnd.Profiles));
         modalService = App.Services?.GetRequiredService<IModalService>() ?? throw new InvalidOperationException("ModalService not available");
         localizationService = App.Services?.GetRequiredService<LocalizationService>() ?? throw new InvalidOperationException("LocalizationService not available");
+        animationStateService = App.Services?.GetRequiredService<IAnimationStateService>() ?? throw new InvalidOperationException("AnimationStateService not available");
+        
+        profilesModel = backEnd.Profiles ?? throw new ArgumentNullException(nameof(backEnd.Profiles));
         localizationService.PropertyChanged += OnLocalizationPropertyChanged;
         profilesModel.Profiles.CollectionChanged += OnProfilesCollectionChanged;
 
@@ -64,7 +57,6 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
 
     private void OnUnloaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        operationSemaphore?.Dispose();
         if (localizationService != null)
         {
             localizationService.PropertyChanged -= OnLocalizationPropertyChanged;
@@ -102,8 +94,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
 
     private async void OnProfilesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        await operationSemaphore.WaitAsync();
-        try
+        await animationStateService.ExecuteWithSemaphoreAsync(async () =>
         {
             switch (e.Action)
             {
@@ -123,11 +114,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
                     await HandleProfilesReset();
                     break;
             }
-        }
-        finally
-        {
-            operationSemaphore.Release();
-        }
+        });
     }
 
     private void HandleProfilesAdded(NotifyCollectionChangedEventArgs e)
@@ -307,10 +294,10 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         var border = new Border
         {
             Classes = { "AddProfileButton" },
-            Height = ProfileHeight,
+            Height = animationStateService.Config.ProfileHeight,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(8, 0, 8, ProfileSpacing),
+            Margin = new Thickness(8, 0, 8, animationStateService.Config.ProfileSpacing),
             RenderTransform = TransformOperations.Parse("translate(0px, 0px)"), // Start at collapsed position
             Child = addProfileTextBlock
         };
@@ -361,10 +348,10 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         var border = new Border
         {
             Classes = { "ProfileItem" },
-            Height = ProfileHeight,
+            Height = animationStateService.Config.ProfileHeight,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(8, 0, 8, ProfileSpacing),
+            Margin = new Thickness(8, 0, 8, animationStateService.Config.ProfileSpacing),
             RenderTransform = TransformOperations.Parse("translate(0px, 0px)"), // Start at collapsed position
             Child = grid,
             Opacity = 1.0,
@@ -385,7 +372,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
                 var deleteButton = grid.Children.OfType<Button>().FirstOrDefault(b => b.Classes.Contains("DeleteButton"));
                 if (deleteButton != null)
                 {
-                    deleteButton.IsEnabled = !areAnimationsActive;
+                    deleteButton.IsEnabled = !animationStateService.AreAnimationsActive;
                 }
             }
         }
@@ -407,7 +394,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
     private void OnAddProfileClicked(object sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         // Prevent rapid clicking during active operations
-        if (areAnimationsActive)
+        if (animationStateService.AreAnimationsActive)
         {
             return;
         }
@@ -425,7 +412,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: Delete button clicked");
         
         // Prevent deletion during animations to avoid bugs
-        if (areAnimationsActive)
+        if (animationStateService.AreAnimationsActive)
         {
             logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "OnDeleteButtonClicked: Animations active, returning");
             return;
@@ -475,9 +462,9 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         }
     }
 
-    private static double CalculatePositionForIndex(int itemIndex)
+    private double CalculatePositionForIndex(int itemIndex)
     {
-        return itemIndex == 0 ? 0 : (itemIndex * (ProfileHeight + ProfileSpacing)) + FirstIndexOffset;
+        return itemIndex == 0 ? 0 : (itemIndex * (animationStateService.Config.ProfileHeight + animationStateService.Config.ProfileSpacing)) + animationStateService.Config.FirstIndexOffset;
     }
 
     private static double ExtractYFromTransform(TransformOperations? transform)
@@ -553,7 +540,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         
         if (staggerIndex > 0)
         {
-            await Task.Delay(staggerIndex * StaggerDelayMs);
+            await Task.Delay(staggerIndex * animationStateService.Config.StaggerDelayMs);
         }
 
         element.RenderTransform = TransformOperations.Parse($"translate(0px, {targetY}px)");
@@ -562,7 +549,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
 
     private async Task AnimateAllElementsToPositions(int focusIndex = -1)
     {
-        areAnimationsActive = true;
+        animationStateService.SetAnimationsActive(true);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AreAnimationsActive)));
         UpdateDeleteButtonStates();
 
@@ -606,14 +593,14 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
             {
                 await Task.WhenAll(animationTasks);
                 
-                await Task.Delay(AnimationCompleteDelayMs);
+                await Task.Delay(animationStateService.Config.AnimationCompleteDelayMs);
             }
             catch (Exception)
             {
             }
         }
 
-        areAnimationsActive = false;
+        animationStateService.SetAnimationsActive(false);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AreAnimationsActive)));
         UpdateDeleteButtonStates();
     }
@@ -683,7 +670,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
     public async Task ExpandElements()
     {
         // Small delay to ensure elements are rendered before animating
-        await Task.Delay(ElementRenderDelayMs);
+        await Task.Delay(animationStateService.Config.ElementRenderDelayMs);
         
         await AnimateAllElementsToPositions(-1);
     }
@@ -692,7 +679,7 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
     {
         if (allItems.Count == 0) return;
 
-        areAnimationsActive = true;
+        animationStateService.SetAnimationsActive(true);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AreAnimationsActive)));
         UpdateDeleteButtonStates();
 
@@ -703,17 +690,17 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         {
             if (i >= allItems.Count) break;
             
-            animationTasks.Add(CollapseElementToTransformPosition(i, i * CollapseStaggerDelayMs));
+            animationTasks.Add(CollapseElementToTransformPosition(i, i * animationStateService.Config.CollapseStaggerDelayMs));
         }
 
         try
         {
             await Task.WhenAll(animationTasks);
-            await Task.Delay(AnimationCompleteDelayMs);
+            await Task.Delay(animationStateService.Config.AnimationCompleteDelayMs);
         }
         finally
         {
-            areAnimationsActive = false;
+            animationStateService.SetAnimationsActive(false);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AreAnimationsActive)));
             UpdateDeleteButtonStates();
         }
@@ -736,6 +723,5 @@ public partial class ProfileListView : UserControl, INotifyPropertyChanged
         element.RenderTransform = TransformOperations.Parse("translate(0px, 0px)");
     }
 
-    public bool AreAnimationsActive => areAnimationsActive;
-
+    public bool AreAnimationsActive => animationStateService.AreAnimationsActive;
 }

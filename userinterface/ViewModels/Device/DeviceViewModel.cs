@@ -16,22 +16,24 @@ namespace userinterface.ViewModels.Device
         private readonly IModalService modalService;
         private readonly userspace_backend.BackEnd? backEnd;
 
-        public DeviceViewModel(BE.DeviceModel deviceBE, BE.DevicesModel devicesBE, bool isDefault = false, Func<DeviceViewModel, Task>? animatedDeleteCallback = null)
+        public DeviceViewModel(BE.DeviceModel deviceBE, BE.DevicesModel devicesBE, IModalService modalService, LocalizationService localizationService, bool isDefault = false, Func<DeviceViewModel, Task>? animatedDeleteCallback = null)
         {
             DeviceBE = deviceBE;
             DevicesBE = devicesBE;
             IsDefaultDevice = isDefault;
             AnimatedDeleteCallback = animatedDeleteCallback;
-            modalService = App.Services?.GetRequiredService<IModalService>() ?? throw new InvalidOperationException("ModalService not available");
+            this.modalService = modalService;
             backEnd = App.Services?.GetService<userspace_backend.BackEnd>();
 
-            NameField = new NamedEditableFieldViewModel(DeviceBE.Name);
+            NameField = new NamedEditableFieldViewModel(DeviceBE.Name, localizationService);
 
-            DPIField = new NamedEditableFieldViewModel(DeviceBE.DPI);
+            HWIDField = new NamedEditableFieldViewModel(DeviceBE.HardwareID, localizationService);
 
-            PollRateField = new NamedEditableFieldViewModel(DeviceBE.PollRate);
+            DPIField = new NamedEditableFieldViewModel(DeviceBE.DPI, localizationService);
 
-            IgnoreBool = new EditableBoolViewModel(DeviceBE.Ignore);
+            PollRateField = new NamedEditableFieldViewModel(DeviceBE.PollRate, localizationService);
+
+            IgnoreBool = new EditableBoolViewModel(DeviceBE.Ignore, localizationService);
             IgnoreBool.PropertyChanged += OnIgnoreBoolChanged;
 
             DeviceGroup = new DeviceGroupSelectorViewModel(DeviceBE, DevicesBE.DeviceGroups);
@@ -55,6 +57,8 @@ namespace userinterface.ViewModels.Device
         private Func<DeviceViewModel, Task>? AnimatedDeleteCallback { get; }
 
         public NamedEditableFieldViewModel NameField { get; set; }
+
+        public NamedEditableFieldViewModel HWIDField { get; set; }
 
         public NamedEditableFieldViewModel DPIField { get; set; }
 
