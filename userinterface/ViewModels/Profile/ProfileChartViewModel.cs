@@ -446,7 +446,7 @@ namespace userinterface.ViewModels.Profile
         {
             if (ySeries == null) return;
             
-            var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
+            var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
             var ySeriesExists = Series.Contains(ySeries);
             
             if (hasYCurve && !ySeriesExists)
@@ -683,7 +683,7 @@ namespace userinterface.ViewModels.Profile
             currentSpeedData.Clear();
             currentYSpeedData.Clear();
             
-            var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
+            var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
             
             // Set BackEnd reference and device service for centralized device handling
             mouseTracker.SetBackEnd(backEnd);
@@ -780,7 +780,7 @@ namespace userinterface.ViewModels.Profile
                     OnPropertyChanged(nameof(CurrentDeviceDPI));
                 }
                 
-                var hasYCurve = Math.Abs(YXRatio.CurrentValidatedValue - 1.0) > ToleranceThreshold;
+                var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
                 
                 if (hasYCurve)
                 {
