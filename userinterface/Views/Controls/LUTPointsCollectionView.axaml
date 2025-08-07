@@ -49,37 +49,137 @@
       <Setter Property="FontSize" Value="12"/>
       <Setter Property="FontStyle" Value="Italic"/>
     </Style>
+    
+    <Style Selector="Button.carousel-nav-button">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="8,4"/>
+      <Setter Property="Width" Value="40"/>
+      <Setter Property="Height" Value="32"/>
+    </Style>
+    
+    <Style Selector="Button.carousel-nav-button:pointerover">
+      <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonBrush}"/>
+    </Style>
+    
+    <Style Selector="Button.carousel-nav-button:disabled">
+      <Setter Property="Opacity" Value="0.3"/>
+    </Style>
+    
+    <Style Selector="TextBlock.empty-state-text">
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontStyle" Value="Italic"/>
+    </Style>
   </UserControl.Styles>
 
-  <StackPanel Spacing="12">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
     
     <!-- Add Point Button -->
-    <Button Command="{Binding AddPointCommand}"
+    <Button Grid.Row="0"
+            Command="{Binding AddPointCommand}"
             Classes="add-point-button"
-            IsEnabled="{Binding CanAddPoints}">
+            IsEnabled="{Binding CanAddPoints}"
+            Margin="0,0,0,12">
       <StackPanel Orientation="Horizontal" Spacing="8">
         <TextBlock Text="+" FontWeight="Bold" FontSize="16"/>
         <TextBlock Text="Add Point"/>
       </StackPanel>
     </Button>
     
-    <!-- Points List -->
-    <ScrollViewer MaxHeight="400" 
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
-      <ItemsControl ItemsSource="{Binding Points}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate DataType="vm:LUTPointCardViewModel">
-            <views:LUTPointCardView Margin="0,0,0,8"/>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </ScrollViewer>
+    <!-- Carousel Container -->
+    <Grid Grid.Row="1" Height="240">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      
+      <!-- Previous Button -->
+      <Button Grid.Row="0"
+              Command="{Binding NavigatePreviousCommand}"
+              IsEnabled="{Binding CanNavigatePrevious}"
+              Classes="carousel-nav-button"
+              HorizontalAlignment="Center"
+              Margin="0,0,0,8">
+        <TextBlock Text="▲" FontSize="16"/>
+      </Button>
+      
+      <!-- Cards Display Area -->
+      <Grid Grid.Row="1">
+        <!-- Previous Card (faded) -->
+        <ContentControl Content="{Binding PreviousPoint}"
+                        IsVisible="{Binding PreviousPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Opacity="0.3"
+                        IsHitTestVisible="False">
+          <ContentControl.RenderTransform>
+            <TranslateTransform Y="-60"/>
+          </ContentControl.RenderTransform>
+          <ContentControl.ContentTemplate>
+            <DataTemplate DataType="vm:LUTPointCardViewModel">
+              <views:LUTPointCardView/>
+            </DataTemplate>
+          </ContentControl.ContentTemplate>
+        </ContentControl>
+        
+        <!-- Current Card (active) -->
+        <ContentControl Content="{Binding CurrentPoint}"
+                        IsVisible="{Binding CurrentPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Opacity="1.0">
+          <ContentControl.ContentTemplate>
+            <DataTemplate DataType="vm:LUTPointCardViewModel">
+              <views:LUTPointCardView/>
+            </DataTemplate>
+          </ContentControl.ContentTemplate>
+        </ContentControl>
+        
+        <!-- Next Card (faded) -->
+        <ContentControl Content="{Binding NextPoint}"
+                        IsVisible="{Binding NextPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Opacity="0.3"
+                        IsHitTestVisible="False">
+          <ContentControl.RenderTransform>
+            <TranslateTransform Y="60"/>
+          </ContentControl.RenderTransform>
+          <ContentControl.ContentTemplate>
+            <DataTemplate DataType="vm:LUTPointCardViewModel">
+              <views:LUTPointCardView/>
+            </DataTemplate>
+          </ContentControl.ContentTemplate>
+        </ContentControl>
+        
+        <!-- Empty State Message -->
+        <TextBlock Text="No points added yet. Click 'Add Point' to start."
+                   IsVisible="{Binding !HasPoints}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Classes="empty-state-text"/>
+      </Grid>
+      
+      <!-- Next Button -->
+      <Button Grid.Row="2"
+              Command="{Binding NavigateNextCommand}"
+              IsEnabled="{Binding CanNavigateNext}"
+              Classes="carousel-nav-button"
+              HorizontalAlignment="Center"
+              Margin="0,8,0,0">
+        <TextBlock Text="▼" FontSize="16"/>
+      </Button>
+    </Grid>
     
     <!-- Actions Bar -->
-    <StackPanel Orientation="Horizontal" 
+    <StackPanel Grid.Row="2"
+                Orientation="Horizontal" 
                 Spacing="12"
-                IsVisible="{Binding HasPoints}">
+                IsVisible="{Binding HasPoints}"
+                Margin="0,12,0,0">
       
       <Button Command="{Binding ClearAllPointsCommand}" 
               Classes="secondary-button">
@@ -92,6 +192,6 @@
       
     </StackPanel>
     
-  </StackPanel>
+  </Grid>
 
 </UserControl>

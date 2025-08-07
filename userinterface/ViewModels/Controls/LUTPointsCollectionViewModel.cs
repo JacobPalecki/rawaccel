@@ -15,7 +15,20 @@ namespace userinterface.ViewModels.Controls
         [ObservableProperty]
         private bool canAddPoints = true;
 
+        [ObservableProperty]
+        private int currentPointIndex = 0;
+
         public bool HasPoints => Points.Count > 0;
+        
+        public bool CanNavigatePrevious => CurrentPointIndex > 0;
+        
+        public bool CanNavigateNext => CurrentPointIndex < Points.Count - 1;
+        
+        public LUTPointCardViewModel? CurrentPoint => Points.Count > CurrentPointIndex ? Points[CurrentPointIndex] : null;
+        
+        public LUTPointCardViewModel? PreviousPoint => CurrentPointIndex > 0 ? Points[CurrentPointIndex - 1] : null;
+        
+        public LUTPointCardViewModel? NextPoint => CurrentPointIndex < Points.Count - 1 ? Points[CurrentPointIndex + 1] : null;
 
         public LUTPointsCollectionViewModel()
         {
@@ -24,12 +37,16 @@ namespace userinterface.ViewModels.Controls
             
             AddPointCommand = new RelayCommand(AddPoint, () => CanAddPoints);
             ClearAllPointsCommand = new RelayCommand(ClearAllPoints, () => Points.Count > 0);
+            NavigatePreviousCommand = new RelayCommand(NavigatePrevious, () => CanNavigatePrevious);
+            NavigateNextCommand = new RelayCommand(NavigateNext, () => CanNavigateNext);
         }
 
         public ObservableCollection<LUTPointCardViewModel> Points { get; }
 
         public ICommand AddPointCommand { get; }
         public ICommand ClearAllPointsCommand { get; }
+        public ICommand NavigatePreviousCommand { get; }
+        public ICommand NavigateNextCommand { get; }
 
         public event EventHandler<CollectionChangedEventArgs>? CollectionChanged;
 
@@ -77,7 +94,38 @@ namespace userinterface.ViewModels.Controls
             Points.Add(newPoint);
             
             UpdatePointIndices();
+            CurrentPointIndex = Points.Count - 1; // Navigate to new point
             ((RelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
+            UpdateNavigationProperties();
+        }
+        
+        private void NavigatePrevious()
+        {
+            if (CanNavigatePrevious)
+            {
+                CurrentPointIndex--;
+                UpdateNavigationProperties();
+            }
+        }
+        
+        private void NavigateNext()
+        {
+            if (CanNavigateNext)
+            {
+                CurrentPointIndex++;
+                UpdateNavigationProperties();
+            }
+        }
+        
+        private void UpdateNavigationProperties()
+        {
+            OnPropertyChanged(nameof(CanNavigatePrevious));
+            OnPropertyChanged(nameof(CanNavigateNext));
+            OnPropertyChanged(nameof(CurrentPoint));
+            OnPropertyChanged(nameof(PreviousPoint));
+            OnPropertyChanged(nameof(NextPoint));
+            ((RelayCommand)NavigatePreviousCommand).NotifyCanExecuteChanged();
+            ((RelayCommand)NavigateNextCommand).NotifyCanExecuteChanged();
         }
 
         private void ClearAllPoints()
@@ -88,21 +136,37 @@ namespace userinterface.ViewModels.Controls
             }
             
             Points.Clear();
+            CurrentPointIndex = 0;
             ((RelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
+            UpdateNavigationProperties();
         }
 
         private void OnPointsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(HasPoints));
             CollectionChanged?.Invoke(this, new CollectionChangedEventArgs());
+            UpdateNavigationProperties();
         }
 
         private void OnPointDeleted(object? sender, PointDeletedEventArgs e)
         {
+            var deletedIndex = Points.IndexOf(e.Point);
             UnsubscribeFromPointEvents(e.Point);
             Points.Remove(e.Point);
             UpdatePointIndices();
+            
+            // Adjust current index if needed
+            if (CurrentPointIndex >= Points.Count && Points.Count > 0)
+            {
+                CurrentPointIndex = Points.Count - 1;
+            }
+            else if (CurrentPointIndex > deletedIndex && CurrentPointIndex > 0)
+            {
+                CurrentPointIndex--;
+            }
+            
             ((RelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
+            UpdateNavigationProperties();
         }
 
         private void OnPointValueChanged(object? sender, PointValueChangedEventArgs e)
