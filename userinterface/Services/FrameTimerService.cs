@@ -1,7 +1,7 @@
 using Avalonia.Threading;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using userspace_backend.Logging;
 
 namespace userinterface.Services
 {
@@ -15,13 +15,13 @@ namespace userinterface.Services
     {
         private readonly Stopwatch frameStopwatch = new();
         private readonly DispatcherTimer frameTimer;
-        private readonly ILogger<FrameTimerService> logger;
+        private readonly ILoggingService loggingService;
         private const double THRESHOLD_MS = 8.33;
         private bool isMonitoring = false;
 
-        public FrameTimerService(ILogger<FrameTimerService> logger)
+        public FrameTimerService(ILoggingService loggingService)
         {
-            this.logger = logger;
+            this.loggingService = loggingService;
             frameTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(THRESHOLD_MS)
@@ -36,7 +36,7 @@ namespace userinterface.Services
             isMonitoring = true;
             frameStopwatch.Restart();
             frameTimer.Start();
-            logger.LogDebug("Started monitoring: {Context}", context);
+            loggingService.LogDebug(LogSource.Performance, "Started monitoring: {Context}", context);
         }
 
         public void StopMonitoring(string context = "")
@@ -45,7 +45,7 @@ namespace userinterface.Services
             
             frameTimer.Stop();
             isMonitoring = false;
-            logger.LogDebug("Stopped monitoring: {Context}", context);
+            loggingService.LogDebug(LogSource.Performance, "Stopped monitoring: {Context}", context);
         }
 
 
@@ -56,7 +56,7 @@ namespace userinterface.Services
             var elapsed = frameStopwatch.ElapsedMilliseconds;
             if (elapsed >= THRESHOLD_MS)
             {
-                logger.LogWarning("UI Thread blocked for {ElapsedMs}ms - potential frame drop!", elapsed);
+                loggingService.LogWarning(LogSource.Performance, "UI Thread blocked for {ElapsedMs}ms - potential frame drop!", elapsed);
             }
             
             frameStopwatch.Restart();
@@ -66,7 +66,7 @@ namespace userinterface.Services
         public void MonitorOperation(string operationName, Action operation)
         {
             var stopwatch = Stopwatch.StartNew();
-            logger.LogDebug("Starting operation: {OperationName}", operationName);
+            loggingService.LogDebug(LogSource.Performance, "Starting operation: {OperationName}", operationName);
             
             StartMonitoring($"Operation: {operationName}");
             
@@ -78,7 +78,7 @@ namespace userinterface.Services
             {
                 stopwatch.Stop();
                 StopMonitoring($"Operation: {operationName}");
-                logger.LogDebug("Completed operation: {OperationName} in {ElapsedMs}ms", operationName, stopwatch.ElapsedMilliseconds);
+                loggingService.LogDebug(LogSource.Performance, "Completed operation: {OperationName} in {ElapsedMs}ms", operationName, stopwatch.ElapsedMilliseconds);
             }
         }
     }

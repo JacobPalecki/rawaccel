@@ -42,7 +42,7 @@ public partial class App : Application
         // Register logging
         services.AddLogging(builder =>
         {
-            // Change this to be "LogLevel.Debug" if you want to see logs.
+            // Change this to be "LogLevel.Debug" if you want to see debug logs.
 #if DEBUG
             builder.AddDebug();
             builder.SetMinimumLevel(LogLevel.Warning);
