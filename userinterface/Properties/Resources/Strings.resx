@@ -581,4 +581,21 @@
   <data name="NoUnconfiguredDevice" xml:space="preserve">
     <value>No unconfigured device available to create.</value>
   </data>
+  
+  <!-- LUT Resources -->
+  <data name="LUT_ValueCorrected" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="LUT_MaxPointsReached" xml:space="preserve">
+    <value>Maximum {0} points reached</value>
+  </data>
+  <data name="LUT_AllPointsCleared" xml:space="preserve">
+    <value>{0} points cleared</value>
+  </data>
+  <data name="LUT_PointDeleted" xml:space="preserve">
+    <value>Point ({0}, {1}) deleted</value>
+  </data>
+  <data name="LUT_SequenceError" xml:space="preserve">
+    <value>X values must be sequential: {0}</value>
+  </data>
 </root>

@@ -20,6 +20,11 @@
       <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
     </Style>
 
+    <Style Selector="Border.point-card.error">
+      <Setter Property="BorderBrush" Value="{DynamicResource DangerButtonBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
+    </Style>
+
     <Style Selector="TextBlock.point-header">
       <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="FontSize" Value="12"/>
@@ -56,6 +61,24 @@
       <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}"/>
     </Style>
 
+    <Style Selector="TextBox.coordinate-input.error">
+      <Setter Property="BorderBrush" Value="{DynamicResource DangerButtonBrush}"/>
+      <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="TextBox.coordinate-input.error:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource DangerButtonBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.validation-error">
+      <Setter Property="Foreground" Value="{DynamicResource DangerButtonBrush}"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontStyle" Value="Italic"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,2,0,0"/>
+    </Style>
+
     <Style Selector="Button.delete-button">
       <Setter Property="Width" Value="24"/>
       <Setter Property="Height" Value="24"/>
@@ -75,8 +98,11 @@
     </Style>
   </UserControl.Styles>
 
-  <Border Classes="point-card" Padding="8">
-    <Grid ColumnDefinitions="*,Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
+  <Border Classes.point-card="True" 
+          Classes.error="{Binding HasValidationErrors}"
+          Padding="8">
+    
+    <Grid ColumnDefinitions="*,Auto,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
       
       <!-- Header -->
       <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5"
@@ -91,8 +117,9 @@
       
       <TextBox Grid.Column="1" Grid.Row="1"
                Text="{Binding XValueText}"
-               Classes="coordinate-input"
-               ToolTip.Tip="Mouse speed"
+               Classes.coordinate-input="True"
+               Classes.error="{Binding HasValidationErrors}"
+               ToolTip.Tip="Mouse speed (0 to 10000)"
                TextWrapping="NoWrap"
                Margin="0,0,12,0"/>
       
@@ -102,8 +129,9 @@
       
       <TextBox Grid.Column="3" Grid.Row="1"
                Text="{Binding YValueText}"
-               Classes="coordinate-input"
-               ToolTip.Tip="Output value"
+               Classes.coordinate-input="True"
+               Classes.error="{Binding HasValidationErrors}"
+               ToolTip.Tip="Output value (0 to 1000)"
                TextWrapping="NoWrap"
                Margin="0,0,12,0"/>
       
@@ -114,6 +142,12 @@
         <PathIcon Data="{StaticResource delete_regular}" 
                   Classes="delete-icon"/>
       </Button>
+      
+      <!-- Validation Error Message -->
+      <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="5"
+                 Text="{Binding ValidationMessage}"
+                 Classes="validation-error"
+                 IsVisible="{Binding HasValidationErrors}"/>
       
     </Grid>
   </Border>
