@@ -15,13 +15,18 @@ namespace userspace_backend.Display.Calculations
 
         public static ICollection<double> CalculateCurvePointSpeeds()
         {
+            return CalculateCurvePointSpeeds(SlowestHandSpeed, FastestHandSpeed);
+        }
+
+        public static ICollection<double> CalculateCurvePointSpeeds(double minSpeed, double maxSpeed)
+        {
             List<double> curvePointSpeeds = new List<double>();
 
-            // Calculate logarithmic distribution of speeds from SlowestHandSpeed to FastestHandSpeed
+            // Calculate logarithmic distribution of speeds from minSpeed to maxSpeed
             // This provides more detail at lower speeds where mouse movement is more precise
-            double ratio = FastestHandSpeed / SlowestHandSpeed;
+            double ratio = maxSpeed / minSpeed;
             double sqrtRatio = Math.Sqrt(ratio);
-            double middle = sqrtRatio * SlowestHandSpeed;
+            double middle = sqrtRatio * minSpeed;
             double increment = 2.0 / (CurvePointsResolution - 1.0);
 
             for (double i = -1; i <= 1; i += increment)

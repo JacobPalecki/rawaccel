@@ -77,6 +77,7 @@ namespace userspace_backend.Model
         protected void AnyCurveSettingCollectionChangedEventHandler(object? sender, EventArgs e)
         {
             // All settings collections currently require curve preview to be re-generated
+            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] AnyCurveSettingCollectionChangedEventHandler called for: {sender?.GetType().Name}");
             RecalculateDriverDataAndCurvePreview();
         }
 
@@ -87,13 +88,16 @@ namespace userspace_backend.Model
 
         protected void RecalculateDriverDataAndCurvePreview()
         {
+            System.Diagnostics.Debug.WriteLine("[LUT DEBUG] RecalculateDriverDataAndCurvePreview called");
             RecalculateDriverData();
 
             // Generate X curve points (original behavior)
+            System.Diagnostics.Debug.WriteLine("[LUT DEBUG] Generating X curve points");
             XCurvePreview.GeneratePoints(CurrentValidatedDriverProfile);
 
             // Generate Y curve points by multiplying X curve outputs by YX ratio
             GenerateYCurvePoints();
+            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] Generated {XCurvePreview.Points?.Count} X curve points");
         }
 
         private void GenerateYCurvePoints()
