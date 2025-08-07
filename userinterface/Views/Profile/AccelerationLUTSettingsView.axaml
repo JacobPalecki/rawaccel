@@ -46,7 +46,7 @@
 		<TextBlock Classes="Warning"
            Text="{ext:Localized ProfileExpertsOnlyWarning}"/>
 		<TextBlock Classes="Instructions"
-           Text="{ext:Localized ProfileLUTFormatInstructions}"/>
-		<ContentControl Content="{Binding LUTPoints}" Height="100"/>
+           Text="Add individual coordinate points to define your acceleration curve. Each point represents a mouse speed (X) and output value (Y)."/>
+		<ContentControl Content="{Binding PointsCollection}"/>
 	</StackPanel>
 </UserControl>

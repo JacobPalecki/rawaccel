@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:userinterface.ViewModels.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="80"
+             x:Class="userinterface.Views.Controls.LUTPointCardView"
+             x:DataType="vm:LUTPointCardViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Border.point-card">
+      <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+
+    <Style Selector="Border.point-card:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.point-header">
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.field-label">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
+    <Style Selector="NumericUpDown.coordinate-input">
+      <Setter Property="Width" Value="80"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="ShowButtonSpinner" Value="False"/>
+      <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="8,4"/>
+    </Style>
+
+    <Style Selector="NumericUpDown.coordinate-input:focus">
+      <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+    </Style>
+
+    <Style Selector="Button.delete-button">
+      <Setter Property="Width" Value="24"/>
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+
+    <Style Selector="Button.delete-button:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Border Classes="point-card" Padding="12">
+    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+      
+      <!-- Header -->
+      <TextBlock Grid.Column="0" Grid.Row="0" 
+                 Text="{Binding PointIndex, StringFormat='Point {0}'}"
+                 Classes="point-header"/>
+      
+      <Button Grid.Column="1" Grid.Row="0"
+              Command="{Binding DeletePointCommand}"
+              Classes="delete-button"
+              ToolTip.Tip="Delete point">×</Button>
+      
+      <!-- Input Fields -->
+      <StackPanel Grid.ColumnSpan="2" Grid.Row="1" 
+                  Orientation="Horizontal" 
+                  Spacing="16"
+                  Margin="0,8,0,0">
+        
+        <StackPanel>
+          <TextBlock Text="X:" Classes="field-label"/>
+          <NumericUpDown Value="{Binding XValue}"
+                         Minimum="0"
+                         Maximum="10000"
+                         Increment="1"
+                         Classes="coordinate-input"
+                         ToolTip.Tip="Mouse speed"/>
+        </StackPanel>
+        
+        <StackPanel>
+          <TextBlock Text="Y:" Classes="field-label"/>
+          <NumericUpDown Value="{Binding YValue}"
+                         Minimum="0" 
+                         Maximum="100"
+                         Increment="0.1"
+                         FormatString="F2"
+                         Classes="coordinate-input"
+                         ToolTip.Tip="Output value"/>
+        </StackPanel>
+        
+      </StackPanel>
+      
+    </Grid>
+  </Border>
+
+</UserControl>
