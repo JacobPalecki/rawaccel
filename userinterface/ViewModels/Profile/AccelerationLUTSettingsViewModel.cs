@@ -1,14 +1,18 @@
 ﻿using userinterface.ViewModels.Controls;
 using userspace_backend.Model.AccelDefinitions;
+using userspace_backend.Logging;
 using BE = userspace_backend.Model.AccelDefinitions;
 
 namespace userinterface.ViewModels.Profile
 {
     public partial class AccelerationLUTSettingsViewModel : ViewModelBase
     {
-        public AccelerationLUTSettingsViewModel(BE.LookupTableDefinitionModel lutAccelBE)
+        private readonly ILoggingService? loggingService;
+
+        public AccelerationLUTSettingsViewModel(BE.LookupTableDefinitionModel lutAccelBE, ILoggingService? loggingService = null)
         {
             LUTAccelBE = lutAccelBE;
+            this.loggingService = loggingService;
             
             PointsCollection = new LUTPointsCollectionViewModel();
             
@@ -32,21 +36,19 @@ namespace userinterface.ViewModels.Profile
             var coordinates = PointsCollection.ConvertToData();
             var coordinateString = string.Join(",", coordinates);
             
-            // DEBUG: Log the data being sent
-            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] Setting coordinates: {coordinateString}");
-            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] LUTAccelBE type: {LUTAccelBE?.GetType().Name}");
+            loggingService?.LogDebug(LogSource.LUT, "Setting coordinates: {Coordinates}", coordinateString);
+            loggingService?.LogDebug(LogSource.LUT, "LUTAccelBE type: {Type}", LUTAccelBE?.GetType().Name);
             
             LUTAccelBE.Data.InterfaceValue = coordinateString;
             var success = LUTAccelBE.Data.TryUpdateFromInterface();
             
-            // DEBUG: Log the result
-            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] TryUpdateFromInterface result: {success}");
-            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] CurrentValidatedValue: {LUTAccelBE.Data.CurrentValidatedValue?.ToString()}");
+            loggingService?.LogDebug(LogSource.LUT, "TryUpdateFromInterface result: {Success}", success);
+            loggingService?.LogDebug(LogSource.LUT, "CurrentValidatedValue: {Value}", LUTAccelBE.Data.CurrentValidatedValue?.ToString());
             
             // WORKAROUND: Manually trigger AnySettingChanged event if automatic event chain fails
             if (success)
             {
-                System.Diagnostics.Debug.WriteLine("[LUT DEBUG] Manually triggering AnySettingChanged");
+                loggingService?.LogDebug(LogSource.LUT, "Manually triggering AnySettingChanged event");
                 LUTAccelBE.AnySettingChanged?.Invoke(LUTAccelBE, System.EventArgs.Empty);
             }
         }

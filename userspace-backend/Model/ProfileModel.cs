@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using userspace_backend.Common;
 using userspace_backend.Display;
+using userspace_backend.Logging;
 using userspace_backend.Model.AccelDefinitions;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend.Model.ProfileComponents;
@@ -15,6 +16,13 @@ namespace userspace_backend.Model
 {
     public class ProfileModel : EditableSettingsCollection<DATA.Profile>
     {
+        private static ILoggingService? loggingService;
+
+        public static void InitializeLogging(ILoggingService? logger)
+        {
+            loggingService = logger;
+        }
+
         public ProfileModel(DATA.Profile dataObject, IModelValueValidator<string> nameValidator) : base(dataObject)
         {
             NameValidator = nameValidator;
@@ -77,7 +85,7 @@ namespace userspace_backend.Model
         protected void AnyCurveSettingCollectionChangedEventHandler(object? sender, EventArgs e)
         {
             // All settings collections currently require curve preview to be re-generated
-            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] AnyCurveSettingCollectionChangedEventHandler called for: {sender?.GetType().Name}");
+            loggingService?.LogDebug(LogSource.LUT, "AnyCurveSettingCollectionChangedEventHandler called for: {SenderType}", sender?.GetType().Name);
             RecalculateDriverDataAndCurvePreview();
         }
 
@@ -88,16 +96,16 @@ namespace userspace_backend.Model
 
         protected void RecalculateDriverDataAndCurvePreview()
         {
-            System.Diagnostics.Debug.WriteLine("[LUT DEBUG] RecalculateDriverDataAndCurvePreview called");
+            loggingService?.LogDebug(LogSource.LUT, "RecalculateDriverDataAndCurvePreview called");
             RecalculateDriverData();
 
             // Generate X curve points (original behavior)
-            System.Diagnostics.Debug.WriteLine("[LUT DEBUG] Generating X curve points");
+            loggingService?.LogDebug(LogSource.LUT, "Generating X curve points");
             XCurvePreview.GeneratePoints(CurrentValidatedDriverProfile);
 
             // Generate Y curve points by multiplying X curve outputs by YX ratio
             GenerateYCurvePoints();
-            System.Diagnostics.Debug.WriteLine($"[LUT DEBUG] Generated {XCurvePreview.Points?.Count} X curve points");
+            loggingService?.LogDebug(LogSource.LUT, "Generated {PointCount} X curve points", XCurvePreview.Points?.Count);
         }
 
         private void GenerateYCurvePoints()

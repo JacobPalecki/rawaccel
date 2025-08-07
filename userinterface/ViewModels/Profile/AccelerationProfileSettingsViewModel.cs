@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using userinterface.Services;
+using userspace_backend.Logging;
 using BE = userspace_backend.Model.AccelDefinitions;
 using BEData = userspace_backend.Data.Profiles.Acceleration;
 
@@ -27,8 +28,9 @@ namespace userinterface.ViewModels.Profile
         public AccelerationProfileSettingsViewModel(BE.AccelerationModel accelerationBE, INotificationService notificationService, LocalizationService localizationService)
         {
             AccelerationBE = accelerationBE;
+            var loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
             AccelerationFormulaSettings = new AccelerationFormulaSettingsViewModel(accelerationBE.FormulaAccel, notificationService);
-            AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(accelerationBE.LookupTableAccel);
+            AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(accelerationBE.LookupTableAccel, loggingService);
             AnisotropySettings = new AnisotropyProfileSettingsViewModel(accelerationBE.Anisotropy, localizationService);
             CoalescionSettings = new CoalescionProfileSettingsViewModel(accelerationBE.Coalescion);
             AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;

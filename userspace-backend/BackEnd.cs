@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using userspace_backend.Data.Profiles;
 using userspace_backend.IO;
 using userspace_backend.Model;
+using userspace_backend.Model.EditableSettings;
 using userspace_backend.Hardware;
 using userspace_backend.Logging;
 using DATA = userspace_backend.Data;
@@ -101,6 +102,11 @@ namespace userspace_backend
             BackEndLoader = backEndLoader;
             this.deviceInfoProvider = deviceInfoProvider;
             this.loggingService = loggingService;
+            
+            // Initialize static logging for models
+            ProfileModel.InitializeLogging(loggingService);
+            EditableSettingLogging.Initialize(loggingService);
+            
             Devices = new DevicesModel(deviceInfoProvider);
             Profiles = new ProfilesModel([]);
             Settings = new DATA.Settings();
