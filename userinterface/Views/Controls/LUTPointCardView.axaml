@@ -9,7 +9,7 @@
 
   <UserControl.Styles>
     <Style Selector="Border.point-card">
-      <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="CornerRadius" Value="8"/>
@@ -30,7 +30,8 @@
       <Setter Property="FontSize" Value="12"/>
       <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
-      <Setter Property="Margin" Value="0,0,0,4"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
     </Style>
 
     <Style Selector="NumericUpDown.coordinate-input">
@@ -51,62 +52,68 @@
     </Style>
 
     <Style Selector="Button.delete-button">
-      <Setter Property="Width" Value="24"/>
-      <Setter Property="Height" Value="24"/>
+      <Setter Property="Width" Value="32"/>
+      <Setter Property="Height" Value="32"/>
       <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-      <Setter Property="FontSize" Value="16"/>
-      <Setter Property="FontWeight" Value="Bold"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Padding" Value="0"/>
     </Style>
 
     <Style Selector="Button.delete-button:pointerover">
-      <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+    </Style>
+
+    <Style Selector="PathIcon.delete-icon">
+      <Setter Property="Width" Value="16"/>
+      <Setter Property="Height" Value="16"/>
+      <Setter Property="Foreground" Value="{DynamicResource DangerButtonBrush}"/>
     </Style>
   </UserControl.Styles>
 
   <Border Classes="point-card" Padding="12">
-    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+    <Grid ColumnDefinitions="*,Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
       
       <!-- Header -->
-      <TextBlock Grid.Column="0" Grid.Row="0" 
+      <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5"
                  Text="{Binding PointIndex, StringFormat='Point {0}'}"
-                 Classes="point-header"/>
-      
-      <Button Grid.Column="1" Grid.Row="0"
-              Command="{Binding DeletePointCommand}"
-              Classes="delete-button"
-              ToolTip.Tip="Delete point">×</Button>
+                 Classes="point-header"
+                 Margin="0,0,0,8"/>
       
       <!-- Input Fields -->
-      <StackPanel Grid.ColumnSpan="2" Grid.Row="1" 
-                  Orientation="Horizontal" 
-                  Spacing="16"
-                  Margin="0,8,0,0">
-        
-        <StackPanel>
-          <TextBlock Text="X:" Classes="field-label"/>
-          <NumericUpDown Value="{Binding XValue}"
-                         Minimum="0"
-                         Maximum="10000"
-                         Increment="1"
-                         Classes="coordinate-input"
-                         ToolTip.Tip="Mouse speed"/>
-        </StackPanel>
-        
-        <StackPanel>
-          <TextBlock Text="Y:" Classes="field-label"/>
-          <NumericUpDown Value="{Binding YValue}"
-                         Minimum="0" 
-                         Maximum="100"
-                         Increment="0.1"
-                         FormatString="F2"
-                         Classes="coordinate-input"
-                         ToolTip.Tip="Output value"/>
-        </StackPanel>
-        
-      </StackPanel>
+      <TextBlock Grid.Column="0" Grid.Row="1" 
+                 Text="X:" 
+                 Classes="field-label"/>
+      
+      <NumericUpDown Grid.Column="1" Grid.Row="1"
+                     Value="{Binding XValue}"
+                     Minimum="0"
+                     Maximum="10000"
+                     Increment="1"
+                     Classes="coordinate-input"
+                     ToolTip.Tip="Mouse speed"
+                     Margin="0,0,16,0"/>
+      
+      <TextBlock Grid.Column="2" Grid.Row="1" 
+                 Text="Y:" 
+                 Classes="field-label"/>
+      
+      <NumericUpDown Grid.Column="3" Grid.Row="1"
+                     Value="{Binding YValue}"
+                     Minimum="0" 
+                     Maximum="100"
+                     Increment="0.1"
+                     FormatString="F2"
+                     Classes="coordinate-input"
+                     ToolTip.Tip="Output value"
+                     Margin="0,0,16,0"/>
+      
+      <Button Grid.Column="4" Grid.Row="1"
+              Command="{Binding DeletePointCommand}"
+              Classes="delete-button"
+              ToolTip.Tip="Delete point">
+        <PathIcon Data="{StaticResource delete_regular}" 
+                  Classes="delete-icon"/>
+      </Button>
       
     </Grid>
   </Border>
