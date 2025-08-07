@@ -95,7 +95,7 @@
     </Button>
     
     <!-- Carousel Container -->
-    <Grid Grid.Row="1" Height="240">
+    <Grid Grid.Row="1" Height="160">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
@@ -109,7 +109,8 @@
               Classes="carousel-nav-button"
               HorizontalAlignment="Center"
               Margin="0,0,0,8">
-        <TextBlock Text="▲" FontSize="16"/>
+        <PathIcon Data="{StaticResource chevron_up_regular}" 
+                  Width="16" Height="16"/>
       </Button>
       
       <!-- Cards Display Area -->
@@ -118,9 +119,10 @@
         <ContentControl Content="{Binding PreviousPoint}"
                         IsVisible="{Binding PreviousPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Opacity="0.3"
-                        IsHitTestVisible="False">
+                        IsHitTestVisible="False"
+                        ZIndex="1">
           <ContentControl.RenderTransform>
-            <TranslateTransform Y="-60"/>
+            <TranslateTransform Y="-40"/>
           </ContentControl.RenderTransform>
           <ContentControl.ContentTemplate>
             <DataTemplate DataType="vm:LUTPointCardViewModel">
@@ -132,7 +134,8 @@
         <!-- Current Card (active) -->
         <ContentControl Content="{Binding CurrentPoint}"
                         IsVisible="{Binding CurrentPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        Opacity="1.0">
+                        Opacity="1.0"
+                        ZIndex="2">
           <ContentControl.ContentTemplate>
             <DataTemplate DataType="vm:LUTPointCardViewModel">
               <views:LUTPointCardView/>
@@ -144,9 +147,10 @@
         <ContentControl Content="{Binding NextPoint}"
                         IsVisible="{Binding NextPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Opacity="0.3"
-                        IsHitTestVisible="False">
+                        IsHitTestVisible="False"
+                        ZIndex="1">
           <ContentControl.RenderTransform>
-            <TranslateTransform Y="60"/>
+            <TranslateTransform Y="40"/>
           </ContentControl.RenderTransform>
           <ContentControl.ContentTemplate>
             <DataTemplate DataType="vm:LUTPointCardViewModel">
@@ -170,7 +174,8 @@
               Classes="carousel-nav-button"
               HorizontalAlignment="Center"
               Margin="0,8,0,0">
-        <TextBlock Text="▼" FontSize="16"/>
+        <PathIcon Data="{StaticResource chevron_down_regular}" 
+                  Width="16" Height="16"/>
       </Button>
     </Grid>
     

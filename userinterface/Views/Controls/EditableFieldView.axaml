@@ -17,7 +17,7 @@
 		   Example: Height="32" + Padding="8" = only 16px for content (causes scroll bars)
 		2. If you need explicit height, ensure: Height >= Content Height + Padding + Border
 		   Example: Height="48" + Padding="8" = 32px for content (works fine)
-		3. For single-line inputs: Remove TextWrapping="Wrap" and add AcceptsReturn="False"
+		3. For single-line inputs: Remove TextWrapping="Wrap"
 		-->
 		<Style Selector="TextBox">
 			<Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
