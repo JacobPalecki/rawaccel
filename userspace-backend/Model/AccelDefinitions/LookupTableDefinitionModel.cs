@@ -88,6 +88,14 @@ namespace userspace_backend.Model.AccelDefinitions
 
         public double[] Data { get; set; }
 
+        public override string ToString()
+        {
+            if (Data == null || Data.Length == 0)
+                return string.Empty;
+
+            return string.Join(",", Data);
+        }
+
         public int CompareTo(object? obj)
         {
             if (obj == null)
