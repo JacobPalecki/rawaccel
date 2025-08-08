@@ -65,7 +65,7 @@ namespace userinterface.ViewModels.Controls
 
             for (int i = 0; i < data.Length - 1; i += 2)
             {
-                var pointCard = new LUTPointCardViewModel(data[i], data[i + 1], (i / 2) + 1);
+                var pointCard = new LUTPointCardViewModel(data[i], data[i + 1], (i / 2) + 1, loggingService);
                 SubscribeToPointEvents(pointCard);
                 Points.Add(pointCard);
             }
@@ -124,7 +124,7 @@ namespace userinterface.ViewModels.Controls
                 nextYValue = CalculateInterpolatedYValue(nextXValue);
             }
 
-            var newPoint = new LUTPointCardViewModel(nextXValue, nextYValue, Points.Count + 1);
+            var newPoint = new LUTPointCardViewModel(nextXValue, nextYValue, Points.Count + 1, loggingService);
             SubscribeToPointEvents(newPoint);
             Points.Add(newPoint);
             
@@ -304,6 +304,11 @@ namespace userinterface.ViewModels.Controls
 
         private void OnPointValueChanged(object? sender, PointValueChangedEventArgs e)
         {
+            // Debug: Log every point value change for troubleshooting
+            loggingService?.LogInformation(LogSource.LUT, 
+                "DEBUG: Point value changed - Point {Index}: ({X}, {Y})", 
+                e.Point.PointIndex, e.XValue, e.YValue);
+            
             // Check for sequence validation errors (X values must be strictly increasing)
             ValidatePointSequence(e.Point);
             

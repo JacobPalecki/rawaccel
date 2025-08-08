@@ -598,4 +598,13 @@
   <data name="LUT_SequenceError" xml:space="preserve">
     <value>X values must be sequential: {0}</value>
   </data>
+  <data name="LUT_XValidationError" xml:space="preserve">
+    <value>X coordinate {0}: {1}</value>
+  </data>
+  <data name="LUT_YValidationError" xml:space="preserve">
+    <value>Y coordinate {0}: {1}</value>
+  </data>
+  <data name="LUT_InvalidInput" xml:space="preserve">
+    <value>Invalid input corrected to valid range</value>
+  </data>
 </root>
