@@ -96,13 +96,40 @@
       <Setter Property="Height" Value="14"/>
       <Setter Property="Foreground" Value="{DynamicResource DangerButtonBrush}"/>
     </Style>
+    
+    <Style Selector="Button.swap-button">
+      <Setter Property="Width" Value="20"/>
+      <Setter Property="Height" Value="20"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="2"/>
+      <Setter Property="Margin" Value="2"/>
+    </Style>
+    
+    <Style Selector="Button.swap-button:pointerover">
+      <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+    </Style>
+    
+    <Style Selector="Button.swap-button:disabled">
+      <Setter Property="Opacity" Value="0.3"/>
+    </Style>
+    
+    <Style Selector="PathIcon.swap-icon">
+      <Setter Property="Width" Value="12"/>
+      <Setter Property="Height" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+    </Style>
+    
+    <Style Selector="Button.swap-button:pointerover PathIcon.swap-icon">
+      <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonBrush}"/>
+    </Style>
   </UserControl.Styles>
 
   <Border Classes.point-card="True" 
           Classes.error="{Binding HasValidationErrors}"
           Padding="8">
     
-    <Grid ColumnDefinitions="*,Auto,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+    <Grid ColumnDefinitions="*,Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
       
       <!-- Header -->
       <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5"
@@ -116,6 +143,7 @@
                  Classes="field-label"/>
       
       <TextBox Grid.Column="1" Grid.Row="1"
+               Name="XTextBox"
                Text="{Binding XValueText}"
                Classes.coordinate-input="True"
                Classes.error="{Binding HasValidationErrors}"
@@ -128,6 +156,7 @@
                  Classes="field-label"/>
       
       <TextBox Grid.Column="3" Grid.Row="1"
+               Name="YTextBox"
                Text="{Binding YValueText}"
                Classes.coordinate-input="True"
                Classes.error="{Binding HasValidationErrors}"
@@ -143,8 +172,38 @@
                   Classes="delete-icon"/>
       </Button>
       
+      <!-- Chevron buttons container - centered vertically -->
+      <Grid Grid.Column="5" Grid.Row="0" Grid.RowSpan="3"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="8"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Button Grid.Row="0"
+                Command="{Binding SwapYWithPreviousCommand}"
+                IsEnabled="{Binding CanSwapWithPrevious}"
+                Classes="swap-button"
+                ToolTip.Tip="Swap Y value with previous point">
+          <PathIcon Data="{StaticResource chevron_up_regular}" 
+                    Classes="swap-icon"/>
+        </Button>
+        
+        <Button Grid.Row="2"
+                Command="{Binding SwapYWithNextCommand}"
+                IsEnabled="{Binding CanSwapWithNext}"
+                Classes="swap-button"
+                ToolTip.Tip="Swap Y value with next point">
+          <PathIcon Data="{StaticResource chevron_down_regular}" 
+                    Classes="swap-icon"/>
+        </Button>
+        
+      </Grid>
+      
       <!-- Validation Error Message -->
-      <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="5"
+      <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="6"
                  Text="{Binding ValidationMessage}"
                  Classes="validation-error"
                  IsVisible="{Binding HasValidationErrors}"/>

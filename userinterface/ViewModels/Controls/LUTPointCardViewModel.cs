@@ -28,6 +28,12 @@ namespace userinterface.ViewModels.Controls
         [ObservableProperty]
         private string validationMessage = string.Empty;
 
+        [ObservableProperty]
+        private bool canSwapWithPrevious;
+
+        [ObservableProperty]
+        private bool canSwapWithNext;
+
         public LUTPointCardViewModel(double x, double y, int index, ILoggingService? loggingService = null)
         {
             this.loggingService = loggingService;
@@ -53,6 +59,8 @@ namespace userinterface.ViewModels.Controls
             YCoordinate.PropertyChanged += OnCoordinatePropertyChanged;
             
             DeletePointCommand = new RelayCommand(OnDeletePoint);
+            SwapYWithPreviousCommand = new RelayCommand(OnSwapYWithPrevious);
+            SwapYWithNextCommand = new RelayCommand(OnSwapYWithNext);
             
             // Update validation status initially
             UpdateValidationStatus();
@@ -87,14 +95,28 @@ namespace userinterface.ViewModels.Controls
         }
 
         public ICommand DeletePointCommand { get; }
+        public ICommand SwapYWithPreviousCommand { get; }
+        public ICommand SwapYWithNextCommand { get; }
 
         public event EventHandler<PointDeletedEventArgs>? PointDeleted;
         public event EventHandler<PointValueChangedEventArgs>? ValueChanged;
+        public event EventHandler<SwapYValuesEventArgs>? SwapYRequested;
 
         private void OnDeletePoint()
         {
             PointDeleted?.Invoke(this, new PointDeletedEventArgs(this));
         }
+
+        private void OnSwapYWithPrevious()
+        {
+            SwapYRequested?.Invoke(this, new SwapYValuesEventArgs(this, SwapDirection.Previous));
+        }
+
+        private void OnSwapYWithNext()
+        {
+            SwapYRequested?.Invoke(this, new SwapYValuesEventArgs(this, SwapDirection.Next));
+        }
+
         
         private void OnCoordinatePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -291,6 +313,24 @@ namespace userinterface.ViewModels.Controls
             Point = point;
             XValue = xValue;
             YValue = yValue;
+        }
+    }
+
+    public enum SwapDirection
+    {
+        Previous,
+        Next
+    }
+
+    public class SwapYValuesEventArgs : EventArgs
+    {
+        public LUTPointCardViewModel Point { get; }
+        public SwapDirection Direction { get; }
+
+        public SwapYValuesEventArgs(LUTPointCardViewModel point, SwapDirection direction)
+        {
+            Point = point;
+            Direction = direction;
         }
     }
 }

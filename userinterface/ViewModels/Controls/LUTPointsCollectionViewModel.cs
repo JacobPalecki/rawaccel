@@ -388,13 +388,55 @@ namespace userinterface.ViewModels.Controls
         {
             point.PointDeleted += OnPointDeleted;
             point.ValueChanged += OnPointValueChanged;
+            point.SwapYRequested += OnSwapYRequested;
         }
 
         private void UnsubscribeFromPointEvents(LUTPointCardViewModel point)
         {
             point.PointDeleted -= OnPointDeleted;
             point.ValueChanged -= OnPointValueChanged;
+            point.SwapYRequested -= OnSwapYRequested;
         }
+
+        private void OnSwapYRequested(object? sender, SwapYValuesEventArgs e)
+        {
+            var pointIndex = Points.IndexOf(e.Point);
+            if (pointIndex < 0) return;
+
+            int targetIndex = e.Direction == SwapDirection.Previous ? pointIndex - 1 : pointIndex + 1;
+
+            // Validate bounds
+            if (targetIndex < 0 || targetIndex >= Points.Count) return;
+
+            // Swap Y values only (preserve X values)
+            var currentY = e.Point.YValue;
+            var targetY = Points[targetIndex].YValue;
+
+            // Perform the swap
+            e.Point.YValue = targetY;
+            Points[targetIndex].YValue = currentY;
+
+            // Move selection to follow the swapped point
+            CurrentPointIndex = targetIndex;
+            UpdateNavigationProperties();
+
+            loggingService?.LogInformation(LogSource.LUT, 
+                "Swapped Y values between Point {Index1} and Point {Index2}: Y1={Y1} <-> Y2={Y2}", 
+                e.Point.PointIndex, Points[targetIndex].PointIndex, currentY, targetY);
+
+            // Notify that collection changed for chart update
+            CollectionChanged?.Invoke(this, new CollectionChangedEventArgs());
+        }
+
+        private void UpdateSwapCapabilities()
+        {
+            for (int i = 0; i < Points.Count; i++)
+            {
+                Points[i].CanSwapWithPrevious = i > 0;
+                Points[i].CanSwapWithNext = i < Points.Count - 1;
+            }
+        }
+
 
         private void UpdatePointIndices()
         {
@@ -402,6 +444,7 @@ namespace userinterface.ViewModels.Controls
             {
                 Points[i].PointIndex = i + 1;
             }
+            UpdateSwapCapabilities();
         }
     }
 
