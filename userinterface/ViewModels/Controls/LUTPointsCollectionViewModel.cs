@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using userinterface.Services;
 using userspace_backend.Logging;
@@ -17,6 +18,7 @@ namespace userinterface.ViewModels.Controls
     {
         private readonly INotificationService? notificationService;
         private readonly ILoggingService? loggingService;
+        private readonly IModalService? modalService;
 
         [ObservableProperty]
         private bool canAddPoints = true;
@@ -36,16 +38,17 @@ namespace userinterface.ViewModels.Controls
         
         public LUTPointCardViewModel? NextPoint => CurrentPointIndex < Points.Count - 1 ? Points[CurrentPointIndex + 1] : null;
 
-        public LUTPointsCollectionViewModel(INotificationService? notificationService = null, ILoggingService? loggingService = null)
+        public LUTPointsCollectionViewModel(INotificationService? notificationService = null, ILoggingService? loggingService = null, IModalService? modalService = null)
         {
             this.notificationService = notificationService;
             this.loggingService = loggingService;
+            this.modalService = modalService;
             
             Points = new ObservableCollection<LUTPointCardViewModel>();
             Points.CollectionChanged += OnPointsCollectionChanged;
             
             AddPointCommand = new RelayCommand(TryAddPoint);
-            ClearAllPointsCommand = new RelayCommand(ClearAllPoints, () => Points.Count > 0);
+            ClearAllPointsCommand = new AsyncRelayCommand(ClearAllPointsAsync, () => Points.Count > 0);
             NavigatePreviousCommand = new RelayCommand(NavigatePrevious, () => CanNavigatePrevious);
             NavigateNextCommand = new RelayCommand(NavigateNext, () => CanNavigateNext);
         }
@@ -130,7 +133,7 @@ namespace userinterface.ViewModels.Controls
             
             UpdatePointIndices();
             CurrentPointIndex = Points.Count - 1; // Navigate to new point
-            ((RelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
+            ((AsyncRelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
             UpdateNavigationProperties();
             
             // Update max points constraint
@@ -241,23 +244,49 @@ namespace userinterface.ViewModels.Controls
             ((RelayCommand)NavigateNextCommand).NotifyCanExecuteChanged();
         }
 
-        private void ClearAllPoints()
+        private async Task ClearAllPointsAsync()
         {
             var pointCount = Points.Count;
             
+            // Show confirmation modal
+            if (modalService != null)
+            {
+                loggingService?.LogInformation(LogSource.LUT, "Showing clear all points confirmation modal for {Count} points", pointCount);
+                var confirmed = await modalService.ShowConfirmationAsync(
+                    "LUT_ClearAllPointsTitle",
+                    "LUT_ClearAllPointsMessage",
+                    "LUT_ClearAllPointsConfirm",
+                    "ModalCancel");
+                    
+                if (!confirmed)
+                {
+                    loggingService?.LogInformation(LogSource.LUT, "Clear all points operation cancelled by user");
+                    return;
+                }
+            }
+            
+            // Set index to 0 and update navigation BEFORE clearing to avoid index issues
+            CurrentPointIndex = 0;
+            UpdateNavigationProperties();
+            
+            // Unsubscribe from events before clearing
             foreach (var point in Points)
             {
                 UnsubscribeFromPointEvents(point);
             }
             
+            // Clear the collection
             Points.Clear();
-            CurrentPointIndex = 0;
-            ((RelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
-            UpdateNavigationProperties();
+            
+            // Update commands after clearing
+            ((AsyncRelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
             
             // Re-enable adding points after clearing
             CanAddPoints = true;
             ((RelayCommand)AddPointCommand).NotifyCanExecuteChanged();
+            
+            // Final navigation update to ensure consistency
+            UpdateNavigationProperties();
             
             // Success notification
             notificationService?.ShowSuccessToast("LUT_AllPointsCleared", 3000, pointCount);
@@ -294,7 +323,7 @@ namespace userinterface.ViewModels.Controls
             // Re-enable adding points if we were at the limit
             CanAddPoints = Points.Count < LUTSequenceValidator.MaxPoints;
             ((RelayCommand)AddPointCommand).NotifyCanExecuteChanged();
-            ((RelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
+            ((AsyncRelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
             UpdateNavigationProperties();
             
             // Success notification

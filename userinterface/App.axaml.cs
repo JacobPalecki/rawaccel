@@ -149,7 +149,8 @@ public partial class App : Application
         services.AddTransient<ViewModels.Profile.ProfileSettingsViewModel>(provider =>
             new ViewModels.Profile.ProfileSettingsViewModel(
                 provider.GetRequiredService<INotificationService>(),
-                provider.GetRequiredService<LocalizationService>()));
+                provider.GetRequiredService<LocalizationService>(),
+                provider.GetRequiredService<IModalService>()));
         services.AddTransient<ViewModels.Profile.ProfileChartViewModel>();
         services.AddTransient<ViewModels.Profile.AccelerationFormulaSettingsViewModel>();
         services.AddTransient<ViewModels.Profile.AccelerationLUTSettingsViewModel>();

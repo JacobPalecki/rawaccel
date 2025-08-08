@@ -8,11 +8,13 @@ namespace userinterface.ViewModels.Profile
     {
         private readonly INotificationService notificationService;
         private readonly LocalizationService localizationService;
+        private readonly IModalService modalService;
 
-        public ProfileSettingsViewModel(INotificationService notificationService, LocalizationService localizationService)
+        public ProfileSettingsViewModel(INotificationService notificationService, LocalizationService localizationService, IModalService modalService)
         {
             this.notificationService = notificationService;
             this.localizationService = localizationService;
+            this.modalService = modalService;
         }
 
         protected BE.ProfileModel ProfileModelBE { get; private set; } = null!;
@@ -30,7 +32,7 @@ namespace userinterface.ViewModels.Profile
             ProfileModelBE = profileModel;
             OutputDPIField = new EditableFieldViewModel(profileModel.OutputDPI);
             YXRatioField = new EditableFieldViewModel(profileModel.YXRatio);
-            AccelerationSettings = new AccelerationProfileSettingsViewModel(profileModel.Acceleration, notificationService, localizationService);
+            AccelerationSettings = new AccelerationProfileSettingsViewModel(profileModel.Acceleration, notificationService, localizationService, modalService);
             HiddenSettings = new HiddenProfileSettingsViewModel(profileModel.Hidden);
         }
     }

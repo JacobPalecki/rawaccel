@@ -607,4 +607,13 @@
   <data name="LUT_InvalidInput" xml:space="preserve">
     <value>Invalid input corrected to valid range</value>
   </data>
+  <data name="LUT_ClearAllPointsTitle" xml:space="preserve">
+    <value>Clear All Points</value>
+  </data>
+  <data name="LUT_ClearAllPointsMessage" xml:space="preserve">
+    <value>Are you sure you want to clear all points? This action cannot be undone.</value>
+  </data>
+  <data name="LUT_ClearAllPointsConfirm" xml:space="preserve">
+    <value>Clear All</value>
+  </data>
 </root>
