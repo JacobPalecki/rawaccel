@@ -56,7 +56,6 @@ namespace userinterface.ViewModels.Controls
             this.loggingService = loggingService;
             this.localizationService = localizationService;
 
-            // Subscribe to language changes
             if (this.localizationService != null)
             {
                 this.localizationService.PropertyChanged += OnLocalizationChanged;
@@ -64,7 +63,6 @@ namespace userinterface.ViewModels.Controls
 
             PointIndex = index;
 
-            // Create EditableSetting instances with LUT-specific validators
             XCoordinate = new EditableSetting<double>(
                 displayName: "X Coordinate",
                 initialValue: x,
@@ -79,7 +77,6 @@ namespace userinterface.ViewModels.Controls
                 validator: LUTModelValueValidators.LUTYValidator,
                 autoUpdateFromInterface: true);
 
-            // Subscribe to property changes for validation feedback
             XCoordinate.PropertyChanged += OnCoordinatePropertyChanged;
             YCoordinate.PropertyChanged += OnCoordinatePropertyChanged;
 
@@ -87,14 +84,12 @@ namespace userinterface.ViewModels.Controls
             SwapYWithPreviousCommand = new RelayCommand(OnSwapYWithPrevious);
             SwapYWithNextCommand = new RelayCommand(OnSwapYWithNext);
 
-            // Update validation status initially
             UpdateValidationStatus();
         }
 
         public EditableSetting<double> XCoordinate { get; }
         public EditableSetting<double> YCoordinate { get; }
 
-        // Convenience properties for backward compatibility
         public double XValue
         {
             get => XCoordinate.CurrentValidatedValue;
@@ -168,28 +163,23 @@ namespace userinterface.ViewModels.Controls
 
             if (e.PropertyName == nameof(EditableSetting<double>.CurrentValidatedValue))
             {
-                // Notify about value changes
                 ValueChanged?.Invoke(this, new PointValueChangedEventArgs(this, XValue, YValue));
 
-                // Update validation status
                 UpdateValidationStatus();
-
-                // Notify UI about property changes for binding
+g
                 OnPropertyChanged(nameof(XValue));
                 OnPropertyChanged(nameof(YValue));
             }
             else if (e.PropertyName == nameof(EditableSetting<double>.InterfaceValue))
             {
-                // Log input changes at debug level for troubleshooting
+                // Log input changes at debug level
                 loggingService?.LogDebug(LogSource.LUT,
                     "LUT Point {Index} {CoordinateType} input changed to: '{InterfaceValue}'",
                     PointIndex, coordinateType, setting?.InterfaceValue ?? "null");
 
-                // Update text binding properties
                 OnPropertyChanged(nameof(XValueText));
                 OnPropertyChanged(nameof(YValueText));
 
-                // Update tracking of last interface values
                 if (coordinateType == "X")
                     lastXInterfaceValue = setting?.InterfaceValue;
                 else
@@ -274,7 +264,7 @@ namespace userinterface.ViewModels.Controls
             // Detect validation correction: same value set twice in a row indicates EditableSetting correction
             if (currentValue == lastValue)
             {
-                // Only show toast if we haven't already shown one for this exact value
+                // This stops duplicate toasts for the same value and toast spam but also causes issues when going back to the same value after changing it
                 if (currentValue != lastToastValue)
                 {
                     loggingService?.LogInformation(LogSource.LUT,
@@ -286,14 +276,12 @@ namespace userinterface.ViewModels.Controls
                     {
                         var maxValue = coordinateType == "X" ? LUTXValueValidator.MaxValue : LUTYValueValidator.MaxValue;
 
-                        // Most likely the user exceeded the max value (common case like 9999 > 1000)
                         var toastKey = coordinateType == "X" ? "LUT_XValidationError" : "LUT_YValidationError";
                         var errorMessage = $"exceeds maximum of {maxValue}";
 
                         NotificationManager.TriggerNotification(toastKey, NotificationType.Warning,
                             $">{maxValue}", errorMessage);
 
-                        // Track that we showed toast for this value to prevent duplicates
                         if (coordinateType == "X")
                             lastXToastValue = currentValue;
                         else
@@ -319,7 +307,6 @@ namespace userinterface.ViewModels.Controls
 
         public void UpdateTextFromValues()
         {
-            // Update interface values to reflect current model values
             XCoordinate.InterfaceValue = XValue.ToString(CultureInfo.InvariantCulture);
             YCoordinate.InterfaceValue = YValue.ToString("F2", CultureInfo.InvariantCulture);
         }

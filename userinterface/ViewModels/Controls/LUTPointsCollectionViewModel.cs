@@ -119,23 +119,12 @@ namespace userinterface.ViewModels.Controls
             double nextXValue = 0;
             double nextYValue = 1;
 
-            // Smart defaults for new points
             if (Points.Count > 0)
             {
                 var lastPoint = Points.Last();
-                // Calculate intelligent X increment
-                if (Points.Count == 1)
-                {
-                    nextXValue = lastPoint.XValue + 10; // Default increment for second point
-                }
-                else
-                {
-                    // Calculate average gap for more intelligent spacing
-                    var averageGap = CalculateAverageXGap();
-                    nextXValue = lastPoint.XValue + averageGap;
-                }
+                var averageGap = CalculateAverageXGap();
+                nextXValue = lastPoint.XValue + averageGap;
 
-                // Intelligent Y value interpolation
                 nextYValue = CalculateInterpolatedYValue(nextXValue);
             }
 
@@ -158,7 +147,6 @@ namespace userinterface.ViewModels.Controls
                 notificationService?.ShowWarningToast("LUT_MaxPointsReached", 6000, LUTSequenceValidator.MaxPoints);
             }
 
-            // Log the addition (no toast notification for successful point additions)
             loggingService?.LogInformation(LogSource.LUT, "LUT point added: ({X}, {Y}), Total points: {Count}", nextXValue, nextYValue, Points.Count);
         }
 
@@ -178,7 +166,7 @@ namespace userinterface.ViewModels.Controls
         private double CalculateInterpolatedYValue(double targetX)
         {
             if (Points.Count == 0) return 1.0; // Default Y value
-            if (Points.Count == 1) return Points[0].YValue; // Use existing point's Y value
+            if (Points.Count == 1) return Points[0].YValue;
 
             var sortedPoints = Points.OrderBy(p => p.XValue).ToList();
 
@@ -196,7 +184,6 @@ namespace userinterface.ViewModels.Controls
                     var lastPoint = sortedPoints.Last();
                     var secondLastPoint = sortedPoints[sortedPoints.Count - 2];
 
-                    // Linear extrapolation: maintain the same slope
                     var slope = (lastPoint.YValue - secondLastPoint.YValue) / (lastPoint.XValue - secondLastPoint.XValue);
                     var extrapolatedY = lastPoint.YValue + slope * (targetX - lastPoint.XValue);
 
@@ -214,16 +201,14 @@ namespace userinterface.ViewModels.Controls
 
                 if (targetX >= leftPoint.XValue && targetX <= rightPoint.XValue)
                 {
-                    // Linear interpolation between the two points
                     var ratio = (targetX - leftPoint.XValue) / (rightPoint.XValue - leftPoint.XValue);
                     var interpolatedY = leftPoint.YValue + ratio * (rightPoint.YValue - leftPoint.YValue);
 
-                    // Ensure Y value stays within reasonable bounds
                     return Math.Max(0.1, Math.Min(1000.0, interpolatedY));
                 }
             }
-
             // Fallback - should not reach here
+            loggingService?.LogCritical(LogSource.LUT, "Error when calculating interpolated y value, using fallback");
             return sortedPoints.Last().YValue;
         }
 
@@ -281,13 +266,11 @@ namespace userinterface.ViewModels.Controls
             CurrentPointIndex = 0;
             UpdateNavigationProperties();
 
-            // Unsubscribe from events before clearing
             foreach (var point in Points)
             {
                 UnsubscribeFromPointEvents(point);
             }
 
-            // Clear the collection
             Points.Clear();
 
             // Update commands after clearing
@@ -300,7 +283,6 @@ namespace userinterface.ViewModels.Controls
             // Final navigation update to ensure consistency
             UpdateNavigationProperties();
 
-            // Success notification
             notificationService?.ShowSuccessToast("LUT_AllPointsCleared", 3000, pointCount);
             loggingService?.LogInformation(LogSource.LUT, "All LUT points cleared, {Count} points removed", pointCount);
         }
@@ -331,7 +313,6 @@ namespace userinterface.ViewModels.Controls
             Points.Remove(e.Point);
             UpdatePointIndices();
 
-            // Adjust current index if needed
             if (CurrentPointIndex >= Points.Count && Points.Count > 0)
             {
                 CurrentPointIndex = Points.Count - 1;
@@ -341,13 +322,11 @@ namespace userinterface.ViewModels.Controls
                 CurrentPointIndex--;
             }
 
-            // Re-enable adding points if we were at the limit
             CanAddPoints = Points.Count < LUTSequenceValidator.MaxPoints;
             ((RelayCommand)AddPointCommand).NotifyCanExecuteChanged();
             ((AsyncRelayCommand)ClearAllPointsCommand).NotifyCanExecuteChanged();
             UpdateNavigationProperties();
 
-            // Success notification
             notificationService?.ShowInfoToast("LUT_PointDeleted", 3000, deletedX, deletedY);
             loggingService?.LogInformation(LogSource.LUT, "LUT point deleted: ({X}, {Y}), Remaining points: {Count}", deletedX, deletedY, Points.Count);
         }
@@ -359,7 +338,6 @@ namespace userinterface.ViewModels.Controls
                 "DEBUG: Point value changed - Point {Index}: ({X}, {Y})",
                 e.Point.PointIndex, e.XValue, e.YValue);
 
-            // Check for sequence validation errors (X values must be strictly increasing)
             ValidatePointSequence(e.Point);
 
             CollectionChanged?.Invoke(this, new CollectionChangedEventArgs());
@@ -433,7 +411,6 @@ namespace userinterface.ViewModels.Controls
             var currentY = e.Point.YValue;
             var targetY = Points[targetIndex].YValue;
 
-            // Perform the swap
             e.Point.YValue = targetY;
             Points[targetIndex].YValue = currentY;
 
@@ -445,7 +422,6 @@ namespace userinterface.ViewModels.Controls
                 "Swapped Y values between Point {Index1} and Point {Index2}: Y1={Y1} <-> Y2={Y2}",
                 e.Point.PointIndex, Points[targetIndex].PointIndex, currentY, targetY);
 
-            // Notify that collection changed for chart update
             CollectionChanged?.Invoke(this, new CollectionChangedEventArgs());
         }
 
