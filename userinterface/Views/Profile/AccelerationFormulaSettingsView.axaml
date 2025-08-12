@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:userinterface.ViewModels.Profile"
              xmlns:controls="using:userinterface.Views.Controls"
+             xmlns:ext="using:userinterface.Extensions"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="userinterface.Views.Profile.AccelerationFormulaSettingsView"
              x:DataType="vm:AccelerationFormulaSettingsViewModel">
@@ -48,7 +49,7 @@
 						 Height="16"
 						 VerticalAlignment="Top"
 						 Margin="0,2,0,0"
-						 ToolTip.Tip="Recommended">
+						 ToolTip.Tip="{ext:Localized AccelRecommendedTooltip}">
 					<Viewbox.IsVisible>
 						<Binding Path="." Converter="{x:Static ObjectConverters.Equal}" ConverterParameter="Synchronous"/>
 					</Viewbox.IsVisible>

@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:userinterface.ViewModels.Controls"
+             xmlns:ext="using:userinterface.Extensions"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="80"
              x:Class="userinterface.Views.Controls.LUTPointCardView"
              x:DataType="vm:LUTPointCardViewModel">
@@ -133,13 +134,13 @@
       
       <!-- Header -->
       <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5"
-                 Text="{Binding PointIndex, StringFormat='Point {0}'}"
+                 Text="{Binding PointLabel}"
                  Classes="point-header"
                  Margin="0,0,0,4"/>
       
       <!-- Input Fields -->
       <TextBlock Grid.Column="0" Grid.Row="1" 
-                 Text="X:" 
+                 Text="{ext:Localized LutXLabel}" 
                  Classes="field-label"/>
       
       <TextBox Grid.Column="1" Grid.Row="1"
@@ -147,12 +148,12 @@
                Text="{Binding XValueText}"
                Classes.coordinate-input="True"
                Classes.error="{Binding HasValidationErrors}"
-               ToolTip.Tip="Mouse speed (0 to 10000)"
+               ToolTip.Tip="{ext:Localized LutMouseSpeedTooltip}"
                TextWrapping="NoWrap"
                Margin="0,0,12,0"/>
       
       <TextBlock Grid.Column="2" Grid.Row="1" 
-                 Text="Y:" 
+                 Text="{ext:Localized LutYLabel}" 
                  Classes="field-label"/>
       
       <TextBox Grid.Column="3" Grid.Row="1"
@@ -160,14 +161,14 @@
                Text="{Binding YValueText}"
                Classes.coordinate-input="True"
                Classes.error="{Binding HasValidationErrors}"
-               ToolTip.Tip="Output value (0 to 1000)"
+               ToolTip.Tip="{ext:Localized LutOutputValueTooltip}"
                TextWrapping="NoWrap"
                Margin="0,0,12,0"/>
       
       <Button Grid.Column="4" Grid.Row="1"
               Command="{Binding DeletePointCommand}"
               Classes="delete-button"
-              ToolTip.Tip="Delete point">
+              ToolTip.Tip="{ext:Localized LutDeletePointTooltip}">
         <PathIcon Data="{StaticResource delete_regular}" 
                   Classes="delete-icon"/>
       </Button>
@@ -186,7 +187,7 @@
                 Command="{Binding SwapYWithPreviousCommand}"
                 IsEnabled="{Binding CanSwapWithPrevious}"
                 Classes="swap-button"
-                ToolTip.Tip="Swap Y value with previous point">
+                ToolTip.Tip="{ext:Localized LutSwapWithPreviousTooltip}">
           <PathIcon Data="{StaticResource chevron_up_regular}" 
                     Classes="swap-icon"/>
         </Button>
@@ -195,7 +196,7 @@
                 Command="{Binding SwapYWithNextCommand}"
                 IsEnabled="{Binding CanSwapWithNext}"
                 Classes="swap-button"
-                ToolTip.Tip="Swap Y value with next point">
+                ToolTip.Tip="{ext:Localized LutSwapWithNextTooltip}">
           <PathIcon Data="{StaticResource chevron_down_regular}" 
                     Classes="swap-icon"/>
         </Button>

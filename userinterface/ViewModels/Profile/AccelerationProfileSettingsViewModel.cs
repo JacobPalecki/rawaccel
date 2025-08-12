@@ -30,7 +30,7 @@ namespace userinterface.ViewModels.Profile
             AccelerationBE = accelerationBE;
             var loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
             AccelerationFormulaSettings = new AccelerationFormulaSettingsViewModel(accelerationBE.FormulaAccel, notificationService);
-            AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(accelerationBE.LookupTableAccel, loggingService, notificationService, modalService);
+            AccelerationLUTSettings = new AccelerationLUTSettingsViewModel(accelerationBE.LookupTableAccel, loggingService, notificationService, modalService, localizationService);
             AnisotropySettings = new AnisotropyProfileSettingsViewModel(accelerationBE.Anisotropy, localizationService);
             CoalescionSettings = new CoalescionProfileSettingsViewModel(accelerationBE.Coalescion);
             AccelerationBE.DefinitionType.AutoUpdateFromInterface = true;

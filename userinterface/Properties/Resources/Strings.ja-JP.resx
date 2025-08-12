@@ -118,7 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   
-  <!-- MainWindow Resources -->
   <data name="MainWindowApplySettingsButton" xml:space="preserve">
     <value>設定を反映</value>
   </data>
@@ -135,7 +134,6 @@
     <value>プロファイル</value>
   </data>
   
-  <!-- Settings Resources -->
   <data name="SettingsGeneralSettingsTitle" xml:space="preserve">
     <value>一般設定</value>
   </data>
@@ -143,7 +141,6 @@
     <value>設定</value>
   </data>
   
-  <!-- Device Resources -->
   <data name="DeviceAddDevice" xml:space="preserve">
     <value>デバイス追加</value>
   </data>
@@ -157,7 +154,6 @@
     <value>デバイス</value>
   </data>
   
-  <!-- Mapping Resources -->
   <data name="MappingAddEntry" xml:space="preserve">
     <value>項目追加</value>
   </data>
@@ -165,7 +161,6 @@
     <value>割り当て追加</value>
   </data>
   
-  <!-- Profile Resources -->
   <data name="ProfileAddNewProfile" xml:space="preserve">
     <value>プロファイル追加</value>
   </data>
@@ -185,7 +180,6 @@
     <value>リアルタイム速度追跡切り替え</value>
   </data>
 
-  <!-- Language Names (Native) -->
   <data name="LanguageEN-US" xml:space="preserve">
     <value>English</value>
   </data>
@@ -193,7 +187,6 @@
     <value>日本語</value>
   </data>
 
-  <!-- Toast Notification Resources -->
   <data name="MainWindowSettingsAppliedSuccess" xml:space="preserve">
     <value>設定を反映しました！</value>
   </data>
@@ -219,7 +212,6 @@
     <value>デバイス '{0}' (ID: {1}) はシステムに接続されていません</value>
   </data>
 
-  <!-- Modal Dialog Resources -->
   <data name="ModalOK" xml:space="preserve">
     <value>OK</value>
   </data>
@@ -267,7 +259,6 @@
     <value>上限</value>
   </data>
 
-  <!-- Jump Acceleration Resources -->
   <data name="AccelJumpSmooth" xml:space="preserve">
     <value>スムーズ</value>
   </data>
@@ -278,7 +269,6 @@
     <value>出力</value>
   </data>
 
-  <!-- Linear Acceleration Resources -->
   <data name="AccelLinearAcceleration" xml:space="preserve">
     <value>加速度</value>
   </data>
@@ -289,7 +279,6 @@
     <value>上限</value>
   </data>
 
-  <!-- Power Acceleration Resources -->
   <data name="AccelPowerScale" xml:space="preserve">
     <value>スケール</value>
   </data>
@@ -303,7 +292,6 @@
     <value>上限</value>
   </data>
 
-  <!-- Natural Acceleration Resources -->
   <data name="AccelNaturalDecayRate" xml:space="preserve">
     <value>減衰率</value>
   </data>
@@ -314,7 +302,6 @@
     <value>制限</value>
   </data>
 
-  <!-- Synchronous Acceleration Resources -->
   <data name="AccelSynchronousGamma" xml:space="preserve">
     <value>ガンマ</value>
   </data>
@@ -328,7 +315,6 @@
     <value>スムーズさ</value>
   </data>
 
-  <!-- General Acceleration Resources -->
   <data name="AccelDefinitionType" xml:space="preserve">
     <value>設定方式</value>
   </data>
@@ -336,7 +322,6 @@
     <value>計算方式</value>
   </data>
 
-  <!-- Lookup Table Resources -->
   <data name="LookupTableApplyAs" xml:space="preserve">
     <value>適用方法</value>
   </data>
@@ -344,7 +329,6 @@
     <value>データ</value>
   </data>
 
-  <!-- Profile Component Resources -->
   <data name="ProfileOutputDPI" xml:space="preserve">
     <value>出力DPI</value>
   </data>
@@ -352,7 +336,6 @@
     <value>Y/X比</value>
   </data>
 
-  <!-- Anisotropy Resources -->
   <data name="AnisotropyDomain" xml:space="preserve">
     <value>入力範囲</value>
   </data>
@@ -378,7 +361,6 @@
     <value>X軸とY軸を連動</value>
   </data>
 
-  <!-- Hidden Model Resources -->
   <data name="HiddenRotation" xml:space="preserve">
     <value>回転</value>
   </data>
@@ -398,7 +380,6 @@
     <value>出力平滑化時定数</value>
   </data>
 
-  <!-- Coalescion Resources -->
   <data name="CoalescionInputSmoothingHalfLife" xml:space="preserve">
     <value>入力平滑化時定数</value>
   </data>
@@ -406,7 +387,6 @@
     <value>スケール平滑化時定数</value>
   </data>
 
-  <!-- Device Resources -->
   <data name="DeviceDPI" xml:space="preserve">
     <value>DPI</value>
   </data>
@@ -417,7 +397,6 @@
     <value>無視</value>
   </data>
 
-  <!-- Settings Resources -->
   <data name="SettingsLanguage" xml:space="preserve">
     <value>言語</value>
   </data>
@@ -443,7 +422,6 @@
     <value>ダーク</value>
   </data>
 
-  <!-- Support & Bug Reports Resources -->
   <data name="SupportSectionTitle" xml:space="preserve">
     <value>サポート・バグ報告</value>
   </data>
@@ -457,7 +435,6 @@
     <value>解決済み問題もご確認ください。お探しの問題が既に解決されている場合があります。</value>
   </data>
 
-  <!-- Device Field Resources -->
   <data name="DeviceName" xml:space="preserve">
     <value>名前</value>
   </data>
@@ -471,7 +448,6 @@
     <value>デバイスグループ</value>
   </data>
 
-  <!-- Chart Axis Labels -->
   <data name="ChartAxisMouseSpeed" xml:space="preserve">
     <value>マウス移動速度</value>
   </data>
@@ -479,7 +455,6 @@
     <value>出力</value>
   </data>
 
-  <!-- Profile Section Headers -->
   <data name="ProfileSectionAcceleration" xml:space="preserve">
     <value>加速設定</value>
   </data>
@@ -493,7 +468,6 @@
     <value>方向性調整</value>
   </data>
 
-  <!-- Alpha Build Warning Dialog Resources -->
   <data name="AlphaBuildWarningTitle" xml:space="preserve">
     <value>アルファ版警告</value>
   </data>
@@ -525,7 +499,6 @@
     <value>承知しました</value>
   </data>
 
-  <!-- Acceleration Definition Type Options -->
   <data name="AccelDefinitionNone" xml:space="preserve">
     <value>なし</value>
   </data>
@@ -536,7 +509,6 @@
     <value>参照テーブル</value>
   </data>
 
-  <!-- Acceleration Formula Type Options -->
   <data name="AccelFormulaSynchronous" xml:space="preserve">
     <value>同期式</value>
   </data>
@@ -556,7 +528,6 @@
     <value>段階式</value>
   </data>
 
-  <!-- Unconfigured Device Dialog Resources -->
   <data name="UnconfiguredDeviceTitle" xml:space="preserve">
     <value>新しいデバイスを検出</value>
   </data>
@@ -580,5 +551,101 @@
   </data>
   <data name="NoUnconfiguredDevice" xml:space="preserve">
     <value>作成可能な未構成デバイスがありません。</value>
+  </data>
+  
+  <data name="LUT_ValueCorrected" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="LUT_MaxPointsReached" xml:space="preserve">
+    <value>最大{0}ポイントに達しました</value>
+  </data>
+  <data name="LUT_AllPointsCleared" xml:space="preserve">
+    <value>{0}ポイントを削除しました</value>
+  </data>
+  <data name="LUT_PointDeleted" xml:space="preserve">
+    <value>ポイント ({0}, {1}) を削除しました</value>
+  </data>
+  <data name="LUT_SequenceError" xml:space="preserve">
+    <value>X値は順番である必要があります: {0}</value>
+  </data>
+  <data name="LUT_XValidationError" xml:space="preserve">
+    <value>X座標 {0}: {1}</value>
+  </data>
+  <data name="LUT_YValidationError" xml:space="preserve">
+    <value>Y座標 {0}: {1}</value>
+  </data>
+  <data name="LUT_InvalidInput" xml:space="preserve">
+    <value>無効な入力を有効範囲に修正しました</value>
+  </data>
+  <data name="LUT_ClearAllPointsTitle" xml:space="preserve">
+    <value>全ポイントを削除</value>
+  </data>
+  <data name="LUT_ClearAllPointsMessage" xml:space="preserve">
+    <value>全てのポイントを削除しますか？この操作は元に戻せません。</value>
+  </data>
+  <data name="LUT_ClearAllPointsConfirm" xml:space="preserve">
+    <value>全て削除</value>
+  </data>
+  
+  <data name="LutAddCoordinateInstructions" xml:space="preserve">
+    <value>加速カーブを定義する座標ポイントを追加します。各ポイントはマウス速度(X)と出力値(Y)を表します。</value>
+  </data>
+  <data name="LutAddPoint" xml:space="preserve">
+    <value>ポイント追加</value>
+  </data>
+  <data name="LutClearAll" xml:space="preserve">
+    <value>全て削除</value>
+  </data>
+  <data name="LutNoPointsMessage" xml:space="preserve">
+    <value>まだポイントがありません。「ポイント追加」をクリックして開始してください。</value>
+  </data>
+  <data name="LutPointFormat" xml:space="preserve">
+    <value>ポイント {0}</value>
+  </data>
+  <data name="LutPointsCountFormat" xml:space="preserve">
+    <value>{0} ポイント</value>
+  </data>
+  <data name="LutMouseSpeedTooltip" xml:space="preserve">
+    <value>マウス速度 (0〜10000)</value>
+  </data>
+  <data name="LutOutputValueTooltip" xml:space="preserve">
+    <value>出力値 (0〜1000)</value>
+  </data>
+  <data name="LutDeletePointTooltip" xml:space="preserve">
+    <value>ポイントを削除</value>
+  </data>
+  <data name="LutSwapWithPreviousTooltip" xml:space="preserve">
+    <value>前のポイントとY値を入れ替え</value>
+  </data>
+  <data name="LutSwapWithNextTooltip" xml:space="preserve">
+    <value>次のポイントとY値を入れ替え</value>
+  </data>
+  <data name="LutXLabel" xml:space="preserve">
+    <value>X:</value>
+  </data>
+  <data name="LutYLabel" xml:space="preserve">
+    <value>Y:</value>
+  </data>
+  
+  <data name="DeviceRefreshTooltip" xml:space="preserve">
+    <value>利用可能なデバイスを更新</value>
+  </data>
+  <data name="AccelRecommendedTooltip" xml:space="preserve">
+    <value>推奨</value>
+  </data>
+  <data name="AnisotropyXHeader" xml:space="preserve">
+    <value>X</value>
+  </data>
+  <data name="AnisotropyYHeader" xml:space="preserve">
+    <value>Y</value>
+  </data>
+  <data name="SettingsDevicesTitle" xml:space="preserve">
+    <value>デバイス</value>
+  </data>
+  <data name="SettingsMappingsTitle" xml:space="preserve">
+    <value>マッピング</value>
+  </data>
+  <data name="SettingsProfilesTitle" xml:space="preserve">
+    <value>プロファイル</value>
   </data>
 </root>

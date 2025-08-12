@@ -118,7 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   
-  <!-- MainWindow Resources -->
   <data name="MainWindowApplySettingsButton" xml:space="preserve">
     <value>Apply Settings</value>
   </data>
@@ -135,7 +134,6 @@
     <value>Profiles</value>
   </data>
   
-  <!-- Settings Resources -->
   <data name="SettingsGeneralSettingsTitle" xml:space="preserve">
     <value>General Settings</value>
   </data>
@@ -143,7 +141,6 @@
     <value>Settings</value>
   </data>
   
-  <!-- Device Resources -->
   <data name="DeviceAddDevice" xml:space="preserve">
     <value>Add Device</value>
   </data>
@@ -157,7 +154,6 @@
     <value>Devices</value>
   </data>
   
-  <!-- Mapping Resources -->
   <data name="MappingAddEntry" xml:space="preserve">
     <value>Add Entry</value>
   </data>
@@ -165,7 +161,6 @@
     <value>Add Mapping</value>
   </data>
   
-  <!-- Profile Resources -->
   <data name="ProfileAddNewProfile" xml:space="preserve">
     <value>Add New Profile</value>
   </data>
@@ -185,7 +180,6 @@
     <value>Toggle Real-time Speed Tracking</value>
   </data>
 
-  <!-- Language Names (Native) -->
   <data name="LanguageEN-US" xml:space="preserve">
     <value>English</value>
   </data>
@@ -193,7 +187,6 @@
     <value>日本語</value>
   </data>
 
-  <!-- Toast Notification Resources -->
   <data name="MainWindowSettingsAppliedSuccess" xml:space="preserve">
     <value>Settings applied successfully!</value>
   </data>
@@ -219,7 +212,6 @@
     <value>Device '{0}' (ID: {1}) is not connected to the system</value>
   </data>
 
-  <!-- Modal Dialog Resources -->
   <data name="ModalOK" xml:space="preserve">
     <value>OK</value>
   </data>
@@ -267,7 +259,6 @@
     <value>Cap</value>
   </data>
 
-  <!-- Jump Acceleration Resources -->
   <data name="AccelJumpSmooth" xml:space="preserve">
     <value>Smooth</value>
   </data>
@@ -278,7 +269,6 @@
     <value>Output</value>
   </data>
 
-  <!-- Linear Acceleration Resources -->
   <data name="AccelLinearAcceleration" xml:space="preserve">
     <value>Acceleration</value>
   </data>
@@ -289,7 +279,6 @@
     <value>Cap</value>
   </data>
 
-  <!-- Power Acceleration Resources -->
   <data name="AccelPowerScale" xml:space="preserve">
     <value>Scale</value>
   </data>
@@ -303,7 +292,6 @@
     <value>Cap</value>
   </data>
 
-  <!-- Natural Acceleration Resources -->
   <data name="AccelNaturalDecayRate" xml:space="preserve">
     <value>Decay Rate</value>
   </data>
@@ -314,7 +302,6 @@
     <value>Limit</value>
   </data>
 
-  <!-- Synchronous Acceleration Resources -->
   <data name="AccelSynchronousGamma" xml:space="preserve">
     <value>Gamma</value>
   </data>
@@ -328,7 +315,6 @@
     <value>Smoothness</value>
   </data>
 
-  <!-- General Acceleration Resources -->
   <data name="AccelDefinitionType" xml:space="preserve">
     <value>Definition Type</value>
   </data>
@@ -336,7 +322,6 @@
     <value>Formula Type</value>
   </data>
 
-  <!-- Lookup Table Resources -->
   <data name="LookupTableApplyAs" xml:space="preserve">
     <value>Apply as</value>
   </data>
@@ -344,7 +329,6 @@
     <value>Data</value>
   </data>
 
-  <!-- Profile Component Resources -->
   <data name="ProfileOutputDPI" xml:space="preserve">
     <value>Output DPI</value>
   </data>
@@ -352,7 +336,6 @@
     <value>Y/X Ratio</value>
   </data>
 
-  <!-- Anisotropy Resources -->
   <data name="AnisotropyDomain" xml:space="preserve">
     <value>Domain</value>
   </data>
@@ -378,7 +361,6 @@
     <value>Combine X and Y Components</value>
   </data>
 
-  <!-- Hidden Model Resources -->
   <data name="HiddenRotation" xml:space="preserve">
     <value>Rotation</value>
   </data>
@@ -398,7 +380,6 @@
     <value>Output Smoothing Half-Life</value>
   </data>
 
-  <!-- Coalescion Resources -->
   <data name="CoalescionInputSmoothingHalfLife" xml:space="preserve">
     <value>Input Smoothing Half-Life</value>
   </data>
@@ -406,7 +387,6 @@
     <value>Scale Smoothing Half-Life</value>
   </data>
 
-  <!-- Device Resources -->
   <data name="DeviceDPI" xml:space="preserve">
     <value>DPI</value>
   </data>
@@ -417,7 +397,6 @@
     <value>Ignore</value>
   </data>
 
-  <!-- Settings Resources -->
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Language</value>
   </data>
@@ -443,7 +422,6 @@
     <value>Dark</value>
   </data>
 
-  <!-- Support & Bug Reports Resources -->
   <data name="SupportSectionTitle" xml:space="preserve">
     <value>Support &amp; Bug Reports</value>
   </data>
@@ -457,7 +435,6 @@
     <value>Check closed issues too - your problem may already be resolved</value>
   </data>
 
-  <!-- Device Field Resources -->
   <data name="DeviceName" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -471,7 +448,6 @@
     <value>Device Group</value>
   </data>
 
-  <!-- Chart Axis Labels -->
   <data name="ChartAxisMouseSpeed" xml:space="preserve">
     <value>Mouse Speed</value>
   </data>
@@ -479,7 +455,6 @@
     <value>Output</value>
   </data>
 
-  <!-- Profile Section Headers -->
   <data name="ProfileSectionAcceleration" xml:space="preserve">
     <value>Acceleration</value>
   </data>
@@ -493,7 +468,6 @@
     <value>Anisotropy</value>
   </data>
 
-  <!-- Alpha Build Warning Dialog Resources -->
   <data name="AlphaBuildWarningTitle" xml:space="preserve">
     <value>Alpha Build Warning</value>
   </data>
@@ -525,7 +499,6 @@
     <value>I Understand</value>
   </data>
 
-  <!-- Acceleration Definition Type Options -->
   <data name="AccelDefinitionNone" xml:space="preserve">
     <value>None</value>
   </data>
@@ -536,7 +509,6 @@
     <value>Lookup Table</value>
   </data>
 
-  <!-- Acceleration Formula Type Options -->
   <data name="AccelFormulaSynchronous" xml:space="preserve">
     <value>Synchronous</value>
   </data>
@@ -556,7 +528,6 @@
     <value>Jump</value>
   </data>
 
-  <!-- Unconfigured Device Dialog Resources -->
   <data name="UnconfiguredDeviceTitle" xml:space="preserve">
     <value>New Device Detected</value>
   </data>
@@ -582,7 +553,6 @@
     <value>No unconfigured device available to create.</value>
   </data>
   
-  <!-- LUT Resources -->
   <data name="LUT_ValueCorrected" xml:space="preserve">
     <value>{0}</value>
   </data>
@@ -615,5 +585,67 @@
   </data>
   <data name="LUT_ClearAllPointsConfirm" xml:space="preserve">
     <value>Clear All</value>
+  </data>
+  
+  <data name="LutAddCoordinateInstructions" xml:space="preserve">
+    <value>Add individual coordinate points to define your acceleration curve. Each point represents a mouse speed (X) and output value (Y).</value>
+  </data>
+  <data name="LutAddPoint" xml:space="preserve">
+    <value>Add Point</value>
+  </data>
+  <data name="LutClearAll" xml:space="preserve">
+    <value>Clear All</value>
+  </data>
+  <data name="LutNoPointsMessage" xml:space="preserve">
+    <value>No points added yet. Click 'Add Point' to start.</value>
+  </data>
+  <data name="LutPointFormat" xml:space="preserve">
+    <value>Point {0}</value>
+  </data>
+  <data name="LutPointsCountFormat" xml:space="preserve">
+    <value>{0} points</value>
+  </data>
+  <data name="LutMouseSpeedTooltip" xml:space="preserve">
+    <value>Mouse speed (0 to 10000)</value>
+  </data>
+  <data name="LutOutputValueTooltip" xml:space="preserve">
+    <value>Output value (0 to 1000)</value>
+  </data>
+  <data name="LutDeletePointTooltip" xml:space="preserve">
+    <value>Delete point</value>
+  </data>
+  <data name="LutSwapWithPreviousTooltip" xml:space="preserve">
+    <value>Swap Y value with previous point</value>
+  </data>
+  <data name="LutSwapWithNextTooltip" xml:space="preserve">
+    <value>Swap Y value with next point</value>
+  </data>
+  <data name="LutXLabel" xml:space="preserve">
+    <value>X:</value>
+  </data>
+  <data name="LutYLabel" xml:space="preserve">
+    <value>Y:</value>
+  </data>
+  
+  <data name="DeviceRefreshTooltip" xml:space="preserve">
+    <value>Refresh available devices</value>
+  </data>
+  <data name="AccelRecommendedTooltip" xml:space="preserve">
+    <value>Recommended</value>
+  </data>
+  <data name="AnisotropyXHeader" xml:space="preserve">
+    <value>X</value>
+  </data>
+  <data name="AnisotropyYHeader" xml:space="preserve">
+    <value>Y</value>
+  </data>
+  <data name="SettingsDevicesTitle" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="SettingsMappingsTitle" xml:space="preserve">
+    <value>Mappings</value>
+  </data>
+  <data name="SettingsProfilesTitle" xml:space="preserve">
+    <value>Profiles</value>
   </data>
 </root>

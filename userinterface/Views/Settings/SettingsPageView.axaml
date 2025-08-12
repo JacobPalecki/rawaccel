@@ -96,7 +96,7 @@
                     CornerRadius="8"
                     Padding="20">
 				<StackPanel Spacing="16">
-					<TextBlock Text="Devices"
+					<TextBlock Text="{ext:Localized SettingsDevicesTitle}"
                                FontSize="18"
                                FontWeight="SemiBold"
                                Margin="0,0,0,8"/>
@@ -112,7 +112,7 @@
                     CornerRadius="8"
                     Padding="20">
 				<StackPanel Spacing="16">
-					<TextBlock Text="Mappings"
+					<TextBlock Text="{ext:Localized SettingsMappingsTitle}"
                                FontSize="18"
                                FontWeight="SemiBold"
                                Margin="0,0,0,8"/>
@@ -128,7 +128,7 @@
                     CornerRadius="8"
                     Padding="20">
 				<StackPanel Spacing="16">
-					<TextBlock Text="Profiles"
+					<TextBlock Text="{ext:Localized SettingsProfilesTitle}"
                                FontSize="18"
                                FontWeight="SemiBold"
                                Margin="0,0,0,8"/>

@@ -7,20 +7,37 @@ using System.Windows.Input;
 using userspace_backend.Model.EditableSettings;
 using userspace_backend;
 using userspace_backend.Logging;
+using userinterface.Services;
 
 namespace userinterface.ViewModels.Controls
 {
     public partial class LUTPointCardViewModel : ViewModelBase
     {
         private readonly ILoggingService? loggingService;
+        private readonly LocalizationService? localizationService;
         
         private string? lastXInterfaceValue;
         private string? lastYInterfaceValue;
         private string? lastXToastValue;
         private string? lastYToastValue;
         
-        [ObservableProperty]
         private int pointIndex;
+        
+        public int PointIndex 
+        { 
+            get => pointIndex;
+            set
+            {
+                if (SetProperty(ref pointIndex, value))
+                {
+                    OnPropertyChanged(nameof(PointLabel));
+                }
+            }
+        }
+        
+        public string PointLabel => localizationService != null 
+            ? string.Format(localizationService.GetText("LutPointFormat"), PointIndex)
+            : $"Point {PointIndex}";
         
         [ObservableProperty]
         private bool hasValidationErrors;
@@ -34,9 +51,17 @@ namespace userinterface.ViewModels.Controls
         [ObservableProperty]
         private bool canSwapWithNext;
 
-        public LUTPointCardViewModel(double x, double y, int index, ILoggingService? loggingService = null)
+        public LUTPointCardViewModel(double x, double y, int index, ILoggingService? loggingService = null, LocalizationService? localizationService = null)
         {
             this.loggingService = loggingService;
+            this.localizationService = localizationService;
+            
+            // Subscribe to language changes
+            if (this.localizationService != null)
+            {
+                this.localizationService.PropertyChanged += OnLocalizationChanged;
+            }
+            
             PointIndex = index;
             
             // Create EditableSetting instances with LUT-specific validators
@@ -101,6 +126,14 @@ namespace userinterface.ViewModels.Controls
         public event EventHandler<PointDeletedEventArgs>? PointDeleted;
         public event EventHandler<PointValueChangedEventArgs>? ValueChanged;
         public event EventHandler<SwapYValuesEventArgs>? SwapYRequested;
+
+        private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == LocalizationService.LanguageChangedPropertyName)
+            {
+                OnPropertyChanged(nameof(PointLabel));
+            }
+        }
 
         private void OnDeletePoint()
         {

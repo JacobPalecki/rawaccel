@@ -129,7 +129,7 @@
 					<Button DockPanel.Dock="Right"
                             Margin="8,0,0,0"
                             Command="{Binding RefreshDevicesCommand}"
-                            ToolTip.Tip="Refresh available devices"
+                            ToolTip.Tip="{ext:Localized DeviceRefreshTooltip}"
                             Width="32"
                             Height="32"
                             Background="Transparent"

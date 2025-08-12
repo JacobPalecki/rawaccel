@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -19,6 +20,7 @@ namespace userinterface.ViewModels.Controls
         private readonly INotificationService? notificationService;
         private readonly ILoggingService? loggingService;
         private readonly IModalService? modalService;
+        private readonly LocalizationService? localizationService;
 
         [ObservableProperty]
         private bool canAddPoints = true;
@@ -27,6 +29,10 @@ namespace userinterface.ViewModels.Controls
         private int currentPointIndex = 0;
 
         public bool HasPoints => Points.Count > 0;
+        
+        public string PointsCountLabel => localizationService != null 
+            ? string.Format(localizationService.GetText("LutPointsCountFormat"), Points.Count)
+            : $"{Points.Count} points";
         
         public bool CanNavigatePrevious => CurrentPointIndex > 0;
         
@@ -38,11 +44,18 @@ namespace userinterface.ViewModels.Controls
         
         public LUTPointCardViewModel? NextPoint => CurrentPointIndex < Points.Count - 1 ? Points[CurrentPointIndex + 1] : null;
 
-        public LUTPointsCollectionViewModel(INotificationService? notificationService = null, ILoggingService? loggingService = null, IModalService? modalService = null)
+        public LUTPointsCollectionViewModel(INotificationService? notificationService = null, ILoggingService? loggingService = null, IModalService? modalService = null, LocalizationService? localizationService = null)
         {
             this.notificationService = notificationService;
             this.loggingService = loggingService;
             this.modalService = modalService;
+            this.localizationService = localizationService;
+            
+            // Subscribe to language changes
+            if (this.localizationService != null)
+            {
+                this.localizationService.PropertyChanged += OnLocalizationChanged;
+            }
             
             Points = new ObservableCollection<LUTPointCardViewModel>();
             Points.CollectionChanged += OnPointsCollectionChanged;
@@ -68,7 +81,7 @@ namespace userinterface.ViewModels.Controls
 
             for (int i = 0; i < data.Length - 1; i += 2)
             {
-                var pointCard = new LUTPointCardViewModel(data[i], data[i + 1], (i / 2) + 1, loggingService);
+                var pointCard = new LUTPointCardViewModel(data[i], data[i + 1], (i / 2) + 1, loggingService, localizationService);
                 SubscribeToPointEvents(pointCard);
                 Points.Add(pointCard);
             }
@@ -127,7 +140,7 @@ namespace userinterface.ViewModels.Controls
                 nextYValue = CalculateInterpolatedYValue(nextXValue);
             }
 
-            var newPoint = new LUTPointCardViewModel(nextXValue, nextYValue, Points.Count + 1, loggingService);
+            var newPoint = new LUTPointCardViewModel(nextXValue, nextYValue, Points.Count + 1, loggingService, localizationService);
             SubscribeToPointEvents(newPoint);
             Points.Add(newPoint);
             
@@ -296,8 +309,17 @@ namespace userinterface.ViewModels.Controls
         private void OnPointsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(HasPoints));
+            OnPropertyChanged(nameof(PointsCountLabel));
             CollectionChanged?.Invoke(this, new CollectionChangedEventArgs());
             UpdateNavigationProperties();
+        }
+
+        private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == LocalizationService.LanguageChangedPropertyName)
+            {
+                OnPropertyChanged(nameof(PointsCountLabel));
+            }
         }
 
         private void OnPointDeleted(object? sender, PointDeletedEventArgs e)
