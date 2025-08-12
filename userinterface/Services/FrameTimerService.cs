@@ -16,7 +16,7 @@ namespace userinterface.Services
         private readonly Stopwatch frameStopwatch = new();
         private readonly DispatcherTimer frameTimer;
         private readonly ILoggingService loggingService;
-        private const double THRESHOLD_MS = 8.33;
+        private const double THRESHOLD_MS = 20.0;
         private bool isMonitoring = false;
 
         public FrameTimerService(ILoggingService loggingService)
