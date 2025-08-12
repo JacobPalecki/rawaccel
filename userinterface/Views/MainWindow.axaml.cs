@@ -1,8 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Platform;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -13,7 +11,6 @@ using userinterface.Extensions;
 using userinterface.Models;
 using userinterface.Services;
 using userinterface.ViewModels;
-using userinterface.Views.Controls;
 using userspace_backend.Hardware;
 
 namespace userinterface.Views;
@@ -30,14 +27,14 @@ public partial class MainWindow : Window
         InitializeControls();
         UpdateThemeToggleButton();
         UpdateSelectedButton(NavigationPage.Devices);
-        
+
         // Subscribe to theme changes
         ThemeService.ThemeChanged += OnThemeChanged;
-        
+
         // Set up mouse tracking when window is loaded
         this.Opened += OnWindowOpened;
     }
-    
+
     private void OnWindowOpened(object? sender, EventArgs e)
     {
         try
@@ -58,18 +55,18 @@ public partial class MainWindow : Window
 
     private const int WM_INPUT = 0x00FF;
     private IntPtr originalWndProc = IntPtr.Zero;
-    
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-    
+
     [DllImport("user32.dll")]
     private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-    
+
     private const int GWL_WNDPROC = -4;
-    
+
     private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
     private WndProcDelegate? wndProcDelegate;
-    
+
     private void SetupWindowProcHook(IntPtr hwnd)
     {
         try
@@ -82,7 +79,7 @@ public partial class MainWindow : Window
         {
         }
     }
-    
+
     private IntPtr WindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
     {
         try
@@ -95,19 +92,19 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
         }
-        
+
         return CallWindowProc(originalWndProc, hWnd, msg, wParam, lParam);
     }
 
     private INotificationService NotificationService =>
         App.Services!.GetRequiredService<INotificationService>();
-    
+
     private ISettingsService SettingsService =>
         App.Services!.GetRequiredService<ISettingsService>();
-    
+
     private IThemeService ThemeService =>
         App.Services!.GetRequiredService<IThemeService>();
-    
+
     private IMouseTracker MouseTracker =>
         App.Services!.GetRequiredService<IMouseTracker>();
 
@@ -246,7 +243,7 @@ public partial class MainWindow : Window
                 break;
         }
     }
-    
+
     public void UpdateNavigationSelection(NavigationPage page)
     {
         UpdateSelectedButton(page);
@@ -260,7 +257,7 @@ public partial class MainWindow : Window
         {
             var currentTheme = SettingsService.Theme;
             var actualTheme = ThemeVariantConverter.GetActualTheme(currentTheme);
-            
+
             if (actualTheme == ThemeVariant.Dark)
             {
                 themeIcon.Data = (Avalonia.Media.Geometry?)this.FindResource("weather_moon_regular");

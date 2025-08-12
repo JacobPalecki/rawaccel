@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -34,7 +33,7 @@ namespace userinterface.ViewModels.Profile
 
             ProfileViewModels = [];
             UpdateProfileViewModels();
-            
+
             profileListView.SelectedProfileChanged += OnProfileSelectionChanged;
         }
 
@@ -89,7 +88,7 @@ namespace userinterface.ViewModels.Profile
         protected void UpdateProfileViewModels()
         {
             ProfileViewModels.Clear();
-            
+
             foreach (var profileModelBE in ProfileModels)
             {
                 var profileViewModel = viewModelFactory.CreateProfileViewModel(profileModelBE);

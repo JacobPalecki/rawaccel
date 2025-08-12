@@ -40,7 +40,7 @@ namespace userinterface.ViewModels.Device
         public void SetView(DevicesListView view)
         {
             devicesListView = view;
-            
+
             // Refresh existing DeviceViewModels to include the animation callback
             UpdateDeviceViews();
         }
@@ -85,7 +85,7 @@ namespace userinterface.ViewModels.Device
         public void UpdateDeviceViews()
         {
             DeviceViews.Clear();
-            
+
             for (int i = 0; i < DevicesBE.Devices.Count; i++)
             {
                 var device = DevicesBE.Devices[i];

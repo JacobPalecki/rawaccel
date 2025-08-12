@@ -40,11 +40,11 @@ public class LocalizationService : INotifyPropertyChanged
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var result = Properties.Resources.Strings.ResourceManager.GetString(key) ?? key;
-        
+
         if (stopwatch.ElapsedMilliseconds >= 10)
         {
         }
-        
+
         return result;
     }
 

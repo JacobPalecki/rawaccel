@@ -32,7 +32,7 @@ namespace userinterface.Services
         public void StartMonitoring(string context = "")
         {
             if (isMonitoring) return;
-            
+
             isMonitoring = true;
             frameStopwatch.Restart();
             frameTimer.Start();
@@ -42,7 +42,7 @@ namespace userinterface.Services
         public void StopMonitoring(string context = "")
         {
             if (!isMonitoring) return;
-            
+
             frameTimer.Stop();
             isMonitoring = false;
             loggingService.LogDebug(LogSource.Performance, "Stopped monitoring: {Context}", context);
@@ -58,7 +58,7 @@ namespace userinterface.Services
             {
                 loggingService.LogWarning(LogSource.Performance, "UI Thread blocked for {ElapsedMs}ms - potential frame drop!", elapsed);
             }
-            
+
             frameStopwatch.Restart();
         }
 
@@ -67,9 +67,9 @@ namespace userinterface.Services
         {
             var stopwatch = Stopwatch.StartNew();
             loggingService.LogDebug(LogSource.Performance, "Starting operation: {OperationName}", operationName);
-            
+
             StartMonitoring($"Operation: {operationName}");
-            
+
             try
             {
                 operation();

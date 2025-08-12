@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection;
 using userinterface.Commands;
 using userinterface.Services;
 using userinterface.ViewModels.Controls;
@@ -40,7 +40,7 @@ namespace userinterface.ViewModels.Device
 
             AvailableDevices = new ObservableCollection<MultiHandleDevice>();
             RefreshAvailableDevices();
-            
+
             var currentDevice = AvailableDevices.FirstOrDefault(d => d.id == DeviceBE.HardwareID.ModelValue);
             SelectedDevice = currentDevice;
 
@@ -100,7 +100,7 @@ namespace userinterface.ViewModels.Device
             {
                 if (backEnd?.Hardware.ActiveDevice == null)
                     return false;
-                
+
                 return DeviceBE.HardwareID == backEnd.Hardware.ActiveDevice.HardwareID;
             }
         }
@@ -129,9 +129,9 @@ namespace userinterface.ViewModels.Device
         {
             if (isDeleting)
                 return;
-            
+
             isDeleting = true;
-            
+
             try
             {
                 var confirmed = await modalService.ShowConfirmationAsync(

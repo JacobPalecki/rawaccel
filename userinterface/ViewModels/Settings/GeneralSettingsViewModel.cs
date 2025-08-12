@@ -48,7 +48,7 @@ public class GeneralSettingsViewModel : ViewModelBase
     public ObservableCollection<LanguageItem> AvailableLanguages { get; }
 
     public IEnumerable<string> ThemeLocalizationKeys { get; }
-    
+
     public IEnumerable<string> ThemeEnumValues { get; }
 
     public NotificationSettings NotificationSettings { get; }

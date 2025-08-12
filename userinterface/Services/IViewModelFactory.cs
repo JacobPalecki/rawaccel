@@ -1,5 +1,4 @@
 using System;
-using userinterface.ViewModels.Device;
 using userinterface.ViewModels.Mapping;
 using userinterface.ViewModels.Profile;
 using BE = userspace_backend.Model;

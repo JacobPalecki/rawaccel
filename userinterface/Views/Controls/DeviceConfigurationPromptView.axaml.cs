@@ -8,11 +8,11 @@ namespace userinterface.Views.Controls
     public partial class DeviceConfigurationPromptView : UserControl
     {
         public bool? DialogResult { get; private set; }
-        
+
         public DeviceConfigurationPromptView(string deviceName)
         {
             InitializeComponent();
-            
+
             var localizationService = App.Services?.GetService<LocalizationService>();
             if (localizationService != null)
             {

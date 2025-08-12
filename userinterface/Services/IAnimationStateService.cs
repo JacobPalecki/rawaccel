@@ -1,19 +1,19 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace userinterface.Services
 {
     public interface IAnimationStateService
     {
         bool AreAnimationsActive { get; }
-        
+
         void SetAnimationsActive(bool active);
-        
+
         event EventHandler<bool>? AnimationStateChanged;
 
         AnimationConfig Config { get; }

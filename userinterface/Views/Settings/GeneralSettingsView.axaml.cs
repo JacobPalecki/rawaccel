@@ -57,7 +57,7 @@ public partial class GeneralSettingsView : UserControl
 
         themeComboBox.Bind(LocalizedComboBox.LocalizationKeysProperty, new Binding("ThemeLocalizationKeys"));
         themeComboBox.Bind(LocalizedComboBox.EnumValuesProperty, new Binding("ThemeEnumValues"));
-        
+
         // Handle selection changes
         themeComboBox.SelectionChanged += (sender, e) =>
         {

@@ -1,6 +1,5 @@
 ﻿using userinterface.Services;
 using userinterface.ViewModels.Controls;
-using userspace_backend.Model.AccelDefinitions;
 using userspace_backend.Logging;
 using BE = userspace_backend.Model.AccelDefinitions;
 
@@ -20,11 +19,11 @@ namespace userinterface.ViewModels.Profile
             this.notificationService = notificationService;
             this.modalService = modalService;
             this.localizationService = localizationService;
-            
+
             PointsCollection = new LUTPointsCollectionViewModel(notificationService, loggingService, modalService, localizationService);
-            
+
             LoadPointsFromBackend();
-            
+
             PointsCollection.CollectionChanged += OnPointsCollectionChanged;
         }
 
@@ -42,16 +41,16 @@ namespace userinterface.ViewModels.Profile
         {
             var coordinates = PointsCollection.ConvertToData();
             var coordinateString = string.Join(",", coordinates);
-            
+
             loggingService?.LogDebug(LogSource.LUT, "Setting coordinates: {Coordinates}", coordinateString);
             loggingService?.LogDebug(LogSource.LUT, "LUTAccelBE type: {Type}", LUTAccelBE.GetType().Name);
-            
+
             LUTAccelBE.Data.InterfaceValue = coordinateString;
             var success = LUTAccelBE.Data.TryUpdateFromInterface();
-            
+
             loggingService?.LogDebug(LogSource.LUT, "TryUpdateFromInterface result: {Success}", success);
             loggingService?.LogDebug(LogSource.LUT, "CurrentValidatedValue: {Value}", LUTAccelBE.Data.CurrentValidatedValue.ToString());
-            
+
             // WORKAROUND: Manually trigger AnySettingChanged event if automatic event chain fails
             if (success)
             {

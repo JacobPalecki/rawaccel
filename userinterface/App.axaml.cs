@@ -1,14 +1,10 @@
 using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics;
-using System.Security.AccessControl;
 using System.Threading.Tasks;
 using userinterface.Services;
 using userinterface.ViewModels;
@@ -18,7 +14,6 @@ using userinterface.Views;
 using userspace_backend;
 using userspace_backend.Hardware;
 // using userspace_backend.Logging;
-using Windows.System;
 using DATA = userspace_backend.Data;
 
 namespace userinterface;
@@ -314,9 +309,9 @@ public partial class App : Application
                     _ = typeof(LiveChartsCore.CartesianChart<>).Assembly;
 
                     _ = typeof(Avalonia.Controls.ItemsRepeater).Assembly;
-                    
+
                     _ = typeof(System.Security.Cryptography.MD5).Assembly;
-                    
+
                     _ = typeof(Avalonia.Media.Imaging.Bitmap).Assembly;
                 }
                 catch (Exception ex)

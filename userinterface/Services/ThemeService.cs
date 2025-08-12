@@ -16,10 +16,10 @@ namespace userinterface.Services
         public ThemeService(ISettingsService settingsService)
         {
             this.settingsService = settingsService;
-            
+
             // Listen for theme changes from settings service
             this.settingsService.ThemeChanged += OnSettingsThemeChanged;
-            
+
             // Apply initial theme
             ApplyThemeFromSettings();
         }
@@ -54,11 +54,11 @@ namespace userinterface.Services
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var color = ResolveThemeColor(resourceKey);
-            
+
             if (stopwatch.ElapsedMilliseconds >= 10)
             {
             }
-            
+
             colorCache[resourceKey] = color;
             return color;
         }

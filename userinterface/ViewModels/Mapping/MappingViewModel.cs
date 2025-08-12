@@ -1,11 +1,9 @@
 using Avalonia.Controls;
 using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection;
 using userinterface.Commands;
 using userinterface.Services;
 using BE = userspace_backend.Model;
@@ -21,7 +19,7 @@ namespace userinterface.ViewModels.Mapping
         public const int Padding = 16;
         public const int ContentWidth = 392;
         public const int ContentHeight = 350;
-        
+
         // Static properties for XAML binding
         public static double ContentWidthProperty => ContentWidth;
         public static double ContentHeightProperty => ContentHeight;
@@ -103,14 +101,14 @@ namespace userinterface.ViewModels.Mapping
         {
             var totalWidth = BorderConstants.ContentWidth + (2 * BorderConstants.Padding) + (2 * BorderConstants.BorderThickness);
             var totalHeight = BorderConstants.ContentHeight + (2 * BorderConstants.Padding) + (2 * BorderConstants.BorderThickness);
-            
+
             var offset = BorderConstants.StrokeWidth / 2.0;
             var x = -offset;
             var y = -offset;
             var width = totalWidth + BorderConstants.StrokeWidth;
             var height = totalHeight + BorderConstants.StrokeWidth;
             var r = BorderConstants.CornerRadius;
-            
+
             return $"M {r + x},{y} " +
                    $"L {width - r + x},{y} " +
                    $"A {r},{r} 0 0,1 {width + x},{r + y} " +
@@ -127,11 +125,11 @@ namespace userinterface.ViewModels.Mapping
         {
             mappingListElements.ToList().ForEach(element => element.Cleanup());
             mappingListElements.Clear();
-            
+
             var elements = MappingBE.IndividualMappings
                 .Select((mappingGroup, i) => new MappingListElementViewModel(mappingGroup, MappingBE))
                 .ToList();
-            
+
             foreach (var element in elements)
             {
                 mappingListElements.Add(element);

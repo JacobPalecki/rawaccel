@@ -139,7 +139,7 @@ public class SettingsService : ISettingsService
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        
+
         // Fire specific event for theme changes
         if (propertyName == nameof(Theme))
         {

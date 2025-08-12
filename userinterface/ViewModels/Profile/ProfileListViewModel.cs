@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +29,7 @@ namespace userinterface.ViewModels.Profile
         partial void OnSelectedProfileChanged(BE.ProfileModel? value)
         {
             if (value != null) SelectedProfileChanged?.Invoke(value);
-            
+
             if (profileListView != null)
             {
                 profileListView.SetSelectedProfile(value, false);

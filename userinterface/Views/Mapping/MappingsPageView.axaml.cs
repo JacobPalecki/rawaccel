@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Specialized;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using System;
+using System.Collections.Specialized;
 using userinterface.ViewModels.Mapping;
 
 namespace userinterface.Views.Mapping;
@@ -11,7 +11,7 @@ public partial class MappingsPageView : UserControl
     private MappingsPageViewModel? viewModel;
     private bool isInitialLoad = true;
     private DispatcherTimer? staggerTimer;
-    
+
     private const int StaggerDelayMs = 50;
     private const int NewItemDelayMs = 50;
 
@@ -31,7 +31,7 @@ public partial class MappingsPageView : UserControl
         {
             viewModel = vm;
             vm.MappingViews.CollectionChanged += OnMappingsCollectionChanged;
-            
+
             StartInitialLoadAnimation();
         }
     }
@@ -42,7 +42,7 @@ public partial class MappingsPageView : UserControl
         {
             // Always reset to initial hidden state first
             container.Classes.Remove("Visible");
-            
+
             if (!isInitialLoad) // This is a new item being added
             {
                 RevealElementWithDelay(container, NewItemDelayMs);
@@ -70,7 +70,7 @@ public partial class MappingsPageView : UserControl
         {
             viewModel.MappingViews.CollectionChanged -= OnMappingsCollectionChanged;
         }
-        
+
         CleanupTimer();
     }
 
@@ -86,11 +86,11 @@ public partial class MappingsPageView : UserControl
     private void RevealAllElementsStaggered()
     {
         CleanupTimer();
-        
+
         staggerTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(StaggerDelayMs) };
         int index = 0;
         int totalElements = viewModel?.MappingViews.Count ?? 0;
-        
+
         staggerTimer.Tick += (s, e) =>
         {
             if (index < totalElements && index < ItemsRepeater.Children.Count)
@@ -106,7 +106,7 @@ public partial class MappingsPageView : UserControl
                 CleanupTimer();
             }
         };
-        
+
         staggerTimer.Start();
     }
 

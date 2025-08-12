@@ -1,11 +1,8 @@
-using Avalonia.Media;
 using LiveChartsCore;
-using System.Diagnostics;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -14,12 +11,11 @@ using System.Windows.Input;
 using userinterface.Commands;
 using userinterface.Interfaces;
 using userinterface.Services;
+using userspace_backend;
 using userspace_backend.Display;
 using userspace_backend.Hardware;
 using userspace_backend.Model.EditableSettings;
-using userspace_backend;
 using BE = userspace_backend.Model;
-using Data = userspace_backend.Data;
 
 namespace userinterface.ViewModels.Profile
 {
@@ -66,15 +62,15 @@ namespace userinterface.ViewModels.Profile
         private readonly BackEnd backEnd;
         private readonly IDeviceInfoProvider? deviceInfoProvider;
         private BE.ProfileModel currentProfileModel = null!;
-        
+
         private SolidColorPaint? cachedXStroke;
         private SolidColorPaint? cachedYStroke;
-        
+
         private LineSeries<CurvePoint>? xSeries;
         private LineSeries<CurvePoint>? ySeries;
         private ScatterSeries<CurvePoint>? currentSpeedDotSeries;
         private ScatterSeries<CurvePoint>? currentYSpeedDotSeries;
-        
+
         private readonly object syncObject = new object();
 
         public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTracker mouseTracker, BackEnd backEnd, IDeviceInfoProvider? deviceInfoProvider = null)
@@ -86,12 +82,12 @@ namespace userinterface.ViewModels.Profile
             this.backEnd = backEnd ?? throw new ArgumentNullException(nameof(backEnd));
             this.deviceInfoProvider = deviceInfoProvider;
 
-            RecreateAxesCommand = new RelayCommand(() => 
+            RecreateAxesCommand = new RelayCommand(() =>
             {
                 EnsureInteractiveChartLoaded();
                 RecreateAxes();
             });
-            FitToDataCommand = new RelayCommand(() => 
+            FitToDataCommand = new RelayCommand(() =>
             {
                 EnsureInteractiveChartLoaded();
                 FitToData();
@@ -102,21 +98,21 @@ namespace userinterface.ViewModels.Profile
         public bool IsInitialized { get; private set; }
 
         public bool IsInitializing { get; private set; }
-        
+
         public bool IsInteractiveMode { get; private set; } = false;
-        
+
         public bool IsLoadingChart { get; private set; } = false;
-        
+
         public double ChartOpacity { get; private set; } = 0.0;
-        
+
         private bool hasUserInteracted = false;
-        
+
         public bool IsRealTimeTrackingEnabled { get; private set; } = false;
-        
+
         public string CurrentMouseDevice { get; private set; } = "No device detected";
-        
+
         public string CurrentDeviceDPI { get; private set; } = "Unknown DPI";
-        
+
         private readonly ObservableCollection<CurvePoint> currentSpeedData = new ObservableCollection<CurvePoint>();
         private readonly ObservableCollection<CurvePoint> currentYSpeedData = new ObservableCollection<CurvePoint>();
 
@@ -152,7 +148,7 @@ namespace userinterface.ViewModels.Profile
             {
                 InitializeSeries();
             }
-            
+
             SubscribeToEvents();
         }
 
@@ -181,7 +177,7 @@ namespace userinterface.ViewModels.Profile
                         {
                             InitializeSeries();
                         });
-                        
+
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             try
@@ -190,18 +186,18 @@ namespace userinterface.ViewModels.Profile
                                 YAxes = CreateYAxes();
                                 TooltipTextPaint = new SolidColorPaint(themeService.GetCachedColor(AxisTitleBrush));
                                 TooltipBackgroundPaint = new SolidColorPaint(themeService.GetCachedColor(TooltipBackgroundBrush).WithAlpha(TooltipBackgroundAlpha));
-                                
+
                                 this.themeService.ThemeChanged += OnThemeChanged;
                                 this.localizationService.PropertyChanged += OnLocalizationChanged;
-                                
+
                                 OnPropertyChanged(nameof(XAxes));
                                 OnPropertyChanged(nameof(YAxes));
                                 OnPropertyChanged(nameof(TooltipTextPaint));
                                 OnPropertyChanged(nameof(TooltipBackgroundPaint));
                                 OnPropertyChanged(nameof(Series));
-                                
+
                                 TransitionToInteractiveMode();
-                                
+
                             }
                             catch (Exception ex)
                             {
@@ -219,14 +215,14 @@ namespace userinterface.ViewModels.Profile
                         });
                     }
                 });
-                
+
                 IsInitialized = true;
             }
             finally
             {
                 IsInitializing = false;
             }
-            
+
             return Task.CompletedTask;
         }
 
@@ -254,7 +250,7 @@ namespace userinterface.ViewModels.Profile
                 OnPropertyChanged(nameof(Series));
                 TransitionToInteractiveMode();
             });
-            
+
             return Task.CompletedTask;
         }
 
@@ -264,17 +260,17 @@ namespace userinterface.ViewModels.Profile
                 cachedXStroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = MainStrokeThickness };
             if (cachedYStroke == null)
                 cachedYStroke = new SolidColorPaint(SKColors.OrangeRed) { StrokeThickness = MainStrokeThickness };
-            
+
             xSeries = CreateLineSeries(XCurvePreview.Points, cachedXStroke, "X Curve Profile", "X");
             ySeries = CreateLineSeries(YCurvePreview.Points, cachedYStroke, "Y Curve Profile", "Y");
 
             Series.Clear();
             Series.Add(xSeries);
-            
+
             InitializeCurrentSpeedDotSeries();
             UpdateYSeriesVisibility();
         }
-        
+
         private LineSeries<CurvePoint> CreateLineSeries(ObservableCollection<CurvePoint> points, SolidColorPaint stroke, string name, string axis)
         {
             return new LineSeries<CurvePoint>
@@ -300,14 +296,14 @@ namespace userinterface.ViewModels.Profile
             IsLoadingChart = false;
             IsInteractiveMode = true;
             ChartOpacity = 0.0;
-            
+
             // Batch property changes
             OnPropertyChanged(nameof(IsLoadingChart));
             OnPropertyChanged(nameof(IsInteractiveMode));
             OnPropertyChanged(nameof(ChartOpacity));
-            
+
             await Task.Delay(100);
-            
+
             ChartOpacity = 1.0;
             OnPropertyChanged(nameof(ChartOpacity));
         }
@@ -349,7 +345,7 @@ namespace userinterface.ViewModels.Profile
         public ICommand RecreateAxesCommand { get; }
 
         public ICommand FitToDataCommand { get; }
-        
+
         public ICommand ToggleRealTimeTrackingCommand { get; }
 
         // ================================================================================================
@@ -399,11 +395,11 @@ namespace userinterface.ViewModels.Profile
         public void Dispose()
         {
             StopRealTimeTracking();
-            
+
             themeService.ThemeChanged -= OnThemeChanged;
             localizationService.PropertyChanged -= OnLocalizationChanged;
             UnsubscribeFromEvents();
-            
+
             if (cachedXStroke != null)
             {
                 cachedXStroke.Dispose();
@@ -414,7 +410,7 @@ namespace userinterface.ViewModels.Profile
                 cachedYStroke.Dispose();
                 cachedYStroke = null;
             }
-            
+
             previewRenderer.ClearCache();
         }
 
@@ -445,10 +441,10 @@ namespace userinterface.ViewModels.Profile
         private void UpdateYSeriesVisibility()
         {
             if (ySeries == null) return;
-            
+
             var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
             var ySeriesExists = Series.Contains(ySeries);
-            
+
             if (hasYCurve && !ySeriesExists)
             {
                 Series.Add(ySeries);
@@ -457,7 +453,7 @@ namespace userinterface.ViewModels.Profile
             {
                 Series.Remove(ySeries);
             }
-            
+
             // Update Y speed dot visibility based on curve separation
             if (currentYSpeedDotSeries != null && IsRealTimeTrackingEnabled)
             {
@@ -480,7 +476,7 @@ namespace userinterface.ViewModels.Profile
             var axisName = localizationService?.GetText("ChartAxisOutput") ?? "Output";
             return CreateAxis(axisName, minLimit, maxLimit);
         }
-        
+
         private Axis[] CreateAxis(string name, double? minLimit, double? maxLimit)
         {
             var titleColor = themeService.GetCachedColor(AxisTitleBrush);
@@ -519,7 +515,7 @@ namespace userinterface.ViewModels.Profile
             XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, DefaultMaxX);
             YAxes[0].MinLimit = 0;
             YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, DefaultMaxY);
-            
+
             // Update stored maximums if they increased
             maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
             maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
@@ -538,13 +534,13 @@ namespace userinterface.ViewModels.Profile
         {
             var centerY = (minY + maxY) / 2;
             var centerX = (minX + maxX) / 2;
-            
+
             // Don't allow axis limits to shrink below stored maximums
             YAxes[0].MinLimit = Math.Max(0, centerY - DefaultYRange);
             YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, centerY + DefaultYRange);
             XAxes[0].MinLimit = Math.Max(0, centerX - DefaultAxisRange);
             XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, centerX + DefaultAxisRange);
-            
+
             // Update stored maximums if they increased
             maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
             maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
@@ -556,13 +552,13 @@ namespace userinterface.ViewModels.Profile
             var yRange = maxY - minY;
             var xPadding = xRange * DataPaddingRatio;
             var yPadding = yRange * DataPaddingRatio;
-            
+
             // Don't allow axis limits to shrink below stored maximums
             XAxes[0].MinLimit = Math.Max(0, minX - xPadding);
             XAxes[0].MaxLimit = Math.Max(maxXAxisLimit, maxX + xPadding);
             YAxes[0].MinLimit = Math.Max(0, minY - yPadding);
             YAxes[0].MaxLimit = Math.Max(maxYAxisLimit, maxY + yPadding);
-            
+
             // Update stored maximums if they increased
             maxXAxisLimit = XAxes[0].MaxLimit ?? maxXAxisLimit;
             maxYAxisLimit = YAxes[0].MaxLimit ?? maxYAxisLimit;
@@ -621,21 +617,21 @@ namespace userinterface.ViewModels.Profile
 
             RecreateAxes(currentXMin, currentXMax, currentYMin, currentYMax);
         }
-        
+
         private void InitializeCurrentSpeedDotSeries()
         {
             var accentColor = themeService.GetCachedColor("SecondaryAccentBrush");
-            
+
             if (currentSpeedDotSeries == null)
             {
                 currentSpeedDotSeries = CreateSpeedDotSeries(currentSpeedData, "Current X Speed", accentColor);
             }
-            
+
             if (currentYSpeedDotSeries == null)
             {
                 currentYSpeedDotSeries = CreateSpeedDotSeries(currentYSpeedData, "Current Y Speed", accentColor);
             }
-            
+
             // Always ensure they're in the series collection after a clear
             if (!Series.Contains(currentSpeedDotSeries))
             {
@@ -646,7 +642,7 @@ namespace userinterface.ViewModels.Profile
                 Series.Add(currentYSpeedDotSeries);
             }
         }
-        
+
         private ScatterSeries<CurvePoint> CreateSpeedDotSeries(ObservableCollection<CurvePoint> data, string name, SKColor color)
         {
             return new ScatterSeries<CurvePoint>
@@ -661,7 +657,7 @@ namespace userinterface.ViewModels.Profile
                 DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
             };
         }
-        
+
         private void ToggleRealTimeTracking()
         {
             if (IsRealTimeTrackingEnabled)
@@ -673,33 +669,33 @@ namespace userinterface.ViewModels.Profile
                 StartRealTimeTracking();
             }
         }
-        
+
         private void StartRealTimeTracking()
         {
             if (IsRealTimeTrackingEnabled) return;
-            
+
             IsRealTimeTrackingEnabled = true;
-            
+
             currentSpeedData.Clear();
             currentYSpeedData.Clear();
-            
+
             var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
-            
+
             // Set BackEnd reference and device service for centralized device handling
             mouseTracker.SetBackEnd(backEnd);
-            
+
             // Pass device service if available
             if (deviceInfoProvider != null)
             {
                 mouseTracker.SetDeviceInfoProvider(deviceInfoProvider);
             }
-            
+
             var activeDeviceModel = GetActiveDeviceModel();
             if (activeDeviceModel != null)
             {
                 mouseTracker.SetDeviceDPI(activeDeviceModel.DPI.CurrentValidatedValue);
             }
-            
+
             if (currentSpeedDotSeries != null)
             {
                 currentSpeedDotSeries.IsVisible = true;
@@ -708,12 +704,12 @@ namespace userinterface.ViewModels.Profile
             {
                 currentYSpeedDotSeries.IsVisible = hasYCurve;
             }
-            
+
             mouseTracker.MouseMoved += OnMouseMoved;
             mouseTracker.MouseIdle += OnMouseIdle;
             mouseTracker.StartTracking();
-            
-            
+
+
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
         }
 
@@ -723,28 +719,28 @@ namespace userinterface.ViewModels.Profile
             // TODO: Implement proper active device detection based on current mapping
             return backEnd.Devices.Devices.FirstOrDefault();
         }
-        
+
         private void StopRealTimeTracking()
         {
             if (!IsRealTimeTrackingEnabled) return;
-            
+
             IsRealTimeTrackingEnabled = false;
-            
+
             mouseTracker.MouseMoved -= OnMouseMoved;
             mouseTracker.MouseIdle -= OnMouseIdle;
             mouseTracker.StopTracking();
-            
+
             currentSpeedData.Clear();
             currentYSpeedData.Clear();
-            
+
             CurrentMouseDevice = "No device detected";
             CurrentDeviceDPI = "Unknown DPI";
-            
+
             // Batch property changes
             OnPropertyChanged(nameof(CurrentMouseDevice));
             OnPropertyChanged(nameof(CurrentDeviceDPI));
-            
-            
+
+
             if (currentSpeedDotSeries != null)
             {
                 currentSpeedDotSeries.IsVisible = false;
@@ -753,40 +749,40 @@ namespace userinterface.ViewModels.Profile
             {
                 currentYSpeedDotSeries.IsVisible = false;
             }
-            
+
             OnPropertyChanged(nameof(IsRealTimeTrackingEnabled));
         }
-        
+
         private void OnMouseMoved(object? sender, MouseMovementEventArgs e)
         {
             if (!IsRealTimeTrackingEnabled) return;
-            
+
             try
             {
                 // Update current device info using BackEnd cross-reference
                 var (deviceName, sourceDPI, isKnownDevice) = backEnd.Hardware.GetCurrentDeviceInfo();
-                
+
                 string displayName = isKnownDevice ? deviceName : e.DeviceName;
                 string dpiInfo = $"{sourceDPI} DPI";
-                
+
                 if (CurrentMouseDevice != displayName || CurrentDeviceDPI != dpiInfo)
                 {
-                    
+
                     CurrentMouseDevice = displayName;
                     CurrentDeviceDPI = dpiInfo;
-                    
+
                     // Batch property changes
                     OnPropertyChanged(nameof(CurrentMouseDevice));
                     OnPropertyChanged(nameof(CurrentDeviceDPI));
                 }
-                
+
                 var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
-                
+
                 if (hasYCurve)
                 {
                     var xOutputValue = InterpolateOutputFromSpeed(e.XSpeed, XCurvePreview);
                     var yOutputValue = InterpolateOutputFromSpeed(e.YSpeed, YCurvePreview);
-                    
+
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         UpdateCurrentSpeedDots(e.XSpeed, xOutputValue, e.YSpeed, yOutputValue, hasYCurve);
@@ -795,7 +791,7 @@ namespace userinterface.ViewModels.Profile
                 else
                 {
                     var outputValue = InterpolateOutputFromSpeed(e.MouseSpeed, XCurvePreview);
-                    
+
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         UpdateCurrentSpeedDots(e.MouseSpeed, outputValue, 0, null, hasYCurve);
@@ -806,30 +802,30 @@ namespace userinterface.ViewModels.Profile
             {
             }
         }
-        
+
         private double? InterpolateOutputFromSpeed(double mouseSpeed, ICurvePreview curvePreview)
         {
             if (curvePreview?.Points == null || curvePreview.Points.Count == 0)
                 return null;
-                
+
             var points = curvePreview.Points.ToList();
-            
+
             // Find the closest points for interpolation
             var lowerPoint = points.LastOrDefault(p => p.MouseSpeed <= mouseSpeed);
             var upperPoint = points.FirstOrDefault(p => p.MouseSpeed >= mouseSpeed);
-            
+
             if (lowerPoint == null && upperPoint == null)
                 return null;
-                
+
             if (lowerPoint == null)
                 return upperPoint!.Output;
-                
+
             if (upperPoint == null)
                 return lowerPoint.Output;
-                
+
             if (Math.Abs(lowerPoint.MouseSpeed - upperPoint.MouseSpeed) < 0.001)
                 return lowerPoint.Output;
-                
+
             // Linear interpolation
             double ratio = (mouseSpeed - lowerPoint.MouseSpeed) / (upperPoint.MouseSpeed - lowerPoint.MouseSpeed);
             return lowerPoint.Output + ratio * (upperPoint.Output - lowerPoint.Output);
@@ -838,7 +834,7 @@ namespace userinterface.ViewModels.Profile
         private void UpdateCurrentSpeedDots(double xSpeed, double? xOutputValue, double ySpeed, double? yOutputValue, bool hasYCurve)
         {
             if (!IsRealTimeTrackingEnabled) return;
-            
+
             // Update X speed dot position (keep it persistent, just update position)
             if (xOutputValue.HasValue && xSpeed > 0)
             {
@@ -852,7 +848,7 @@ namespace userinterface.ViewModels.Profile
                     currentSpeedData[0].Output = xOutputValue.Value;
                 }
             }
-            
+
             // Update Y speed dot position (only when separate curves)
             if (hasYCurve && yOutputValue.HasValue && ySpeed > 0)
             {
@@ -866,7 +862,7 @@ namespace userinterface.ViewModels.Profile
                     currentYSpeedData[0].Output = yOutputValue.Value;
                 }
             }
-            
+
             // Update dot visibility based on curve separation
             if (currentSpeedDotSeries != null)
             {
@@ -876,28 +872,28 @@ namespace userinterface.ViewModels.Profile
             {
                 currentYSpeedDotSeries.IsVisible = IsRealTimeTrackingEnabled && hasYCurve;
             }
-            
+
             // Track maximum data values for axis expansion
             if (xSpeed > currentMaxXData || ySpeed > currentMaxXData)
             {
                 currentMaxXData = Math.Max(xSpeed, ySpeed);
             }
-            
+
             if (xOutputValue.HasValue && xOutputValue.Value > currentMaxYData)
             {
                 currentMaxYData = xOutputValue.Value;
             }
-            
+
             if (yOutputValue.HasValue && yOutputValue.Value > currentMaxYData)
             {
                 currentMaxYData = yOutputValue.Value;
             }
         }
-        
+
         private void OnMouseIdle(object? sender, EventArgs e)
         {
             if (!IsRealTimeTrackingEnabled) return;
-            
+
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 currentSpeedData.Clear();

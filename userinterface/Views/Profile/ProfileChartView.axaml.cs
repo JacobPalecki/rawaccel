@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using System.Diagnostics;
 using userinterface.ViewModels.Profile;
 
 namespace userinterface.Views.Profile;
@@ -20,7 +19,7 @@ public partial class ProfileChartView : UserControl
             return;
 
         isChartInitialized = true;
-        
+
         try
         {
             if (!viewModel.IsInitialized)

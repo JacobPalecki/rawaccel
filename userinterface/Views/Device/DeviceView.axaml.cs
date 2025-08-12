@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using userinterface.ViewModels.Device;
@@ -15,10 +13,10 @@ public partial class DeviceView : UserControl
 
     private void OnDeleteButtonClick(object? sender, RoutedEventArgs e)
     {
-        
+
         // Stop the event from propagating first
         e.Handled = true;
-        
+
         // Manually execute the delete command
         if (DataContext is DeviceViewModel deviceViewModel)
         {

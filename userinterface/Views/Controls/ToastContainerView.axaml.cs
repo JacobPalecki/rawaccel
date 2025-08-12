@@ -1,11 +1,6 @@
-using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
-using Avalonia.Media;
 using Avalonia.Media.Transformation;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
@@ -114,7 +109,7 @@ namespace userinterface.Views.Controls
 
             var targetY = CalculatePositionForIndex(position);
             var targetTransform = $"translate(0px, {targetY}px)";
-            
+
             var currentTransformString = toast.RenderTransform?.ToString();
             if (currentTransformString == targetTransform)
             {
@@ -126,7 +121,7 @@ namespace userinterface.Views.Controls
 
             try
             {
-                var isEntry = string.IsNullOrEmpty(currentTransformString) || 
+                var isEntry = string.IsNullOrEmpty(currentTransformString) ||
                              currentTransformString.Contains($"translate(0px, {BasePosition}px)");
                 if (isEntry)
                 {
@@ -170,7 +165,7 @@ namespace userinterface.Views.Controls
                     var toastIndex = viewModel.ToastItems
                         .Select((toast, index) => new { toast, index })
                         .FirstOrDefault(x => x.toast.Id == toastId)?.index ?? -1;
-                    
+
                     if (toastIndex >= 0)
                     {
                         currentY = CalculatePositionForIndex(toastIndex);
@@ -211,13 +206,13 @@ namespace userinterface.Views.Controls
         private List<ToastView> GetToastViews(ItemsControl itemsControl)
         {
             var toastViews = new List<ToastView>();
-            
+
             var presenter = itemsControl.Presenter;
             if (presenter?.Panel == null) return toastViews;
 
             foreach (var child in presenter.Panel.Children)
             {
-                if (child is ContentPresenter contentPresenter && 
+                if (child is ContentPresenter contentPresenter &&
                     contentPresenter.Child is ToastView toastView)
                 {
                     toastViews.Add(toastView);

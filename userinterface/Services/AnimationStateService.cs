@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -10,6 +5,11 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace userinterface.Services
 {
@@ -38,7 +38,7 @@ namespace userinterface.Services
         public async Task<CancellationToken> RegisterAnimationAsync(string context, int index)
         {
             var contextDict = contextAnimations.GetOrAdd(context, _ => new ConcurrentDictionary<int, CancellationTokenSource>());
-            
+
             CancellationTokenSource cts;
             lock (animationLock)
             {
@@ -47,12 +47,12 @@ namespace userinterface.Services
                     existingCts.Cancel();
                     existingCts.Dispose();
                 }
-                
+
                 cts = new CancellationTokenSource();
                 contextDict[index] = cts;
                 SetAnimationsActive(true);
             }
-            
+
             await Task.Yield();
             return cts.Token;
         }
@@ -67,13 +67,13 @@ namespace userinterface.Services
                     {
                         cts?.Dispose();
                     }
-                    
+
                     if (contextDict.IsEmpty)
                     {
                         contextAnimations.TryRemove(context, out _);
                     }
                 }
-                
+
                 CheckAndUpdateAnimationState();
             }
         }
@@ -115,14 +115,14 @@ namespace userinterface.Services
                     }
                     contextAnimations.Clear();
                 }
-                
+
                 CheckAndUpdateAnimationState();
             }
         }
 
         public bool IsAnimationActive(string context, int index)
         {
-            return contextAnimations.TryGetValue(context, out var contextDict) && 
+            return contextAnimations.TryGetValue(context, out var contextDict) &&
                    contextDict.ContainsKey(index);
         }
 
@@ -183,7 +183,7 @@ namespace userinterface.Services
                 transform.Y = y;
                 return transform;
             }
-            
+
             transform = new TranslateTransform(x, y);
             control.RenderTransform = transform;
             return transform;
@@ -194,13 +194,13 @@ namespace userinterface.Services
             easingFunction ??= t => t;
             var stopwatch = Stopwatch.StartNew();
             var duration = TimeSpan.FromMilliseconds(durationMs);
-            
+
             while (stopwatch.Elapsed < duration && !cancellationToken.IsCancellationRequested)
             {
                 var progress = Math.Min(stopwatch.Elapsed.TotalMilliseconds / duration.TotalMilliseconds, 1.0);
                 var easedProgress = easingFunction(progress);
                 var currentValue = from + (to - from) * easedProgress;
-                
+
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     if (axis == TransformAxis.X)
@@ -208,10 +208,10 @@ namespace userinterface.Services
                     else
                         transform.Y = currentValue;
                 });
-                
+
                 await Task.Delay(Config.FrameDelayMs, cancellationToken);
             }
-            
+
             if (!cancellationToken.IsCancellationRequested)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
@@ -251,7 +251,7 @@ namespace userinterface.Services
                     break;
                 }
             }
-            
+
             if (!hasActiveAnimations)
             {
                 SetAnimationsActive(false);

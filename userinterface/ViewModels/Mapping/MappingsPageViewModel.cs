@@ -1,8 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using userinterface.Commands;
@@ -75,7 +73,7 @@ namespace userinterface.ViewModels.Mapping
         {
             CleanupAllMappingViews();
             MappingViews.Clear();
-            
+
             for (int i = 0; i < MappingsBE.Mappings.Count; i++)
             {
                 var mappingBE = MappingsBE.Mappings[i];
@@ -98,7 +96,7 @@ namespace userinterface.ViewModels.Mapping
                 bool isActive = mappingBE.SetActive;
 
                 var viewModel = viewModelFactory.CreateMappingViewModel(mappingBE, MappingsBE, isActive, OnMappingActivationRequested);
-                
+
                 if (insertIndex >= MappingViews.Count)
                 {
                     MappingViews.Add(viewModel);
@@ -142,7 +140,7 @@ namespace userinterface.ViewModels.Mapping
 
                     bool isActive = mappingBE.SetActive;
                     var newViewModel = viewModelFactory.CreateMappingViewModel(mappingBE, MappingsBE, isActive, OnMappingActivationRequested);
-                    
+
                     MappingViews[replaceIndex] = newViewModel;
                 }
             }
@@ -187,7 +185,7 @@ namespace userinterface.ViewModels.Mapping
         private void SetActiveMapping(MappingViewModel newActiveMapping)
         {
             if (activeMappingView == newActiveMapping) return;
-            
+
             if (MappingsBE.SetActiveMapping(newActiveMapping.MappingBE))
             {
                 if (activeMappingView != null)

@@ -26,15 +26,15 @@ namespace userinterface.ViewModels.Profile
         public void Initialize(BE.ProfileModel profileModel)
         {
             var stopwatch = Stopwatch.StartNew();
-            
+
             ProfileModelBE = profileModel;
-            
+
             stopwatch.Restart();
             Settings = viewModelFactory.CreateProfileSettingsViewModel(profileModel);
-            
+
             stopwatch.Restart();
             Chart = viewModelFactory.CreateProfileChartViewModel(profileModel);
-            
+
         }
     }
 }

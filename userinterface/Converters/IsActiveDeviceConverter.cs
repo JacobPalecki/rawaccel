@@ -1,7 +1,7 @@
-using System;
-using System.Globalization;
 using Avalonia.Data.Converters;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Globalization;
 using userspace_backend;
 
 namespace userinterface.Converters

@@ -7,7 +7,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using userinterface.Models;
 using userinterface.Services;
 using userinterface.Views.Controls;
@@ -26,7 +25,7 @@ namespace userinterface.ViewModels.Controls
         {
             this.notificationService = notificationService;
             ToastItems = new ObservableCollection<ToastViewModel>();
-            
+
             this.notificationService.ToastRequested += OnToastRequested;
         }
 
@@ -43,7 +42,7 @@ namespace userinterface.ViewModels.Controls
             {
                 var toastViewModel = new ToastViewModel(notificationService, Guid.NewGuid());
                 toastViewModel.SetToastData(e.Message, e.Type, e.Duration);
-                
+
                 toastQueue.Enqueue(toastViewModel);
                 ProcessQueue();
             });
@@ -53,9 +52,9 @@ namespace userinterface.ViewModels.Controls
         private void ProcessQueue()
         {
             if (isProcessingQueue) return;
-            
+
             isProcessingQueue = true;
-            
+
             try
             {
                 while (ToastItems.Count < MaxToasts && toastQueue.Count > 0)
@@ -83,11 +82,11 @@ namespace userinterface.ViewModels.Controls
                     {
                         await containerView.AnimateToastExit(toastView);
                     }
-                    
+
                     toastToRemove.ToastExpired -= OnIndividualToastExpired;
                     ToastItems.Remove(toastToRemove);
                     toastToRemove.Dispose();
-                    
+
                     ProcessQueue();
                 }
             });
@@ -96,7 +95,7 @@ namespace userinterface.ViewModels.Controls
         private ToastView? FindToastView(Guid toastId)
         {
             if (containerView == null) return null;
-            
+
             var itemsControl = containerView.FindControl<ItemsControl>("ToastItemsControl");
             if (itemsControl?.Presenter?.Panel == null) return null;
 
@@ -126,7 +125,7 @@ namespace userinterface.ViewModels.Controls
                 toast.Dispose();
             }
             ToastItems.Clear();
-            
+
             while (toastQueue.Count > 0)
             {
                 var queuedToast = toastQueue.Dequeue();

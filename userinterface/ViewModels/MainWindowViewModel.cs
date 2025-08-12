@@ -1,9 +1,7 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -67,13 +65,13 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         ApplyCommand = new RelayCommand(() => Apply());
         NavigateCommand = new RelayCommand<NavigationPage>(page => SelectPage(page));
         ToggleThemeCommand = new RelayCommand(() => ToggleTheme());
-        
+
         profileListView.SelectedProfileChanged += OnProfileSelected;
         BE.NotificationManager.NotificationRequested += OnBackEndNotificationRequested;
         BE.NotificationManager.QueuedNotificationRequested += OnBackEndQueuedNotificationRequested;
-        
+
         backEnd.LoggingService?.LogInformation(userspace_backend.Logging.LogSource.UI, "MainWindowViewModel initialized, validating devices");
-        
+
         // Now that UI is ready and event handlers are subscribed, validate devices
         backEnd.ValidateDevicesAfterUIReady();
     }
@@ -155,7 +153,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         backEnd.LoggingService?.LogDebug(userspace_backend.Logging.LogSource.UI, "Navigating to page: {PageName}", page);
         SelectedPage = page;
         IsProfilesExpanded = page == NavigationPage.Profiles;
-        
+
         if (page == NavigationPage.Profiles && profileListView.SelectedProfile == null)
         {
             var defaultProfile = backEnd.Profiles.Profiles.FirstOrDefault(p => p == BE.Model.ProfilesModel.DefaultProfile);
@@ -168,13 +166,13 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
                 profileListView.SelectedProfile = backEnd.Profiles.Profiles[0];
             }
         }
-        
+
         UpdateNavigationButtonSelection(page);
     }
-    
+
     private void UpdateNavigationButtonSelection(NavigationPage page)
     {
-        if (App.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && 
+        if (App.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
             desktop.MainWindow is MainWindow mainWindow)
         {
             mainWindow.UpdateNavigationSelection(page);
@@ -201,7 +199,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
 
         SelectedPage = page;
         IsProfilesExpanded = page == NavigationPage.Profiles;
-        
+
         if (page == NavigationPage.Profiles && profileListView.SelectedProfile == null)
         {
             var defaultProfile = backEnd.Profiles.Profiles.FirstOrDefault(p => p == BE.Model.ProfilesModel.DefaultProfile);
@@ -252,7 +250,7 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
     {
         var currentTheme = settingsService.Theme.ToLower();
         string newTheme;
-        
+
         if (currentTheme == "system")
         {
             var actualSystemTheme = ThemeVariantConverter.GetSystemThemeVariant();
@@ -262,10 +260,10 @@ public partial class MainWindowViewModel : ViewModelBase, INotifyPropertyChanged
         {
             newTheme = currentTheme == "light" ? "Dark" : "Light";
         }
-        
+
         settingsService.Theme = newTheme;
     }
-    
+
     private void OnProfileSelected(BE.Model.ProfileModel selectedProfile)
     {
         if (selectedProfile != null && SelectedPage != NavigationPage.Profiles)

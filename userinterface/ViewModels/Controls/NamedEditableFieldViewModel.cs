@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using userinterface.Services;
 using BE = userspace_backend.Model.EditableSettings;
 

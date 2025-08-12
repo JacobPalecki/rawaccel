@@ -25,7 +25,7 @@ public class ObjectPool<T> : IDisposable where T : class
             resetAction?.Invoke(item);
             return item;
         }
-        
+
         return objectGenerator();
     }
 
@@ -43,7 +43,7 @@ public class ObjectPool<T> : IDisposable where T : class
         if (!disposed)
         {
             disposed = true;
-            
+
             // Dispose all pooled objects if they implement IDisposable
             while (objects.TryTake(out T item))
             {

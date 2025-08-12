@@ -171,7 +171,7 @@ namespace userinterface.Helpers
                                 hideTimer.Dispose();
                                 hideTimer = null;
                             }
-                            
+
                             if (!disposed)
                             {
                                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>

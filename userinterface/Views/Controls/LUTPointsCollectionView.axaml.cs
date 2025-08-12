@@ -17,7 +17,7 @@ namespace userinterface.Views.Controls
             if (DataContext is LUTPointsCollectionViewModel viewModel)
             {
                 var delta = e.Delta.Y;
-                
+
                 if (delta > 0 && viewModel.CanNavigatePrevious)
                 {
                     viewModel.NavigatePreviousCommand.Execute(null);
@@ -26,7 +26,7 @@ namespace userinterface.Views.Controls
                 {
                     viewModel.NavigateNextCommand.Execute(null);
                 }
-                
+
                 e.Handled = true;
             }
         }

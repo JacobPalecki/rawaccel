@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using System.Diagnostics.CodeAnalysis;
 

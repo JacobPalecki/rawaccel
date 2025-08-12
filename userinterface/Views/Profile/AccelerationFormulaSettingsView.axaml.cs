@@ -1,6 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Microsoft.Extensions.DependencyInjection;

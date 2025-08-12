@@ -1,11 +1,10 @@
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.SKCharts;
 using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.SKCharts;
 using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
-using System.Text;
 using System.Threading.Tasks;
 using userspace_backend.Display;
 
@@ -26,7 +25,7 @@ namespace userinterface.Services
                 {
                     // Generate cache key
                     var cacheKey = GenerateChartHash(xPoints, yPoints, yxRatio);
-                    
+
                     // Check cache first
                     if (bitmapCache.TryGetValue(cacheKey, out var cachedBitmap))
                     {
@@ -123,7 +122,7 @@ namespace userinterface.Services
         {
             // Simple hash without crypto to avoid loading System.Security.Cryptography on UI thread
             var hashCode = yxRatio.GetHashCode();
-            
+
             // Sample a few key points for hash
             if (xPoints.Length > 0)
             {
