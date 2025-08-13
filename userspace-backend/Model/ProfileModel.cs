@@ -49,6 +49,10 @@ namespace userspace_backend.Model
 
         public ICurvePreview YCurvePreview { get; protected set; }
 
+        public ObservableCollection<CurvePoint> XLUTPoints { get; private set; } = new ObservableCollection<CurvePoint>();
+
+        public ObservableCollection<CurvePoint> YLUTPoints { get; private set; } = new ObservableCollection<CurvePoint>();
+
         [Obsolete("Use XCurvePreview instead")]
         public ICurvePreview CurvePreview => XCurvePreview;
 
@@ -106,6 +110,9 @@ namespace userspace_backend.Model
             // Generate Y curve points by multiplying X curve outputs by YX ratio
             GenerateYCurvePoints();
             loggingService?.LogDebug(LogSource.LUT, "Generated {PointCount} X curve points", XCurvePreview.Points?.Count);
+
+            // Update LUT points if acceleration type is LUT
+            UpdateLUTPoints();
         }
 
         private void GenerateYCurvePoints()
@@ -121,6 +128,43 @@ namespace userspace_backend.Model
                 MouseSpeed = xPoint.MouseSpeed,
                 Output = xPoint.Output * yxRatio
             }).ToList();
+        }
+
+        private void UpdateLUTPoints()
+        {
+            XLUTPoints.Clear();
+            YLUTPoints.Clear();
+
+            // Check if current acceleration type is LUT
+            if (Acceleration?.DefinitionType?.CurrentValidatedValue == DATA.Profiles.Acceleration.AccelerationDefinitionType.LookupTable)
+            {
+                var lutAccel = Acceleration.LookupTableAccel;
+                if (lutAccel?.Data?.CurrentValidatedValue?.Data != null)
+                {
+                    var lutData = lutAccel.Data.CurrentValidatedValue.Data;
+                    
+                    // LUT data is stored as pairs of (x, y) values
+                    for (int i = 0; i < lutData.Length - 1; i += 2)
+                    {
+                        var xPoint = new CurvePoint
+                        {
+                            MouseSpeed = lutData[i],
+                            Output = lutData[i + 1]
+                        };
+                        XLUTPoints.Add(xPoint);
+
+                        // Y points are scaled by YX ratio
+                        var yPoint = new CurvePoint
+                        {
+                            MouseSpeed = lutData[i],
+                            Output = lutData[i + 1] * YXRatio.CurrentValidatedValue
+                        };
+                        YLUTPoints.Add(yPoint);
+                    }
+
+                    loggingService?.LogDebug(LogSource.LUT, "Updated LUT points: {Count} points", XLUTPoints.Count);
+                }
+            }
         }
 
         protected override IEnumerable<IEditableSetting> EnumerateEditableSettings()

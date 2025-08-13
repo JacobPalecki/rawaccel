@@ -70,6 +70,8 @@ namespace userinterface.ViewModels.Profile
         private LineSeries<CurvePoint>? ySeries;
         private ScatterSeries<CurvePoint>? currentSpeedDotSeries;
         private ScatterSeries<CurvePoint>? currentYSpeedDotSeries;
+        private ScatterSeries<CurvePoint>? xLUTDotSeries;
+        private ScatterSeries<CurvePoint>? yLUTDotSeries;
 
         private readonly object syncObject = new object();
 
@@ -271,8 +273,10 @@ namespace userinterface.ViewModels.Profile
             Series.Add(xSeries);
 
             InitializeCurrentSpeedDotSeries();
+            InitializeLUTDotSeries();
             UpdateYSeriesVisibility();
             UpdateLineSeriesGeometry();
+            UpdateLUTDotsVisibility();
         }
 
         private LineSeries<CurvePoint> CreateLineSeries(ObservableCollection<CurvePoint> points, SolidColorPaint stroke, string name, string axis)
@@ -369,6 +373,17 @@ namespace userinterface.ViewModels.Profile
                 UpdateYSeriesVisibility();
                 UpdateLineSeriesGeometry();
             }
+
+            // Update LUT dots data for new profile
+            if (xLUTDotSeries != null)
+            {
+                xLUTDotSeries.Values = profileModel.XLUTPoints;
+            }
+            if (yLUTDotSeries != null)
+            {
+                yLUTDotSeries.Values = profileModel.YLUTPoints;
+            }
+            UpdateLUTDotsVisibility();
 
             return Task.CompletedTask;
         }
@@ -511,6 +526,9 @@ namespace userinterface.ViewModels.Profile
 
             // Also update line series geometry when Y series visibility changes
             UpdateLineSeriesGeometry();
+            
+            // Also update LUT dots visibility when Y series visibility changes
+            UpdateLUTDotsVisibility();
         }
 
         private void OnAccelerationTypeChanged(object? sender, PropertyChangedEventArgs e)
@@ -519,6 +537,19 @@ namespace userinterface.ViewModels.Profile
             {
                 // Update geometry when acceleration type changes (dots may appear different for different curve types)
                 UpdateLineSeriesGeometry();
+                
+                // Update LUT dots visibility when acceleration type changes
+                UpdateLUTDotsVisibility();
+                
+                // Update LUT points data when switching to/from LUT mode
+                if (xLUTDotSeries != null && currentProfileModel != null)
+                {
+                    xLUTDotSeries.Values = currentProfileModel.XLUTPoints;
+                }
+                if (yLUTDotSeries != null && currentProfileModel != null)
+                {
+                    yLUTDotSeries.Values = currentProfileModel.YLUTPoints;
+                }
             }
         }
 
@@ -719,6 +750,61 @@ namespace userinterface.ViewModels.Profile
             };
         }
 
+        private void InitializeLUTDotSeries()
+        {
+            if (currentProfileModel == null) return;
+
+            // Create scatter series for X LUT points
+            xLUTDotSeries = new ScatterSeries<CurvePoint>
+            {
+                Values = currentProfileModel.XLUTPoints,
+                GeometrySize = 8,
+                Stroke = new SolidColorPaint(SKColors.DarkBlue) { StrokeThickness = 2 },
+                Fill = new SolidColorPaint(SKColors.LightBlue),
+                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                Name = "X LUT Points",
+                IsVisible = false,
+                DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
+            };
+
+            // Create scatter series for Y LUT points
+            yLUTDotSeries = new ScatterSeries<CurvePoint>
+            {
+                Values = currentProfileModel.YLUTPoints,
+                GeometrySize = 8,
+                Stroke = new SolidColorPaint(SKColors.DarkRed) { StrokeThickness = 2 },
+                Fill = new SolidColorPaint(SKColors.LightPink),
+                Mapping = (curvePoint, index) => new LiveChartsCore.Kernel.Coordinate(x: curvePoint.MouseSpeed, y: curvePoint.Output),
+                Name = "Y LUT Points",
+                IsVisible = false,
+                DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
+            };
+
+            // Add to series collection
+            if (!Series.Contains(xLUTDotSeries))
+            {
+                Series.Add(xLUTDotSeries);
+            }
+            if (!Series.Contains(yLUTDotSeries))
+            {
+                Series.Add(yLUTDotSeries);
+            }
+        }
+
+        private void UpdateLUTDotsVisibility()
+        {
+            if (xLUTDotSeries == null || yLUTDotSeries == null || currentProfileModel == null) return;
+
+            // Check if current acceleration type is LUT
+            var isLUT = currentProfileModel.Acceleration?.DefinitionType?.CurrentValidatedValue == 
+                userspace_backend.Data.Profiles.Acceleration.AccelerationDefinitionType.LookupTable;
+
+            xLUTDotSeries.IsVisible = isLUT;
+            
+            // Y LUT dots are visible only if LUT and Y curve is separate
+            var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
+            yLUTDotSeries.IsVisible = isLUT && hasYCurve;
+        }
 
         private void ToggleRealTimeTracking()
         {
