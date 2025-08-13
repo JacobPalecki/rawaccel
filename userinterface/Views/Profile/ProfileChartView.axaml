@@ -154,6 +154,12 @@
 				        ToolTip.Tip="{ext:Localized ProfileRealTimeTracking}">
 					<PathIcon Data="{StaticResource top_speed_regular}"/>
 				</Button>
+				<Button Classes="chart-control"
+				        Classes.active="{Binding ShowDriverGraphApproximation}"
+				        Command="{Binding ToggleDriverGraphApproximationCommand}"
+				        ToolTip.Tip="Show Driver Graph Approximation">
+					<PathIcon Data="{StaticResource data_scatter_regular}"/>
+				</Button>
 			</StackPanel>
 		</Grid>
 	</Border>

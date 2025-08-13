@@ -36,5 +36,5 @@
 			<ContentControl Content="{Binding AccelerationSettings}"/>
 			<ContentControl Content="{Binding HiddenSettings}"/>
 		</StackPanel>
-	</ScrollViewer>
+  	</ScrollViewer>
 </UserControl>

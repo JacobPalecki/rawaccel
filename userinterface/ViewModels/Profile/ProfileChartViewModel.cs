@@ -93,6 +93,7 @@ namespace userinterface.ViewModels.Profile
                 FitToData();
             });
             ToggleRealTimeTrackingCommand = new RelayCommand(ToggleRealTimeTracking);
+            ToggleDriverGraphApproximationCommand = new RelayCommand(ToggleDriverGraphApproximation);
         }
 
         public bool IsInitialized { get; private set; }
@@ -108,6 +109,8 @@ namespace userinterface.ViewModels.Profile
         private bool hasUserInteracted = false;
 
         public bool IsRealTimeTrackingEnabled { get; private set; } = false;
+
+        public bool ShowDriverGraphApproximation { get; private set; } = false;
 
         public string CurrentMouseDevice { get; private set; } = "No device detected";
 
@@ -269,6 +272,7 @@ namespace userinterface.ViewModels.Profile
 
             InitializeCurrentSpeedDotSeries();
             UpdateYSeriesVisibility();
+            UpdateLineSeriesGeometry();
         }
 
         private LineSeries<CurvePoint> CreateLineSeries(ObservableCollection<CurvePoint> points, SolidColorPaint stroke, string name, string axis)
@@ -289,6 +293,42 @@ namespace userinterface.ViewModels.Profile
                 XToolTipLabelFormatter = (chartPoint) => $"Speed: {chartPoint.Coordinate.SecondaryValue:F2}",
                 YToolTipLabelFormatter = (chartPoint) => $"{axis} Output: {chartPoint.Coordinate.PrimaryValue:F2}"
             };
+        }
+
+        private void UpdateLineSeriesGeometry()
+        {
+            if (xSeries == null || ySeries == null || currentProfileModel == null) return;
+
+            if (ShowDriverGraphApproximation)
+            {
+                // When toggle is on, show dots on the line series for any acceleration mode
+                // These dots represent the driver's approximation of the curve
+                xSeries.GeometrySize = 5;
+                xSeries.GeometryFill = new SolidColorPaint(SKColors.CornflowerBlue);
+                xSeries.GeometryStroke = new SolidColorPaint(SKColors.DarkBlue) { StrokeThickness = 1 };
+
+                ySeries.GeometrySize = 5;
+                ySeries.GeometryFill = new SolidColorPaint(SKColors.OrangeRed);
+                ySeries.GeometryStroke = new SolidColorPaint(SKColors.DarkRed) { StrokeThickness = 1 };
+            }
+            else
+            {
+                // Hide dots when toggle is off
+                xSeries.GeometrySize = 0;
+                xSeries.GeometryFill = null;
+                xSeries.GeometryStroke = null;
+
+                ySeries.GeometrySize = 0;
+                ySeries.GeometryFill = null;
+                ySeries.GeometryStroke = null;
+            }
+        }
+
+        private void ToggleDriverGraphApproximation()
+        {
+            ShowDriverGraphApproximation = !ShowDriverGraphApproximation;
+            UpdateLineSeriesGeometry();
+            OnPropertyChanged(nameof(ShowDriverGraphApproximation));
         }
 
         private async void TransitionToInteractiveMode()
@@ -327,6 +367,7 @@ namespace userinterface.ViewModels.Profile
             if (xSeries != null && ySeries != null)
             {
                 UpdateYSeriesVisibility();
+                UpdateLineSeriesGeometry();
             }
 
             return Task.CompletedTask;
@@ -347,6 +388,8 @@ namespace userinterface.ViewModels.Profile
         public ICommand FitToDataCommand { get; }
 
         public ICommand ToggleRealTimeTrackingCommand { get; }
+
+        public ICommand ToggleDriverGraphApproximationCommand { get; }
 
         // ================================================================================================
         // PUBLIC METHODS
@@ -422,12 +465,18 @@ namespace userinterface.ViewModels.Profile
         {
             if (YXRatio != null)
                 YXRatio.PropertyChanged += OnYXRatioChanged;
+            
+            if (currentProfileModel?.Acceleration?.DefinitionType != null)
+                currentProfileModel.Acceleration.DefinitionType.PropertyChanged += OnAccelerationTypeChanged;
         }
 
         private void UnsubscribeFromEvents()
         {
             if (YXRatio != null)
                 YXRatio.PropertyChanged -= OnYXRatioChanged;
+            
+            if (currentProfileModel?.Acceleration?.DefinitionType != null)
+                currentProfileModel.Acceleration.DefinitionType.PropertyChanged -= OnAccelerationTypeChanged;
         }
 
         private void OnYXRatioChanged(object? sender, PropertyChangedEventArgs e)
@@ -458,6 +507,18 @@ namespace userinterface.ViewModels.Profile
             if (currentYSpeedDotSeries != null && IsRealTimeTrackingEnabled)
             {
                 currentYSpeedDotSeries.IsVisible = hasYCurve;
+            }
+
+            // Also update line series geometry when Y series visibility changes
+            UpdateLineSeriesGeometry();
+        }
+
+        private void OnAccelerationTypeChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(EditableSetting<userspace_backend.Data.Profiles.Acceleration.AccelerationDefinitionType>.CurrentValidatedValue))
+            {
+                // Update geometry when acceleration type changes (dots may appear different for different curve types)
+                UpdateLineSeriesGeometry();
             }
         }
 
@@ -657,6 +718,7 @@ namespace userinterface.ViewModels.Profile
                 DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
             };
         }
+
 
         private void ToggleRealTimeTracking()
         {
