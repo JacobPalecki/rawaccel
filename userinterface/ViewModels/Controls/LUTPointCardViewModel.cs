@@ -166,7 +166,7 @@ namespace userinterface.ViewModels.Controls
                 ValueChanged?.Invoke(this, new PointValueChangedEventArgs(this, XValue, YValue));
 
                 UpdateValidationStatus();
-g
+
                 OnPropertyChanged(nameof(XValue));
                 OnPropertyChanged(nameof(YValue));
             }
