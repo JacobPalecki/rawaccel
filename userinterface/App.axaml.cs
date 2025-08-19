@@ -13,7 +13,6 @@ using userinterface.ViewModels.Settings;
 using userinterface.Views;
 using userspace_backend;
 using userspace_backend.Hardware;
-// using userspace_backend.Logging;
 using DATA = userspace_backend.Data;
 
 namespace userinterface;
