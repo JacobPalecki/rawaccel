@@ -89,51 +89,51 @@ namespace userinterface.Services
 
         private void EnqueueModal(ModalQueueItem item)
         {
-            logger?.LogInformation(LogSource.Modal, $"EnqueueModal: Type={item.Type}, IsStartupModal={item.IsStartupModal}, Queue count={modalQueue.Count}");
+            logger?.LogDebug(LogSource.Modal, $"EnqueueModal: Type={item.Type}, IsStartupModal={item.IsStartupModal}, Queue count={modalQueue.Count}");
             modalQueue.Enqueue(item);
 
-            logger?.LogInformation(LogSource.Modal, $"EnqueueModal: App.IsAppLoaded={App.IsAppLoaded}, isProcessingQueue={isProcessingQueue}");
+            logger?.LogDebug(LogSource.Modal, $"EnqueueModal: App.IsAppLoaded={App.IsAppLoaded}, isProcessingQueue={isProcessingQueue}");
 
             // For user-triggered modals, process immediately if app is loaded
             // For startup modals, wait for app load completion
             if (!isProcessingQueue && (App.IsAppLoaded || !item.IsStartupModal))
             {
-                logger?.LogInformation(LogSource.Modal, "Starting ProcessModalQueueAsync");
+                logger?.LogDebug(LogSource.Modal, "Starting ProcessModalQueueAsync");
                 _ = ProcessModalQueueAsync();
             }
             else
             {
-                logger?.LogInformation(LogSource.Modal, "Not processing queue - waiting for app load or already processing");
+                logger?.LogDebug(LogSource.Modal, "Not processing queue - waiting for app load or already processing");
             }
         }
 
         private async Task ProcessModalQueueAsync()
         {
-            logger?.LogInformation(LogSource.Modal, $"ProcessModalQueueAsync called: isProcessingQueue={isProcessingQueue}, queue count={modalQueue.Count}");
+            logger?.LogDebug(LogSource.Modal, $"ProcessModalQueueAsync called: isProcessingQueue={isProcessingQueue}, queue count={modalQueue.Count}");
 
             if (isProcessingQueue)
             {
-                logger?.LogInformation(LogSource.Modal, "Already processing queue, returning");
+                logger?.LogDebug(LogSource.Modal, "Already processing queue, returning");
                 return;
             }
 
             isProcessingQueue = true;
-            logger?.LogInformation(LogSource.Modal, "Started processing modal queue");
+            logger?.LogDebug(LogSource.Modal, "Started processing modal queue");
 
             while (modalQueue.Count > 0)
             {
                 var item = modalQueue.Dequeue();
-                logger?.LogInformation(LogSource.Modal, $"Processing modal: Type={item.Type}, TitleKey='{item.TitleKey}'");
+                logger?.LogDebug(LogSource.Modal, $"Processing modal: Type={item.Type}, TitleKey='{item.TitleKey}'");
 
                 try
                 {
-                    logger?.LogInformation(LogSource.Modal, $"Calling Show{item.Type}Async");
+                    logger?.LogDebug(LogSource.Modal, $"Calling Show{item.Type}Async");
                     
                     switch (item.Type)
                     {
                         case ModalType.Confirmation:
                             var confirmResult = await ShowConfirmationImmediatelyAsync(item.TitleKey, item.MessageKey, item.ConfirmTextKey, item.CancelTextKey);
-                            logger?.LogInformation(LogSource.Modal, $"ShowConfirmationImmediatelyAsync returned: {confirmResult}");
+                            logger?.LogDebug(LogSource.Modal, $"ShowConfirmationImmediatelyAsync returned: {confirmResult}");
                             item.TaskCompletionSource.SetResult(confirmResult);
                             break;
 
@@ -172,47 +172,47 @@ namespace userinterface.Services
 
             }
 
-            logger?.LogInformation(LogSource.Modal, "Finished processing modal queue");
+            logger?.LogDebug(LogSource.Modal, "Finished processing modal queue");
             isProcessingQueue = false;
         }
 
         private bool TryGetModalOverlay(out ModalOverlay modalOverlay)
         {
             modalOverlay = null!;
-            logger?.LogInformation(LogSource.Modal, "TryGetModalOverlay: Starting");
+            logger?.LogDebug(LogSource.Modal, "TryGetModalOverlay: Starting");
 
             if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
-                logger?.LogInformation(LogSource.Modal, "TryGetModalOverlay: Found desktop lifetime");
+                logger?.LogDebug(LogSource.Modal, "TryGetModalOverlay: Found desktop lifetime");
                 var mainWindow = desktop.MainWindow as MainWindow;
-                logger?.LogInformation(LogSource.Modal, $"TryGetModalOverlay: MainWindow = {(mainWindow != null ? "found" : "null")}");
+                logger?.LogDebug(LogSource.Modal, $"TryGetModalOverlay: MainWindow = {(mainWindow != null ? "found" : "null")}");
 
                 var overlay = mainWindow?.FindControl<ModalOverlay>("ModalOverlay");
-                logger?.LogInformation(LogSource.Modal, $"TryGetModalOverlay: ModalOverlay control = {(overlay != null ? "found" : "null")}");
+                logger?.LogDebug(LogSource.Modal, $"TryGetModalOverlay: ModalOverlay control = {(overlay != null ? "found" : "null")}");
 
                 if (overlay != null)
                 {
                     modalOverlay = overlay;
-                    logger?.LogInformation(LogSource.Modal, "TryGetModalOverlay: Success");
+                    logger?.LogDebug(LogSource.Modal, "TryGetModalOverlay: Success");
                     return true;
                 }
             }
             else
             {
-                logger?.LogInformation(LogSource.Modal, "TryGetModalOverlay: Desktop lifetime not found");
+                logger?.LogDebug(LogSource.Modal, "TryGetModalOverlay: Desktop lifetime not found");
             }
 
-            logger?.LogInformation(LogSource.Modal, "TryGetModalOverlay: Failed");
+            logger?.LogDebug(LogSource.Modal, "TryGetModalOverlay: Failed");
             return false;
         }
 
         public async Task<bool> ShowConfirmationAsync(string titleKey, string messageKey, string confirmTextKey = "ModalOK", string cancelTextKey = "ModalCancel")
         {
-            logger?.LogInformation(LogSource.Modal, $"ShowConfirmationAsync called: titleKey='{titleKey}', messageKey='{messageKey}'");
+            logger?.LogDebug(LogSource.Modal, $"ShowConfirmationAsync called: titleKey='{titleKey}', messageKey='{messageKey}'");
 
             if (!settingsService.ShowConfirmModals)
             {
-                logger?.LogInformation(LogSource.Modal, "ShowConfirmModals is disabled, returning true");
+                logger?.LogDebug(LogSource.Modal, "ShowConfirmModals is disabled, returning true");
                 return true;
             }
 
@@ -225,17 +225,17 @@ namespace userinterface.Services
                 CancelTextKey = cancelTextKey
             };
 
-            logger?.LogInformation(LogSource.Modal, "Enqueueing confirmation modal");
+            logger?.LogDebug(LogSource.Modal, "Enqueueing confirmation modal");
             EnqueueModal(item);
-            logger?.LogInformation(LogSource.Modal, "Waiting for confirmation modal result");
+            logger?.LogDebug(LogSource.Modal, "Waiting for confirmation modal result");
             var result = await item.TaskCompletionSource.Task;
-            logger?.LogInformation(LogSource.Modal, $"Confirmation modal result: {result}");
+            logger?.LogDebug(LogSource.Modal, $"Confirmation modal result: {result}");
             return result is bool boolResult ? boolResult : false;
         }
 
         private async Task<bool> ShowConfirmationImmediatelyAsync(string titleKey, string messageKey, string confirmTextKey, string cancelTextKey)
         {
-            logger?.LogInformation(LogSource.Modal, $"ShowConfirmationImmediatelyAsync called: titleKey='{titleKey}'");
+            logger?.LogDebug(LogSource.Modal, $"ShowConfirmationImmediatelyAsync called: titleKey='{titleKey}'");
 
             if (!TryGetModalOverlay(out var modalOverlay))
             {
@@ -243,7 +243,7 @@ namespace userinterface.Services
                 return false;
             }
 
-            logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Got modal overlay successfully");
+            logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Got modal overlay successfully");
 
             if (currentModalContent != null)
             {
@@ -254,7 +254,7 @@ namespace userinterface.Services
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Creating ConfirmationModalView");
+                logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Creating ConfirmationModalView");
 
                 var confirmationDialog = new ConfirmationModalView
                 {
@@ -264,25 +264,25 @@ namespace userinterface.Services
                     CancelText = localizationService.GetText(cancelTextKey)
                 };
 
-                logger?.LogInformation(LogSource.Modal, $"ShowConfirmationImmediatelyAsync: Dialog created - Title='{confirmationDialog.Title}', Message='{confirmationDialog.Message}'");
+                logger?.LogDebug(LogSource.Modal, $"ShowConfirmationImmediatelyAsync: Dialog created - Title='{confirmationDialog.Title}', Message='{confirmationDialog.Message}'");
 
                 confirmationDialog.ConfirmClicked += () =>
                 {
-                    logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Confirm clicked");
+                    logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Confirm clicked");
                     currentConfirmationTask?.SetResult(true);
                     CloseCurrentModal();
                 };
 
                 confirmationDialog.CancelClicked += () =>
                 {
-                    logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Cancel clicked");
+                    logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Cancel clicked");
                     currentConfirmationTask?.SetResult(false);
                     CloseCurrentModal();
                 };
 
                 modalOverlay.BackgroundClicked += () =>
                 {
-                    logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Background clicked");
+                    logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Background clicked");
                     if (!currentConfirmationTask!.Task.IsCompleted)
                     {
                         currentConfirmationTask.SetResult(false);
@@ -291,9 +291,9 @@ namespace userinterface.Services
                 };
 
                 currentModalContent = confirmationDialog;
-                logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Calling modalOverlay.ShowModal");
+                logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: Calling modalOverlay.ShowModal");
                 modalOverlay.ShowModal(confirmationDialog);
-                logger?.LogInformation(LogSource.Modal, "ShowConfirmationImmediatelyAsync: modalOverlay.ShowModal completed");
+                logger?.LogDebug(LogSource.Modal, "ShowConfirmationImmediatelyAsync: modalOverlay.ShowModal completed");
             });
 
             return await currentConfirmationTask.Task;
