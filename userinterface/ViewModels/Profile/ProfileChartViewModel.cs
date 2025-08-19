@@ -1,8 +1,11 @@
 using LiveChartsCore;
+using LiveChartsCore.Kernel;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -14,6 +17,7 @@ using userinterface.Services;
 using userspace_backend;
 using userspace_backend.Display;
 using userspace_backend.Hardware;
+using userspace_backend.Logging;
 using userspace_backend.Model.EditableSettings;
 using BE = userspace_backend.Model;
 
@@ -70,8 +74,8 @@ namespace userinterface.ViewModels.Profile
         private LineSeries<CurvePoint>? ySeries;
         private ScatterSeries<CurvePoint>? currentSpeedDotSeries;
         private ScatterSeries<CurvePoint>? currentYSpeedDotSeries;
-        private ScatterSeries<CurvePoint>? xLUTDotSeries;
-        private ScatterSeries<CurvePoint>? yLUTDotSeries;
+        private LoggingScatterSeries<CurvePoint>? xLUTDotSeries;
+        private LoggingScatterSeries<CurvePoint>? yLUTDotSeries;
 
         private readonly object syncObject = new object();
 
@@ -750,12 +754,38 @@ namespace userinterface.ViewModels.Profile
             };
         }
 
+        // Custom ScatterSeries class for LUT points with click logging
+        public class LoggingScatterSeries<T> : ScatterSeries<T>
+        {
+            private readonly ILoggingService? loggingService;
+            private readonly string seriesType;
+
+            public LoggingScatterSeries(ILoggingService? loggingService, string seriesType)
+            {
+                this.loggingService = loggingService;
+                this.seriesType = seriesType;
+            }
+
+            public void LogPointClick(int pointIndex, double xValue, double yValue)
+            {
+                loggingService?.LogInformation(LogSource.LUT,
+                    "{SeriesType} LUT Point clicked on graph - Index: {Index}, X: {XValue}, Y: {YValue}",
+                    seriesType,
+                    pointIndex,
+                    xValue,
+                    yValue);
+            }
+        }
+
         private void InitializeLUTDotSeries()
         {
             if (currentProfileModel == null) return;
 
+            // Get logging service for LUT point click logging
+            var loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
+
             // Create scatter series for X LUT points
-            xLUTDotSeries = new ScatterSeries<CurvePoint>
+            xLUTDotSeries = new LoggingScatterSeries<CurvePoint>(loggingService, "X")
             {
                 Values = currentProfileModel.XLUTPoints,
                 GeometrySize = 8,
@@ -768,7 +798,7 @@ namespace userinterface.ViewModels.Profile
             };
 
             // Create scatter series for Y LUT points
-            yLUTDotSeries = new ScatterSeries<CurvePoint>
+            yLUTDotSeries = new LoggingScatterSeries<CurvePoint>(loggingService, "Y")
             {
                 Values = currentProfileModel.YLUTPoints,
                 GeometrySize = 8,
@@ -804,6 +834,53 @@ namespace userinterface.ViewModels.Profile
             // Y LUT dots are visible only if LUT and Y curve is separate
             var hasYCurve = YXRatio.CurrentValidatedValue != 1.0;
             yLUTDotSeries.IsVisible = isLUT && hasYCurve;
+        }
+
+        public void HandleChartClick(LiveChartsCore.SkiaSharpView.Avalonia.CartesianChart chart, double pixelX, double pixelY)
+        {
+            if (xLUTDotSeries == null || yLUTDotSeries == null || !xLUTDotSeries.IsVisible)
+                return;
+
+            var clickPoint = new LiveChartsCore.Drawing.LvcPointD(pixelX, pixelY);
+
+            // Check each LUT series with pixel-based distance calculation
+            CheckLUTPointHitsPixelBased(chart, xLUTDotSeries, clickPoint, "X");
+            if (yLUTDotSeries.IsVisible)
+            {
+                CheckLUTPointHitsPixelBased(chart, yLUTDotSeries, clickPoint, "Y");
+            }
+        }
+
+        private void CheckLUTPointHitsPixelBased(LiveChartsCore.SkiaSharpView.Avalonia.CartesianChart chart,
+                                                LoggingScatterSeries<CurvePoint>? series, 
+                                                LiveChartsCore.Drawing.LvcPointD clickPixels, 
+                                                string seriesType)
+        {
+            if (series?.Values is not IEnumerable<CurvePoint> points || !series.IsVisible)
+                return;
+
+            double pixelTolerance = 100.0; // 100 pixels as requested
+            
+            var pointList = points.ToList();
+            for (int i = 0; i < pointList.Count; i++)
+            {
+                var point = pointList[i];
+                
+                // Convert LUT point data coordinates to pixel coordinates
+                var pointDataCoord = new LiveChartsCore.Drawing.LvcPointD(point.MouseSpeed, point.Output);
+                var pointPixels = chart.ScaleDataToPixels(pointDataCoord);
+                
+                // Calculate pixel distance between click and point
+                var pixelDistance = Math.Sqrt(
+                    Math.Pow(clickPixels.X - pointPixels.X, 2) + 
+                    Math.Pow(clickPixels.Y - pointPixels.Y, 2)
+                );
+                
+                if (pixelDistance <= pixelTolerance)
+                {
+                    series.LogPointClick(i, point.MouseSpeed, point.Output);
+                }
+            }
         }
 
         private void ToggleRealTimeTracking()
