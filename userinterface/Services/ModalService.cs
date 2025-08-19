@@ -147,28 +147,33 @@ namespace userinterface.Services
                             item.TaskCompletionSource.SetResult(confirmResult);
                             break;
 
-                        case ModalType.Message:
-                            logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "Calling ShowMessageImmediatelyAsync");
-                            await ShowMessageImmediatelyAsync(item.TitleKey, item.MessageKey, item.OkTextKey);
-                            item.TaskCompletionSource.SetResult(true);
-                            break;
-
                         case ModalType.Dialog:
                             logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "Calling ShowDialogImmediatelyAsync");
                             var dialogResult = await ShowDialogImmediatelyAsync<object?>(item.DialogContent!, item.TitleKey);
                             item.TaskCompletionSource.SetResult(dialogResult);
                             break;
 
-                        case ModalType.AlphaBuildWarning:
-                            logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "Calling ShowAlphaBuildWarningAsync");
-                            await ShowAlphaBuildWarningAsync();
-                            item.TaskCompletionSource.SetResult(true);
-                            break;
-
                         case ModalType.DeviceConfiguration:
                             logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, "Calling ShowDeviceConfigurationAsync");
                             var deviceResult = await ShowDeviceConfigurationAsync(item.DeviceName!);
                             item.TaskCompletionSource.SetResult(deviceResult);
+                            break;
+
+                        default:
+                            // Handle simple modal types that don't return specific values (always return true)
+                            logger?.LogInformation(userspace_backend.Logging.LogSource.Modal, $"Calling Show{item.Type}Async");
+                            switch (item.Type)
+                            {
+                                case ModalType.Message:
+                                    await ShowMessageImmediatelyAsync(item.TitleKey, item.MessageKey, item.OkTextKey);
+                                    break;
+                                case ModalType.AlphaBuildWarning:
+                                    await ShowAlphaBuildWarningAsync();
+                                    break;
+                                default:
+                                    throw new NotSupportedException($"Modal type {item.Type} is not supported");
+                            }
+                            item.TaskCompletionSource.SetResult(true);
                             break;
                     }
                 }
