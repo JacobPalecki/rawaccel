@@ -4,20 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using userinterface.Models;
 using userinterface.Views;
 using userinterface.Views.Controls;
 
 namespace userinterface.Services
 {
-    public enum ModalType
-    {
-        Confirmation,
-        Message,
-        Dialog,
-        AlphaBuildWarning,
-        DeviceConfiguration
-    }
-
     public class ModalQueueItem
     {
         public ModalType Type { get; set; }
