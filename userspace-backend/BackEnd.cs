@@ -290,7 +290,7 @@ namespace userspace_backend
             }
         }
 
-        public void ApplySettingsOnly()
+        public void ApplyUserSettingsOnly()
         {
             WriteSettingsToDisk();
         }

@@ -96,7 +96,7 @@ public class SettingsService : ISettingsService
         errorMessage = null;
         try
         {
-            backEnd.ApplySettingsOnly();
+            backEnd.ApplyUserSettingsOnly();
             return true;
         }
         catch (Exception ex)

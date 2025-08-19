@@ -460,7 +460,7 @@ namespace userinterface.Services
                         if (success)
                         {
                             backEnd.UnconfiguredActiveDevice = null;
-                            backEnd.ApplySettingsOnly();
+                            backEnd.ApplyUserSettingsOnly();
 
                             // Show success notification
                             userspace_backend.NotificationManager.QueueNotification(
