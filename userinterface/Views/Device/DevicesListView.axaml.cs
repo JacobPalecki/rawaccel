@@ -6,10 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using userinterface.Services;
 using userinterface.ViewModels.Device;
+using userspace_backend.Logging;
 
 namespace userinterface.Views.Device;
 
@@ -20,12 +20,14 @@ public partial class DevicesListView : UserControl
     private bool isInitialLoad = true;
 
     private readonly IAnimationStateService animationStateService;
+    private readonly ILoggingService? loggingService;
 
     public bool AreAnimationsActive => animationStateService.AreAnimationsActive;
 
     public DevicesListView()
     {
         animationStateService = App.Services?.GetRequiredService<IAnimationStateService>() ?? throw new InvalidOperationException("AnimationStateService not available");
+        loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
 
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
@@ -57,7 +59,7 @@ public partial class DevicesListView : UserControl
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Animation error: {ex.Message}");
+                loggingService?.LogError(LogSource.UI, ex, "Animation error during device delete");
                 deviceViewModel.DeleteSelf();
             }
         }

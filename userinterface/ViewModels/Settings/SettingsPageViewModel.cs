@@ -1,21 +1,25 @@
-using Microsoft.Extensions.DependencyInjection;
 using userinterface.Services;
 
 namespace userinterface.ViewModels.Settings;
 
 public class SettingsPageViewModel : ViewModelBase
 {
-    private readonly INotificationService? notificationService;
+    private readonly INotificationService notificationService;
 
-    public SettingsPageViewModel()
+    public SettingsPageViewModel(
+        INotificationService notificationService,
+        GeneralSettingsViewModel generalSettingsViewModel,
+        SupportViewModel supportViewModel,
+        DevicesSettingsViewModel devicesSettingsViewModel,
+        MappingsSettingsViewModel mappingsSettingsViewModel,
+        ProfilesSettingsViewModel profilesSettingsViewModel)
     {
-        notificationService = App.Services?.GetService<INotificationService>();
-
-        GeneralSettingsViewModel = App.Services!.GetRequiredService<GeneralSettingsViewModel>();
-        SupportViewModel = App.Services!.GetRequiredService<SupportViewModel>();
-        DevicesSettingsViewModel = App.Services!.GetRequiredService<DevicesSettingsViewModel>();
-        MappingsSettingsViewModel = App.Services!.GetRequiredService<MappingsSettingsViewModel>();
-        ProfilesSettingsViewModel = App.Services!.GetRequiredService<ProfilesSettingsViewModel>();
+        this.notificationService = notificationService;
+        GeneralSettingsViewModel = generalSettingsViewModel;
+        SupportViewModel = supportViewModel;
+        DevicesSettingsViewModel = devicesSettingsViewModel;
+        MappingsSettingsViewModel = mappingsSettingsViewModel;
+        ProfilesSettingsViewModel = profilesSettingsViewModel;
 
         GeneralSettingsViewModel.PropertyChanged += OnGeneralSettingsChanged;
     }

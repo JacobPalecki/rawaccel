@@ -10,7 +10,8 @@ namespace userspace_backend.Logging
         Performance,
         System,
         Modal,
-        LUT
+        LUT,
+        Toast
     }
 
     public static class LogSourceExtensions
@@ -26,6 +27,7 @@ namespace userspace_backend.Logging
                 LogSource.System => "RawAccel.System",
                 LogSource.Modal => "RawAccel.Modal",
                 LogSource.LUT => "RawAccel.LUT",
+                LogSource.Toast => "RawAccel.Toast",
                 _ => "RawAccel.Unknown"
             };
         }
@@ -41,6 +43,7 @@ namespace userspace_backend.Logging
                 LogSource.System => "System Operations",
                 LogSource.Modal => "Modal Dialogs",
                 LogSource.LUT => "LUT Operations",
+                LogSource.Toast => "Toast Notifications",
                 _ => "Unknown"
             };
         }

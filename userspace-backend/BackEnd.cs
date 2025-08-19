@@ -40,9 +40,16 @@ namespace userspace_backend
 
     public static class NotificationManager
     {
+        private static ILoggingService? loggingService;
+
         public static event EventHandler<NotificationEventArgs>? NotificationRequested;
         public static event EventHandler<NotificationEventArgs>? QueuedNotificationRequested;
         public static event EventHandler<ModalEventArgs>? QueuedModalRequested;
+
+        public static void Initialize(ILoggingService? logger)
+        {
+            loggingService = logger;
+        }
 
         public static void TriggerNotification(string messageKey, NotificationType type)
         {
@@ -66,6 +73,9 @@ namespace userspace_backend
 
         public static void QueueNotification(string messageKey, NotificationType type, params object[] formatArgs)
         {
+            loggingService?.LogInformation(LogSource.Toast, "Queuing notification: MessageKey={MessageKey}, Type={Type}, FormatArgs={FormatArgs}", 
+                messageKey, type, formatArgs.Length > 0 ? string.Join(", ", formatArgs) : "none");
+
             QueuedNotificationRequested?.Invoke(null, new NotificationEventArgs
             {
                 MessageKey = messageKey,
@@ -106,6 +116,7 @@ namespace userspace_backend
             // Initialize static logging for models
             ProfileModel.InitializeLogging(loggingService);
             EditableSettingLogging.Initialize(loggingService);
+            NotificationManager.Initialize(loggingService);
             
             Devices = new DevicesModel(deviceInfoProvider);
             Profiles = new ProfilesModel([]);

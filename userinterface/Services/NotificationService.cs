@@ -1,5 +1,6 @@
 ﻿using System;
 using userinterface.Models;
+using userspace_backend.Logging;
 
 namespace userinterface.Services
 {
@@ -7,13 +8,15 @@ namespace userinterface.Services
     {
         private readonly LocalizationService localizationService;
         private readonly ISettingsService settingsService;
+        private readonly ILoggingService loggingService;
 
         private const int DefaultToastDurationMs = 3000;
 
-        public NotificationService(LocalizationService localizationService, ISettingsService settingsService)
+        public NotificationService(LocalizationService localizationService, ISettingsService settingsService, ILoggingService loggingService)
         {
             this.localizationService = localizationService;
             this.settingsService = settingsService;
+            this.loggingService = loggingService;
         }
 
         public event EventHandler<ToastNotificationEventArgs>? ToastRequested;
@@ -29,6 +32,7 @@ namespace userinterface.Services
         {
             if (!settingsService.ShowToastNotifications)
             {
+                loggingService.LogDebug(LogSource.Toast, "Toast notification skipped (disabled): MessageKey={MessageKey}, Type={Type}", messageKey, type);
                 return;
             }
 
@@ -37,6 +41,9 @@ namespace userinterface.Services
             {
                 localizedMessage = string.Format(localizedMessage, formatArgs);
             }
+
+            loggingService.LogInformation(LogSource.Toast, "Showing toast: MessageKey={MessageKey}, Type={Type}, Duration={Duration}ms, Message={Message}", 
+                messageKey, type, durationMs, localizedMessage);
 
             var toastArgs = new ToastNotificationEventArgs
             {
@@ -57,6 +64,7 @@ namespace userinterface.Services
         {
             if (!settingsService.ShowToastNotifications)
             {
+                loggingService.LogDebug(LogSource.Toast, "Immediate toast notification skipped (disabled): MessageKey={MessageKey}, Type={Type}", messageKey, type);
                 return;
             }
 
@@ -67,6 +75,9 @@ namespace userinterface.Services
             {
                 localizedMessage = string.Format(localizedMessage, formatArgs);
             }
+
+            loggingService.LogInformation(LogSource.Toast, "Showing immediate toast: MessageKey={MessageKey}, Type={Type}, Duration={Duration}ms, Message={Message}", 
+                messageKey, type, durationMs, localizedMessage);
 
             var toastArgs = new ToastNotificationEventArgs
             {

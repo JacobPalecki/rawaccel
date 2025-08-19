@@ -4,11 +4,11 @@ using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using userinterface.ViewModels.Controls;
+using userspace_backend.Logging;
 
 namespace userinterface.Views.Controls
 {
@@ -18,6 +18,7 @@ namespace userinterface.Views.Controls
         private readonly SemaphoreSlim operationSemaphore = new(1, 1);
         private readonly object animationLock = new();
         private volatile bool areAnimationsActive;
+        private readonly ILoggingService? loggingService;
 
         private const double ToastHeight = 80.0;
         private const double ToastSpacing = -10;
@@ -31,6 +32,7 @@ namespace userinterface.Views.Controls
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
+            loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
         }
 
         private void OnDataContextChanged(object? sender, EventArgs e)
@@ -137,11 +139,11 @@ namespace userinterface.Views.Controls
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"Toast animation cancelled for position {position}");
+                loggingService?.LogDebug(LogSource.UI, "Toast animation cancelled for position {Position}", position);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Unexpected error in toast animation: {ex.Message}");
+                loggingService?.LogError(LogSource.UI, ex, "Unexpected error in toast animation");
             }
             finally
             {
@@ -179,11 +181,11 @@ namespace userinterface.Views.Controls
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine("Toast exit animation cancelled");
+                loggingService?.LogDebug(LogSource.UI, "Toast exit animation cancelled");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Unexpected error in toast exit animation: {ex.Message}");
+                loggingService?.LogError(LogSource.UI, ex, "Unexpected error in toast exit animation");
             }
             finally
             {

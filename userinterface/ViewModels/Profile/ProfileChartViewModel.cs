@@ -65,6 +65,7 @@ namespace userinterface.ViewModels.Profile
         private readonly IMouseTracker mouseTracker;
         private readonly BackEnd backEnd;
         private readonly IDeviceInfoProvider? deviceInfoProvider;
+        private readonly ILoggingService loggingService;
         private BE.ProfileModel currentProfileModel = null!;
 
         private SolidColorPaint? cachedXStroke;
@@ -79,13 +80,14 @@ namespace userinterface.ViewModels.Profile
 
         private readonly object syncObject = new object();
 
-        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTracker mouseTracker, BackEnd backEnd, IDeviceInfoProvider? deviceInfoProvider = null)
+        public ProfileChartViewModel(IThemeService themeService, LocalizationService localizationService, PreviewChartRenderer previewRenderer, IMouseTracker mouseTracker, BackEnd backEnd, ILoggingService loggingService, IDeviceInfoProvider? deviceInfoProvider = null)
         {
             this.themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             this.localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
             this.previewRenderer = previewRenderer ?? throw new ArgumentNullException(nameof(previewRenderer));
             this.mouseTracker = mouseTracker ?? throw new ArgumentNullException(nameof(mouseTracker));
             this.backEnd = backEnd ?? throw new ArgumentNullException(nameof(backEnd));
+            this.loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
             this.deviceInfoProvider = deviceInfoProvider;
 
             RecreateAxesCommand = new RelayCommand(() =>
@@ -781,8 +783,7 @@ namespace userinterface.ViewModels.Profile
         {
             if (currentProfileModel == null) return;
 
-            // Get logging service for LUT point click logging
-            var loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
+            // Use injected logging service for LUT point click logging
 
             // Create scatter series for X LUT points
             xLUTDotSeries = new LoggingScatterSeries<CurvePoint>(loggingService, "X")

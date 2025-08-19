@@ -5,12 +5,12 @@ using Avalonia.Controls;
 using Avalonia.Styling;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using userinterface.Services;
+using userspace_backend.Logging;
 
 namespace userinterface.Helpers;
 
@@ -21,6 +21,7 @@ public class ProfileListAnimationHelper : IDisposable
     private readonly Border addProfileButton;
     private readonly IAnimationStateService animationStateService;
     private bool disposed = false;
+    private readonly ILoggingService? loggingService;
 
     private readonly FrameTimerService frameTimer;
 
@@ -48,6 +49,7 @@ public class ProfileListAnimationHelper : IDisposable
         this.addProfileButton = addProfileButton ?? throw new ArgumentNullException(nameof(addProfileButton));
         this.frameTimer = frameTimer ?? throw new ArgumentNullException(nameof(frameTimer));
         this.animationStateService = animationStateService ?? throw new ArgumentNullException(nameof(animationStateService));
+        this.loggingService = App.Services?.GetService(typeof(ILoggingService)) as ILoggingService;
     }
 
     public bool AreAnimationsActive
@@ -206,7 +208,7 @@ public class ProfileListAnimationHelper : IDisposable
             var remainingCount = Interlocked.Decrement(ref activeAnimationCount);
 
             // Note: The service handles global animation state automatically
-            Debug.WriteLine($"[ANIMATION] Cleaned up animation for profile {profileIndex}, remaining: {remainingCount}");
+            loggingService?.LogDebug(LogSource.UI, "[ANIMATION] Cleaned up animation for profile {ProfileIndex}, remaining: {RemainingCount}", profileIndex, remainingCount);
         }
     }
 
