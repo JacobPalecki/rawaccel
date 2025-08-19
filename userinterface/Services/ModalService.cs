@@ -462,7 +462,6 @@ namespace userinterface.Services
                             backEnd.UnconfiguredActiveDevice = null;
                             backEnd.ApplyUserSettingsOnly();
 
-                            // Show success notification
                             userspace_backend.NotificationManager.QueueNotification(
                                 "DeviceCreatedSuccessfully",
                                 userspace_backend.NotificationType.Success,
@@ -470,8 +469,6 @@ namespace userinterface.Services
                         }
                         else
                         {
-
-                            // Show error notification
                             userspace_backend.NotificationManager.QueueNotification(
                                 "DeviceCreationFailed",
                                 userspace_backend.NotificationType.Error,
@@ -480,8 +477,6 @@ namespace userinterface.Services
                     }
                     catch (Exception ex)
                     {
-
-                        // Show error notification
                         userspace_backend.NotificationManager.QueueNotification(
                             "DeviceCreationError",
                             userspace_backend.NotificationType.Error,
@@ -490,8 +485,6 @@ namespace userinterface.Services
                 }
                 else
                 {
-
-                    // Show error notification
                     userspace_backend.NotificationManager.QueueNotification(
                         "NoUnconfiguredDevice",
                         userspace_backend.NotificationType.Error);
