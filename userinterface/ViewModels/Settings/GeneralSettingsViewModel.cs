@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using userinterface.Services;
+using userspace_backend.Logging;
 
 namespace userinterface.ViewModels.Settings;
 
@@ -13,14 +14,16 @@ public class GeneralSettingsViewModel : ViewModelBase
     private readonly ISettingsService settingsService;
     private readonly LocalizationService localizationService;
     private readonly IThemeService themeService;
+    private readonly ILoggingService loggingService;
     private LanguageItem selectedLanguage;
     private string selectedThemeValue;
 
-    public GeneralSettingsViewModel()
+    public GeneralSettingsViewModel(ISettingsService settingsService, LocalizationService localizationService, IThemeService themeService, ILoggingService loggingService)
     {
-        settingsService = App.Services!.GetRequiredService<ISettingsService>();
-        localizationService = App.Services!.GetRequiredService<LocalizationService>();
-        themeService = App.Services!.GetRequiredService<IThemeService>();
+        this.settingsService = settingsService;
+        this.localizationService = localizationService;
+        this.themeService = themeService;
+        this.loggingService = loggingService;
 
         AvailableLanguages = new ObservableCollection<LanguageItem>
         {
@@ -97,6 +100,7 @@ public class GeneralSettingsViewModel : ViewModelBase
         }
         catch (CultureNotFoundException ex)
         {
+            loggingService.LogError(LogSource.UI, ex, "Failed to change language to culture code: {CultureCode}", cultureCode);
         }
     }
 

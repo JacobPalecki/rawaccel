@@ -1,15 +1,23 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using userspace_backend.Logging;
 
 namespace userinterface.Services;
 
 public class LocalizationService : INotifyPropertyChanged
 {
+    private readonly ILoggingService loggingService;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     // Specific property name for language changes
     public const string LanguageChangedPropertyName = "CurrentLanguage";
+
+    public LocalizationService(ILoggingService loggingService)
+    {
+        this.loggingService = loggingService;
+    }
 
     public bool TryChangeLanguage(string cultureCode, out CultureInfo? culture)
     {
@@ -27,6 +35,7 @@ public class LocalizationService : INotifyPropertyChanged
         }
         catch (CultureNotFoundException ex)
         {
+            loggingService.LogError(LogSource.UI, ex, "Failed to change language to culture code: {CultureCode}", cultureCode);
             return false;
         }
     }
