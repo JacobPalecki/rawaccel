@@ -127,30 +127,28 @@ namespace userinterface.Services
 
                 try
                 {
+                    logger?.LogInformation(LogSource.Modal, $"Calling Show{item.Type}Async");
+                    
                     switch (item.Type)
                     {
                         case ModalType.Confirmation:
-                            logger?.LogInformation(LogSource.Modal, "Calling ShowConfirmationImmediatelyAsync");
                             var confirmResult = await ShowConfirmationImmediatelyAsync(item.TitleKey, item.MessageKey, item.ConfirmTextKey, item.CancelTextKey);
                             logger?.LogInformation(LogSource.Modal, $"ShowConfirmationImmediatelyAsync returned: {confirmResult}");
                             item.TaskCompletionSource.SetResult(confirmResult);
                             break;
 
                         case ModalType.Dialog:
-                            logger?.LogInformation(LogSource.Modal, "Calling ShowDialogImmediatelyAsync");
                             var dialogResult = await ShowDialogImmediatelyAsync<object?>(item.DialogContent!, item.TitleKey);
                             item.TaskCompletionSource.SetResult(dialogResult);
                             break;
 
                         case ModalType.DeviceConfiguration:
-                            logger?.LogInformation(LogSource.Modal, "Calling ShowDeviceConfigurationAsync");
                             var deviceResult = await ShowDeviceConfigurationAsync(item.DeviceName!);
                             item.TaskCompletionSource.SetResult(deviceResult);
                             break;
 
                         default:
                             // Handle simple modal types that don't return specific values (always return true)
-                            logger?.LogInformation(LogSource.Modal, $"Calling Show{item.Type}Async");
                             switch (item.Type)
                             {
                                 case ModalType.Message:
