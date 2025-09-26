@@ -81,6 +81,8 @@ public partial class DevicesListView : UserControl
             viewModel = vm;
             lastKnownItemCount = vm.DeviceViews.Count;
 
+            vm.SetView(this);
+
             vm.DeviceViews.CollectionChanged += OnDevicesCollectionChanged;
 
             _ = Task.Run(async () =>
